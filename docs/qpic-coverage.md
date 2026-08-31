@@ -33,10 +33,10 @@ Legend: **done** is implemented in both backends and exercised by a runnable tes
 | Global spacing, scale, and background | `layout { ... }` | done |
 | Horizontal/vertical orientation | `layout.orientation` | done |
 | Global gate size, corners, and comment size | remaining `layout` properties | next |
-| Measurement shapes | measurement options | next |
+| Measurement shapes | named measurements default to D; `using tag` selects a tag | done |
 | Custom colors | named colors or quoted `#RRGGBB` values | done |
 | DEFINE composition | parsed `fn` declarations, never text macros | partial — nested wire-operation functions are done; value/style declarations remain |
 | PREAMBLE/PRETIKZ/POSTTIKZ/HEADER/HYPERTARGET | explicit backend escape blocks | next |
 | AUTOWIRES | intentionally replaced by checked declarations | next |
 
-`tests/artifacts.rs` currently compiles representative teleportation, styled/vertical, wire-lifecycle/permutation, nested-function, structured-programming, annotation, and marked-region fixtures to both PDFs. Phase 4 expands this into one parity fixture per upstream golden test and manual example; generated TikZ text is not compared byte-for-byte because qrab has a different frontend and renderer, but every backend artifact must compile and match its circuit-level visual baseline.
+`tests/artifacts.rs` currently compiles representative teleportation, styled/vertical, wire-lifecycle/permutation, nested-function, structured-programming, annotation, marked-region, and measurement-shape fixtures to both PDFs. Phase 4 expands this into one parity fixture per upstream golden test and manual example; generated TikZ text is not compared byte-for-byte because qrab has a different frontend and renderer, but every backend artifact must compile and match its circuit-level visual baseline.

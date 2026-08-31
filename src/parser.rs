@@ -3,8 +3,8 @@ use std::error::Error;
 use std::fmt;
 
 use crate::ast::{
-    BraceSide, Circuit, Control, Group, Layout, Operation, OperationKind, Orientation, Shape, Span,
-    Style, Wire, WireKind,
+    BraceSide, Circuit, Control, Group, Layout, MeasurementShape, Operation, OperationKind,
+    Orientation, Shape, Span, Style, Wire, WireKind,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -283,6 +283,7 @@ fn is_reserved_statement(name: &str) -> bool {
             | "from"
             | "here"
             | "with"
+            | "using"
     )
 }
 
@@ -710,11 +711,43 @@ impl Parser {
         } else {
             None
         };
+        let explicit_shape = self.consume_keyword("using");
+        let shape = if explicit_shape {
+            let shape_span = self.current().span;
+            match self.take_identifier("`d` or `tag`")?.as_str() {
+                "d" => MeasurementShape::D,
+                "tag" => MeasurementShape::Tag,
+                _ => {
+                    return Err(Diagnostic::new(
+                        "measurement shape must be `d` or `tag`",
+                        shape_span,
+                    ));
+                }
+            }
+        } else {
+            MeasurementShape::D
+        };
         let style = self.parse_style()?;
         self.expect_statement_end()?;
+        if label.is_none() && explicit_shape {
+            return Err(Diagnostic::new(
+                "a shaped measurement needs a label introduced by `as`",
+                span,
+            ));
+        }
+        if style.shape.is_some() {
+            return Err(Diagnostic::new(
+                "measurement shapes use `using d` or `using tag`, not the generic `shape` style",
+                span,
+            ));
+        }
         self.ensure_unique(&targets, span, "measurement target")?;
         self.operations.push(Operation {
-            kind: OperationKind::Measure { targets, label },
+            kind: OperationKind::Measure {
+                targets,
+                label,
+                shape,
+            },
             span,
             style,
         });
@@ -1536,6 +1569,42 @@ mod tests {
             circuit.operations[6].kind,
             OperationKind::Touch { ref wires } if wires == &[0, 2]
         ));
+    }
+
+    #[test]
+    fn parses_named_measurement_shapes() {
+        let circuit = parse(
+            r#"
+                circuit measurements {
+                  qubit q[3]
+                  measure q[0]
+                  measure q[1] as "Z"
+                  measure q[2] as "X" using tag
+                }
+            "#,
+        )
+        .expect("valid measurement shapes");
+
+        assert!(matches!(
+            circuit.operations[1].kind,
+            OperationKind::Measure {
+                shape: MeasurementShape::D,
+                ..
+            }
+        ));
+        assert!(matches!(
+            circuit.operations[2].kind,
+            OperationKind::Measure {
+                shape: MeasurementShape::Tag,
+                ..
+            }
+        ));
+        assert!(
+            parse("circuit bad { qubit q; measure q using tag }")
+                .expect_err("tag needs a label")
+                .message
+                .contains("needs a label")
+        );
     }
 
     #[test]

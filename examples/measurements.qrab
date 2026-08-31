@@ -1,0 +1,8 @@
+circuit measurement_shapes {
+  qubit q[3]: "|0>"
+
+  h q[0]
+  measure q[0]
+  measure q[1] as "Z" with fill: "#DDEEFF", stroke: blue
+  measure q[2] as "X" using tag with fill: yellow, stroke: red
+}

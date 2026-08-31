@@ -1,7 +1,8 @@
 use std::{collections::BTreeSet, fmt::Write as _};
 
 use crate::ast::{
-    BraceSide, Circuit, Control, Group, OperationKind, Orientation, Shape, Style, Wire, WireKind,
+    BraceSide, Circuit, Control, Group, MeasurementShape, OperationKind, Orientation, Shape, Style,
+    Wire, WireKind,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -237,7 +238,11 @@ fn render_latex(circuit: &Circuit) -> String {
                     operation.style,
                 );
             }
-            OperationKind::Measure { targets, label } => {
+            OperationKind::Measure {
+                targets,
+                label,
+                shape,
+            } => {
                 for target in targets {
                     draw_latex_measurement(
                         &mut output,
@@ -245,6 +250,7 @@ fn render_latex(circuit: &Circuit) -> String {
                         circuit.layout.wire_gap,
                         operation.positions[*target],
                         label.as_deref(),
+                        *shape,
                         operation.style,
                     );
                 }
@@ -866,9 +872,14 @@ fn draw_latex_measurement(
     wire_gap: f32,
     target: usize,
     label: Option<&str>,
+    shape: MeasurementShape,
     style: &Style,
 ) {
     let y = -(target as f32) * wire_gap;
+    if let Some(label) = label {
+        draw_latex_named_measurement(output, x, y, label, shape, style);
+        return;
+    }
     writeln!(
         output,
         "  \\draw{} ({:.3},{:.3}) rectangle ({:.3},{:.3});",
@@ -896,16 +907,51 @@ fn draw_latex_measurement(
         y - 0.12
     )
     .expect("writing to a String cannot fail");
-    if let Some(label) = label {
-        writeln!(
-            output,
-            "  \\node[anchor=south west,font=\\scriptsize] at ({:.3},{:.3}) {{{}}};",
-            x + 0.26,
-            y + 0.18,
-            latex_text(label)
-        )
-        .expect("writing to a String cannot fail");
+}
+
+fn draw_latex_named_measurement(
+    output: &mut String,
+    x: f32,
+    y: f32,
+    label: &str,
+    shape: MeasurementShape,
+    style: &Style,
+) {
+    let width = style.width.map_or(0.68, |width| width / 28.45);
+    let height = style.height.map_or(0.56, |height| height / 28.45);
+    let left = x - width / 2.0;
+    let right = x + width / 2.0;
+    let top = y + height / 2.0;
+    let bottom = y - height / 2.0;
+    match shape {
+        MeasurementShape::D => {
+            let arc_x = right - height / 2.0;
+            writeln!(
+                output,
+                "  \\draw{} ({left:.3},{bottom:.3}) -- ({arc_x:.3},{bottom:.3}) arc[start angle=-90,end angle=90,radius={:.3}] -- ({left:.3},{top:.3}) -- cycle;",
+                latex_circle_options(style, false),
+                height / 2.0
+            )
+            .expect("writing to a String cannot fail");
+        }
+        MeasurementShape::Tag => {
+            let point = (height / 2.0).min(width / 3.0);
+            writeln!(
+                output,
+                "  \\draw{} ({left:.3},{y:.3}) -- ({:.3},{top:.3}) -- ({right:.3},{top:.3}) -- ({right:.3},{bottom:.3}) -- ({:.3},{bottom:.3}) -- cycle;",
+                latex_circle_options(style, false),
+                left + point,
+                left + point
+            )
+            .expect("writing to a String cannot fail");
+        }
     }
+    writeln!(
+        output,
+        "  \\node at ({x:.3},{y:.3}) {{{}}};",
+        latex_text(label)
+    )
+    .expect("writing to a String cannot fail");
 }
 
 fn draw_latex_cross(output: &mut String, x: f32, y: f32, style: &Style) {
@@ -1225,18 +1271,22 @@ fn render_typst(circuit: &Circuit) -> String {
                     .collect::<Vec<_>>();
                 draw_typst_gate(&mut output, x, label, &targets, &controls, operation.style);
             }
-            OperationKind::Measure { targets, label } => {
+            OperationKind::Measure {
+                targets,
+                label,
+                shape,
+            } => {
                 for target in targets {
                     let row = operation.positions[*target];
-                    let label_argument = label.as_ref().map_or_else(String::new, |value| {
-                        format!(", label: text(\"{}\")", typst_string(value))
-                    });
-                    writeln!(
-                        output,
-                        "  quill.meter(x: {x}, y: {row}{label_argument}{}),",
-                        typst_measure_style(operation.style)
-                    )
-                    .expect("writing to a String cannot fail");
+                    draw_typst_measurement(
+                        &mut output,
+                        x,
+                        row,
+                        label.as_deref(),
+                        *shape,
+                        operation.style,
+                        &circuit.layout.background,
+                    );
                 }
             }
             OperationKind::Swap { left, right } => {
@@ -1632,6 +1682,62 @@ fn draw_typst_gate(
         )
         .expect("writing to a String cannot fail");
     }
+}
+
+fn draw_typst_measurement(
+    output: &mut String,
+    x: usize,
+    row: usize,
+    label: Option<&str>,
+    shape: MeasurementShape,
+    style: &Style,
+    background: &str,
+) {
+    let Some(label) = label else {
+        writeln!(
+            output,
+            "  quill.meter(x: {x}, y: {row}{}),",
+            typst_measure_style(style)
+        )
+        .expect("writing to a String cannot fail");
+        return;
+    };
+
+    match shape {
+        MeasurementShape::D => {
+            let mut gate_style = style.clone();
+            gate_style.width.get_or_insert(18.0);
+            writeln!(
+                output,
+                "  quill.gate({}, x: {x}, y: {row}{}, radius: (top-right: 999pt, bottom-right: 999pt)),",
+                typst_gate_body(label, &gate_style),
+                typst_gate_style(&gate_style)
+            )
+            .expect("writing to a String cannot fail");
+        }
+        MeasurementShape::Tag => {
+            let width = style.width.unwrap_or(20.0);
+            writeln!(
+                output,
+                "  quill.gate({}, x: {x}, y: {row}, box: false, width: {width:.3}pt),",
+                typst_measure_tag_body(label, style, background)
+            )
+            .expect("writing to a String cannot fail");
+        }
+    }
+}
+
+fn typst_measure_tag_body(label: &str, style: &Style, background: &str) -> String {
+    let width = style.width.unwrap_or(20.0);
+    let height = style.height.unwrap_or(14.0);
+    let point = (height / 2.0).min(width / 3.0);
+    let fill = typst_color(style.fill.as_deref().unwrap_or(background), style.opacity);
+    let stroke = typst_stroke(style).unwrap_or_else(|| "black".into());
+    format!(
+        "box(width: {width:.3}pt, height: {height:.3}pt, inset: 0pt, [#place(polygon(fill: {fill}, stroke: {stroke}, (0pt, {:.3}pt), ({point:.3}pt, 0pt), ({width:.3}pt, 0pt), ({width:.3}pt, {height:.3}pt), ({point:.3}pt, {height:.3}pt))) #align(center + horizon, text(\"{}\"))])",
+        height / 2.0,
+        typst_string(label)
+    )
 }
 
 fn typst_gate_body(label: &str, style: &Style) -> String {

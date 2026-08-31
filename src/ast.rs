@@ -93,6 +93,12 @@ pub enum Shape {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MeasurementShape {
+    D,
+    Tag,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BraceSide {
     Left,
     Right,
@@ -109,6 +115,7 @@ pub enum OperationKind {
     Measure {
         targets: Vec<usize>,
         label: Option<String>,
+        shape: MeasurementShape,
     },
     Swap {
         left: usize,
@@ -235,9 +242,14 @@ impl OperationKind {
                     })
                     .collect(),
             },
-            Self::Measure { targets, label } => Self::Measure {
+            Self::Measure {
+                targets,
+                label,
+                shape,
+            } => Self::Measure {
                 targets: wires(targets),
                 label: label.clone(),
+                shape: *shape,
             },
             Self::Swap { left, right } => Self::Swap {
                 left: mapping[*left],

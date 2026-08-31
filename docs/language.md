@@ -69,6 +69,8 @@ Wire declarations are `qubit`, `bit`, or `hidden`, followed by a name or fixed-s
 
 Built-in gates are `h`, `x`, `y`, `z`, `s`, and `t`. A gate's controls follow `if`; `!wire` is an open/negative control. Arbitrary single- or multi-wire boxes use `gate "label" on ...`. `phase`, `measure`, `swap`, and `barrier` are first-class statements rather than magic gate names.
 
+An unlabeled `measure q` draws a meter. `measure q as "Z"` draws a D-shaped result marker; append `using tag` for a pointed tag marker. Measurement changes each target to a classical wire in either form.
+
 The compiler packs operations into the earliest non-overlapping column while preserving source order. A barrier occupies its selected wire interval; an empty barrier wire list means every wire.
 
 `set wires to quantum|classical|hidden` changes wire rendering. `start` and `end` defer or stop selected wires and may carry an `as "label"`. `bundle` draws a bundle slash, while `label` centers text across a wire span. `permute` lists selected wires in their new visual order; later operations and output labels follow that order. `space` reserves invisible room and `touch` aligns later operations with the preceding slice. Omitting the wire list for `start`, `end`, `label`, `space`, or `touch` selects every wire.
