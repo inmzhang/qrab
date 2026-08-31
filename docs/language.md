@@ -81,11 +81,12 @@ Circuit annotations are portable too:
 labels "data", "work", "flag" on q[0..3] with fill: yellow
 brace left "input" on q[0..3] with stroke: blue
 note "decode" on q[1]
+equals "encode" on q[0..3] braced both
 cut on q[0..3] as "stage" with stroke: red
 brace both "repeat" on q[0..3]
 ```
 
-`labels` accepts either one repeated label or one label per selected wire. Braces may be `left`, `right`, or `both`. A source-local `cut` occupies its own separator column; qpic-style global numbered cut rules are not yet part of the language.
+`labels` accepts either one repeated label or one label per selected wire. Braces may be `left`, `right`, or `both`. `equals` centers `=` across all wires by default; it accepts another label, an `on` selection, and `braced left|right|both`. A source-local `cut` occupies its own separator column; qpic-style global numbered cut rules are not yet part of the language.
 
 Named marks delimit highlighted regions without becoming gates:
 

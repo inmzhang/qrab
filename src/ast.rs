@@ -138,6 +138,7 @@ pub enum OperationKind {
     Label {
         wires: Vec<usize>,
         label: String,
+        brace: Option<BraceSide>,
     },
     Bundle {
         wire: usize,
@@ -281,9 +282,11 @@ impl OperationKind {
             Self::Label {
                 wires: targets,
                 label,
+                brace,
             } => Self::Label {
                 wires: selected(targets),
                 label: label.clone(),
+                brace: *brace,
             },
             Self::Bundle { wire, label } => Self::Bundle {
                 wire: mapping[*wire],

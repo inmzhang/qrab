@@ -22,7 +22,7 @@ Legend: **done** is implemented in both backends and exercised by a runnable tes
 | Custom target operators and hyperlinks | typed operator/link values | next |
 | Centered mid-circuit labels | `label "text" [on wires]` | done |
 | Per-wire labels and left/right braces | `labels`, `brace` | done |
-| Equals shorthand and qpic brace defaults | label/brace sugar | next |
+| Equals shorthand and qpic brace defaults | `equals [label] [on wires] [braced side]` | done |
 | Comments beside operations | `note` | partial — portable notes occupy scheduled space |
 | Marks and highlighted `@` regions | `mark` and `group ... from ... to ...` | partial — named ranges are done; numeric relative ranges remain |
 | TOUCH and PHANTOM | `touch`, `space` | partial — PHANTOM subslices remain |

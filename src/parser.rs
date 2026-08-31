@@ -265,6 +265,7 @@ fn is_reserved_statement(name: &str) -> bool {
             | "start"
             | "end"
             | "label"
+            | "equals"
             | "bundle"
             | "permute"
             | "space"
@@ -285,6 +286,7 @@ fn is_reserved_statement(name: &str) -> bool {
             | "here"
             | "with"
             | "using"
+            | "braced"
     )
 }
 
@@ -470,6 +472,7 @@ impl Parser {
             "start" => self.parse_endpoint(span, true),
             "end" => self.parse_endpoint(span, false),
             "label" => self.parse_label(span),
+            "equals" => self.parse_equals(span),
             "bundle" => self.parse_bundle(span),
             "permute" => self.parse_permute(span),
             "space" => self.parse_phantom(span),
@@ -865,7 +868,59 @@ impl Parser {
         self.expect_statement_end()?;
         self.ensure_unique(&wires, span, "label wire")?;
         self.operations.push(Operation {
-            kind: OperationKind::Label { wires, label },
+            kind: OperationKind::Label {
+                wires,
+                label,
+                brace: None,
+            },
+            span,
+            style,
+        });
+        Ok(())
+    }
+
+    fn parse_equals(&mut self, span: Span) -> Result<(), Diagnostic> {
+        let label = if self.at_statement_end()
+            || self.at_keyword("on")
+            || self.at_keyword("braced")
+            || self.at_keyword("with")
+        {
+            "=".into()
+        } else {
+            self.take_label("equals label")?
+        };
+        let wires = if self.consume_keyword("on") {
+            self.parse_wire_list()?
+        } else {
+            Vec::new()
+        };
+        let brace = if self.consume_keyword("braced") {
+            let brace_span = self.current().span;
+            Some(
+                match self.take_identifier("`left`, `right`, or `both`")?.as_str() {
+                    "left" => BraceSide::Left,
+                    "right" => BraceSide::Right,
+                    "both" => BraceSide::Both,
+                    _ => {
+                        return Err(Diagnostic::new(
+                            "brace side must be `left`, `right`, or `both`",
+                            brace_span,
+                        ));
+                    }
+                },
+            )
+        } else {
+            None
+        };
+        let style = self.parse_style()?;
+        self.expect_statement_end()?;
+        self.ensure_unique(&wires, span, "equals wire")?;
+        self.operations.push(Operation {
+            kind: OperationKind::Label {
+                wires,
+                label,
+                brace,
+            },
             span,
             style,
         });
@@ -1813,6 +1868,37 @@ mod tests {
             circuit.operations[3].kind,
             OperationKind::Cut { ref wires, ref label }
                 if wires == &[0, 1] && label.as_deref() == Some("stage")
+        ));
+    }
+
+    #[test]
+    fn parses_centered_equals_with_optional_braces() {
+        let circuit = parse(
+            r#"
+                circuit equals {
+                  qubit q[2]
+                  equals on q[0..2]
+                  equals "stage" on q[0..2] braced both with stroke: blue
+                }
+            "#,
+        )
+        .expect("valid equals statements");
+
+        assert!(matches!(
+            circuit.operations[0].kind,
+            OperationKind::Label {
+                ref label,
+                brace: None,
+                ..
+            } if label == "="
+        ));
+        assert!(matches!(
+            circuit.operations[1].kind,
+            OperationKind::Label {
+                ref label,
+                brace: Some(BraceSide::Both),
+                ..
+            } if label == "stage"
         ));
     }
 

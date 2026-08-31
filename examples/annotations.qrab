@@ -5,6 +5,7 @@ circuit annotations {
   brace left "input" on q[0..3] with stroke: blue
   h q[0]
   note "decode" on q[1]
+  equals "encode" on q[0..3] braced both with fill: "#F3F3F3", stroke: teal
   brace right "result" on q[0..3] with stroke: purple
   cut on q[0..3] as "stage" with stroke: red
   x q[2] if q[0]

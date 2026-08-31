@@ -326,7 +326,11 @@ fn render_latex(circuit: &Circuit) -> String {
                     }
                 }
             }
-            OperationKind::Label { wires, label } => {
+            OperationKind::Label {
+                wires,
+                label,
+                brace,
+            } => {
                 let mut rows = expanded_wires(wires, circuit.wires.len())
                     .iter()
                     .map(|wire| operation.positions[*wire])
@@ -334,14 +338,28 @@ fn render_latex(circuit: &Circuit) -> String {
                 rows.sort_unstable();
                 let first = *rows.first().expect("circuit has a wire");
                 let last = *rows.last().expect("circuit has a wire");
-                let y = -((first + last) as f32) * circuit.layout.wire_gap / 2.0;
-                writeln!(
-                    output,
-                    "  \\node{} at ({x:.3},{y:.3}) {{{}}};",
-                    latex_label_options(operation.style),
-                    latex_text(label)
-                )
-                .expect("writing to a String cannot fail");
+                if let Some(side) = brace {
+                    draw_latex_brace(
+                        &mut output,
+                        x,
+                        circuit.layout.wire_gap,
+                        first,
+                        last,
+                        label,
+                        *side,
+                        operation.style,
+                        &circuit.layout.background,
+                    );
+                } else {
+                    let y = -((first + last) as f32) * circuit.layout.wire_gap / 2.0;
+                    writeln!(
+                        output,
+                        "  \\node{} at ({x:.3},{y:.3}) {{{}}};",
+                        latex_label_options(operation.style),
+                        latex_text(label)
+                    )
+                    .expect("writing to a String cannot fail");
+                }
             }
             OperationKind::Bundle { wire, label } => {
                 let y = -(operation.positions[*wire] as f32) * circuit.layout.wire_gap;
@@ -1412,7 +1430,11 @@ fn render_typst(circuit: &Circuit) -> String {
                     }
                 }
             }
-            OperationKind::Label { wires, label } => {
+            OperationKind::Label {
+                wires,
+                label,
+                brace,
+            } => {
                 let mut rows = expanded_wires(wires, circuit.wires.len())
                     .iter()
                     .map(|wire| operation.positions[*wire])
@@ -1420,14 +1442,27 @@ fn render_typst(circuit: &Circuit) -> String {
                 rows.sort_unstable();
                 let first = *rows.first().expect("circuit has a wire");
                 let last = *rows.last().expect("circuit has a wire");
-                writeln!(
-                    output,
-                    "  quill.midstick(text(\"{}\"), n: {}, x: {x}, y: {first}{}),",
-                    typst_string(label),
-                    last - first + 1,
-                    typst_label_style(operation.style)
-                )
-                .expect("writing to a String cannot fail");
+                if let Some(side) = brace {
+                    draw_typst_brace(
+                        &mut output,
+                        x,
+                        first,
+                        last,
+                        label,
+                        *side,
+                        operation.style,
+                        &circuit.layout.background,
+                    );
+                } else {
+                    writeln!(
+                        output,
+                        "  quill.midstick(text(\"{}\"), n: {}, x: {x}, y: {first}{}),",
+                        typst_string(label),
+                        last - first + 1,
+                        typst_label_style(operation.style)
+                    )
+                    .expect("writing to a String cannot fail");
+                }
             }
             OperationKind::Bundle { wire, label } => {
                 writeln!(
@@ -1534,21 +1569,16 @@ fn render_typst(circuit: &Circuit) -> String {
                 rows.sort_unstable();
                 let first = *rows.first().expect("circuit has a wire");
                 let last = *rows.last().expect("circuit has a wire");
-                let n = last - first + 1;
-                writeln!(
-                    output,
-                    "  quill.mqgate({}, n: {n}, x: {x}, y: {first}, fill: {}, stroke: none),",
-                    typst_brace_body(label, *side, n, operation.style),
-                    typst_color(
-                        operation
-                            .style
-                            .fill
-                            .as_deref()
-                            .unwrap_or(&circuit.layout.background),
-                        operation.style.opacity
-                    )
-                )
-                .expect("writing to a String cannot fail");
+                draw_typst_brace(
+                    &mut output,
+                    x,
+                    first,
+                    last,
+                    label,
+                    *side,
+                    operation.style,
+                    &circuit.layout.background,
+                );
             }
             OperationKind::Note { wires, text } => {
                 let first = selected_wires(wires, circuit.wires.len())
@@ -1963,6 +1993,27 @@ fn typst_group_style(style: &Style) -> String {
         arguments.push("radius: 5pt".into());
     }
     typst_arguments(arguments)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn draw_typst_brace(
+    output: &mut String,
+    x: usize,
+    first: usize,
+    last: usize,
+    label: &str,
+    side: BraceSide,
+    style: &Style,
+    background: &str,
+) {
+    let n = last - first + 1;
+    writeln!(
+        output,
+        "  quill.mqgate({}, n: {n}, x: {x}, y: {first}, fill: {}, stroke: none),",
+        typst_brace_body(label, side, n, style),
+        typst_color(style.fill.as_deref().unwrap_or(background), style.opacity)
+    )
+    .expect("writing to a String cannot fail");
 }
 
 fn typst_brace_body(label: &str, side: BraceSide, wires: usize, style: &Style) -> String {
