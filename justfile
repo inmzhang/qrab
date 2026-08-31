@@ -19,6 +19,16 @@ check: fmt-check lint test
 
 ci: check test-artifacts
 
+package:
+    cargo package --locked
+
+release-check: ci
+    cargo build --release --locked
+    cargo package --locked
+
+install-local:
+    cargo install --path . --locked
+
 example:
     cargo run -- compile examples/teleportation.qrab
     tectonic examples/teleportation.tex --outdir target
