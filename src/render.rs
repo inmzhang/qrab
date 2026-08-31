@@ -614,7 +614,7 @@ fn draw_latex_wire(
 
     let y = -(row as f32) * circuit.layout.wire_gap;
     draw_wire_segment(output, kind, start_x, end_x, y, &wire.style);
-    if initial_kind != WireKind::Hidden {
+    if initial_kind != WireKind::Hidden || wire.ellipsis {
         let input = wire.input.as_deref().unwrap_or(&wire.name);
         let input_y = -(wire_index as f32) * circuit.layout.wire_gap;
         writeln!(
@@ -624,7 +624,7 @@ fn draw_latex_wire(
         )
         .expect("writing to a String cannot fail");
     }
-    if kind != WireKind::Hidden
+    if (kind != WireKind::Hidden || wire.ellipsis)
         && let Some(label) = &wire.output
     {
         writeln!(
@@ -1292,7 +1292,7 @@ fn render_typst(circuit: &Circuit) -> String {
 
     for (wire_index, wire) in circuit.wires.iter().enumerate() {
         let (initial_kind, transitions) = wire_transitions(circuit, &scheduled, wire_index);
-        if initial_kind != WireKind::Hidden {
+        if initial_kind != WireKind::Hidden || wire.ellipsis {
             let input = wire.input.as_deref().unwrap_or(&wire.name);
             writeln!(
                 output,
@@ -1304,7 +1304,7 @@ fn render_typst(circuit: &Circuit) -> String {
         let final_kind = transitions
             .last()
             .map_or(initial_kind, |transition| transition.1);
-        if final_kind != WireKind::Hidden
+        if (final_kind != WireKind::Hidden || wire.ellipsis)
             && let Some(label) = &wire.output
         {
             writeln!(

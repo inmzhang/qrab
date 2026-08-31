@@ -1,0 +1,11 @@
+circuit omitted_register {
+  qubit first: "|x_1>" -> "|y_1>"
+  ellipsis omitted
+  qubit last: "|x_n>" -> "|y_n>"
+
+  parallel {
+    h first
+    h last
+  }
+  label "..." on omitted
+}

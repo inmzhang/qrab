@@ -61,6 +61,7 @@ pub enum WireKind {
 pub struct Wire {
     pub name: String,
     pub kind: WireKind,
+    pub ellipsis: bool,
     pub input: Option<String>,
     pub output: Option<String>,
     pub style: Style,

@@ -50,6 +50,11 @@ fn generated_backends_compile_to_pdfs() {
         include_str!("../examples/measurements.qrab"),
         &output_dir,
     );
+    compile_fixture(
+        "ellipsis",
+        include_str!("../examples/ellipsis.qrab"),
+        &output_dir,
+    );
 }
 
 fn compile_fixture(name: &str, source: &str, output_dir: &std::path::Path) {

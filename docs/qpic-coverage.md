@@ -16,7 +16,7 @@ Legend: **done** is implemented in both backends and exercised by a runnable tes
 | Automatic placement and barriers | scheduler and `barrier [wires]` | done |
 | Wire bundles/slashes | `bundle "count" on wire` | done |
 | Quantum/classical/off changes and START/END | `set`, `start`, `end` | partial — active-wire defaults and qpic's late START placement remain |
-| Ellipsis wires and IN/OUT value bullets | `set ... to hidden|quantum as "value"` | partial — value markers are done; ellipsis wires remain |
+| Ellipsis wires and IN/OUT value bullets | `ellipsis` declarations and `set ... as "value"` | done |
 | Portable dimensions, colors, fill, dash, and opacity | trailing `with` properties | done |
 | Box, circle, ellipse, and unboxed shapes | `with shape: ...` | done |
 | Custom target operators and hyperlinks | typed operator/link values | next |
@@ -39,4 +39,4 @@ Legend: **done** is implemented in both backends and exercised by a runnable tes
 | PREAMBLE/PRETIKZ/POSTTIKZ/HEADER/HYPERTARGET | explicit backend escape blocks | next |
 | AUTOWIRES | intentionally replaced by checked declarations | next |
 
-`tests/artifacts.rs` currently compiles representative teleportation, styled/vertical, wire-lifecycle/permutation, nested-function, structured-programming, annotation, marked-region, and measurement-shape fixtures to both PDFs. Phase 4 expands this into one parity fixture per upstream golden test and manual example; generated TikZ text is not compared byte-for-byte because qrab has a different frontend and renderer, but every backend artifact must compile and match its circuit-level visual baseline.
+`tests/artifacts.rs` currently compiles representative teleportation, styled/vertical, wire-lifecycle/permutation, nested-function, structured-programming, annotation, marked-region, measurement-shape, and ellipsis fixtures to both PDFs. Phase 4 expands this into one parity fixture per upstream golden test and manual example; generated TikZ text is not compared byte-for-byte because qrab has a different frontend and renderer, but every backend artifact must compile and match its circuit-level visual baseline.

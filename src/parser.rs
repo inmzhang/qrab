@@ -249,6 +249,7 @@ fn is_reserved_statement(name: &str) -> bool {
             | "qubit"
             | "bit"
             | "hidden"
+            | "ellipsis"
             | "h"
             | "x"
             | "y"
@@ -407,6 +408,7 @@ impl Parser {
             .map(|parameter| Wire {
                 name: parameter.clone(),
                 kind: WireKind::Quantum,
+                ellipsis: false,
                 input: None,
                 output: None,
                 style: Style::default(),
@@ -452,9 +454,10 @@ impl Parser {
         }
         match keyword.as_str() {
             "layout" => self.parse_layout(),
-            "qubit" => self.parse_wire_declaration(WireKind::Quantum),
-            "bit" => self.parse_wire_declaration(WireKind::Classical),
-            "hidden" => self.parse_wire_declaration(WireKind::Hidden),
+            "qubit" => self.parse_wire_declaration(WireKind::Quantum, false),
+            "bit" => self.parse_wire_declaration(WireKind::Classical, false),
+            "hidden" => self.parse_wire_declaration(WireKind::Hidden, false),
+            "ellipsis" => self.parse_wire_declaration(WireKind::Hidden, true),
             "h" | "x" | "y" | "z" | "s" | "t" => {
                 self.parse_builtin_gate(keyword.to_ascii_uppercase(), span)
             }
@@ -621,7 +624,7 @@ impl Parser {
         self.expect_statement_end()
     }
 
-    fn parse_wire_declaration(&mut self, kind: WireKind) -> Result<(), Diagnostic> {
+    fn parse_wire_declaration(&mut self, kind: WireKind, ellipsis: bool) -> Result<(), Diagnostic> {
         let span = self.current().span;
         let base = self.take_identifier("wire name")?;
         let count = if self.consume(&TokenKind::LeftBracket) {
@@ -647,6 +650,13 @@ impl Parser {
         let style = self.parse_style()?;
         self.expect_statement_end()?;
 
+        if ellipsis && count.is_some() {
+            return Err(Diagnostic::new(
+                "an ellipsis declaration names one visual gap",
+                span,
+            ));
+        }
+
         let names = count.map_or_else(
             || vec![base.clone()],
             |length| {
@@ -667,8 +677,9 @@ impl Parser {
             self.wires.push(Wire {
                 name,
                 kind,
-                input: input.clone(),
-                output: output.clone(),
+                ellipsis,
+                input: input.clone().or_else(|| ellipsis.then(|| "...".into())),
+                output: output.clone().or_else(|| ellipsis.then(|| "...".into())),
                 style: style.clone(),
             });
         }
@@ -1644,6 +1655,26 @@ mod tests {
                 .expect_err("classical transition cannot carry a value marker")
                 .message
                 .contains("quantum` or `hidden")
+        );
+    }
+
+    #[test]
+    fn parses_an_ellipsis_wire_as_a_visual_gap() {
+        let circuit = parse(
+            "circuit gap { qubit first; ellipsis omitted; qubit last; label \"...\" on omitted }",
+        )
+        .expect("valid ellipsis wire");
+
+        assert_eq!(circuit.wires.len(), 3);
+        assert!(circuit.wires[1].ellipsis);
+        assert_eq!(circuit.wires[1].kind, WireKind::Hidden);
+        assert_eq!(circuit.wires[1].input.as_deref(), Some("..."));
+        assert_eq!(circuit.wires[1].output.as_deref(), Some("..."));
+        assert!(
+            parse("circuit bad { ellipsis gap[2] }")
+                .expect_err("ellipsis arrays are ambiguous")
+                .message
+                .contains("one visual gap")
         );
     }
 
