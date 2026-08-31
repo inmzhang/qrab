@@ -16,7 +16,7 @@ Legend: **done** is implemented in both backends and exercised by a runnable tes
 | Automatic placement and barriers | scheduler and `barrier [wires]` | done |
 | Wire bundles/slashes | `bundle "count" on wire` | done |
 | Quantum/classical/off changes and START/END | `set`, `start`, `end` | partial — active-wire defaults and qpic's late START placement remain |
-| Ellipsis wires and IN/OUT value bullets | structured wire/value statements | next |
+| Ellipsis wires and IN/OUT value bullets | `set ... to hidden|quantum as "value"` | partial — value markers are done; ellipsis wires remain |
 | Portable dimensions, colors, fill, dash, and opacity | trailing `with` properties | done |
 | Box, circle, ellipse, and unboxed shapes | `with shape: ...` | done |
 | Custom target operators and hyperlinks | typed operator/link values | next |

@@ -795,11 +795,22 @@ impl Parser {
         let wires = self.parse_wire_list()?;
         self.expect_keyword("to")?;
         let kind = self.parse_wire_kind()?;
+        let label = if self.consume_keyword("as") {
+            Some(self.take_label("known wire value")?)
+        } else {
+            None
+        };
         let style = self.parse_style()?;
         self.expect_statement_end()?;
+        if label.is_some() && kind == WireKind::Classical {
+            return Err(Diagnostic::new(
+                "known-value markers only apply to `quantum` or `hidden` transitions",
+                span,
+            ));
+        }
         self.ensure_unique(&wires, span, "wire")?;
         self.operations.push(Operation {
-            kind: OperationKind::WireChange { wires, kind },
+            kind: OperationKind::WireChange { wires, kind, label },
             span,
             style,
         });
@@ -1604,6 +1615,35 @@ mod tests {
                 .expect_err("tag needs a label")
                 .message
                 .contains("needs a label")
+        );
+    }
+
+    #[test]
+    fn parses_known_value_wire_transitions() {
+        let circuit = parse(
+            r#"
+                circuit values {
+                  qubit q
+                  set q to hidden as "0"
+                  set q to quantum as "1"
+                }
+            "#,
+        )
+        .expect("valid known-value transitions");
+
+        assert!(matches!(
+            circuit.operations[0].kind,
+            OperationKind::WireChange {
+                kind: WireKind::Hidden,
+                label: Some(ref label),
+                ..
+            } if label == "0"
+        ));
+        assert!(
+            parse("circuit bad { bit c; set c to classical as \"0\" }")
+                .expect_err("classical transition cannot carry a value marker")
+                .message
+                .contains("quantum` or `hidden")
         );
     }
 

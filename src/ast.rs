@@ -127,6 +127,7 @@ pub enum OperationKind {
     WireChange {
         wires: Vec<usize>,
         kind: WireKind,
+        label: Option<String>,
     },
     Endpoint {
         wires: Vec<usize>,
@@ -261,9 +262,11 @@ impl OperationKind {
             Self::WireChange {
                 wires: targets,
                 kind,
+                label,
             } => Self::WireChange {
                 wires: wires(targets),
                 kind: *kind,
+                label: label.clone(),
             },
             Self::Endpoint {
                 wires: targets,

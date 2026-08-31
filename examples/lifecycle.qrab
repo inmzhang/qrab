@@ -3,6 +3,9 @@ circuit lifecycle {
 
   start q[2] as "|aux>"
   h q[0]
+  set q[1] to hidden as "0" with fill: "#F3F3F3"
+  space q[1] with width: 24
+  set q[1] to quantum as "1"
   bundle "3" on q[0]
   label "mix" on q[0], q[2] with fill: yellow
   set q[0] to classical

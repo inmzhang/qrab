@@ -285,7 +285,21 @@ fn render_latex(circuit: &Circuit) -> String {
                 )
                 .expect("writing to a String cannot fail");
             }
-            OperationKind::WireChange { .. } => {}
+            OperationKind::WireChange { wires, kind, label } => {
+                if let Some(label) = label {
+                    for wire in wires {
+                        draw_latex_value_transition(
+                            &mut output,
+                            x,
+                            -(operation.positions[*wire] as f32) * circuit.layout.wire_gap,
+                            label,
+                            *kind,
+                            operation.style,
+                            &circuit.layout.background,
+                        );
+                    }
+                }
+            }
             OperationKind::Endpoint {
                 wires,
                 start,
@@ -497,7 +511,7 @@ fn wire_kind_transition(
         OperationKind::Measure { targets, .. } if targets.contains(&wire) => {
             Some(WireKind::Classical)
         }
-        OperationKind::WireChange { wires, kind }
+        OperationKind::WireChange { wires, kind, .. }
             if includes_wire(wires, wire, circuit.wires.len()) =>
         {
             Some(*kind)
@@ -573,7 +587,7 @@ fn draw_latex_wire(
             OperationKind::Measure { targets, .. } if targets.contains(&wire_index) => {
                 Some((x + circuit.layout.column_gap.min(0.34), WireKind::Classical))
             }
-            OperationKind::WireChange { wires, kind }
+            OperationKind::WireChange { wires, kind, .. }
                 if includes_wire(wires, wire_index, circuit.wires.len()) =>
             {
                 Some((x, *kind))
@@ -954,6 +968,59 @@ fn draw_latex_named_measurement(
     .expect("writing to a String cannot fail");
 }
 
+fn draw_latex_value_transition(
+    output: &mut String,
+    x: f32,
+    y: f32,
+    label: &str,
+    kind: WireKind,
+    style: &Style,
+    background: &str,
+) {
+    let width = style.width.map_or(0.48, |width| width / 28.45);
+    let height = style.height.map_or(0.34, |height| height / 28.45);
+    let left = x - width / 2.0;
+    let right = x + width / 2.0;
+    let mut fill_options = vec![format!(
+        "fill={}",
+        latex_color(style.fill.as_deref().unwrap_or(background))
+    )];
+    if let Some(opacity) = style.opacity {
+        fill_options.push(format!("opacity={opacity:.3}"));
+    }
+    writeln!(
+        output,
+        "  \\fill{} ({left:.3},{:.3}) rectangle ({right:.3},{:.3});",
+        latex_options(fill_options),
+        y - height / 2.0,
+        y + height / 2.0
+    )
+    .expect("writing to a String cannot fail");
+    let edge = if kind == WireKind::Hidden {
+        left
+    } else {
+        right
+    };
+    writeln!(
+        output,
+        "  \\draw{} ({edge:.3},{:.3}) -- ({edge:.3},{:.3});",
+        latex_line_options(style),
+        y - height / 2.0,
+        y + height / 2.0
+    )
+    .expect("writing to a String cannot fail");
+    let mut label_style = style.clone();
+    label_style.fill = None;
+    label_style.shape = None;
+    writeln!(
+        output,
+        "  \\node{} at ({x:.3},{y:.3}) {{{}}};",
+        latex_label_options(&label_style),
+        latex_text(label)
+    )
+    .expect("writing to a String cannot fail");
+}
+
 fn draw_latex_cross(output: &mut String, x: f32, y: f32, style: &Style) {
     writeln!(
         output,
@@ -1316,7 +1383,21 @@ fn render_typst(circuit: &Circuit) -> String {
                 )
                 .expect("writing to a String cannot fail");
             }
-            OperationKind::WireChange { .. } => {}
+            OperationKind::WireChange { wires, kind, label } => {
+                if let Some(label) = label {
+                    for wire in wires {
+                        draw_typst_value_transition(
+                            &mut output,
+                            x,
+                            operation.positions[*wire],
+                            label,
+                            *kind,
+                            operation.style,
+                            &circuit.layout.background,
+                        );
+                    }
+                }
+            }
             OperationKind::Endpoint { wires, label, .. } => {
                 for wire in expanded_wires(wires, circuit.wires.len()) {
                     let row = operation.positions[wire];
@@ -1736,6 +1817,42 @@ fn typst_measure_tag_body(label: &str, style: &Style, background: &str) -> Strin
     format!(
         "box(width: {width:.3}pt, height: {height:.3}pt, inset: 0pt, [#place(polygon(fill: {fill}, stroke: {stroke}, (0pt, {:.3}pt), ({point:.3}pt, 0pt), ({width:.3}pt, 0pt), ({width:.3}pt, {height:.3}pt), ({point:.3}pt, {height:.3}pt))) #align(center + horizon, text(\"{}\"))])",
         height / 2.0,
+        typst_string(label)
+    )
+}
+
+fn draw_typst_value_transition(
+    output: &mut String,
+    x: usize,
+    row: usize,
+    label: &str,
+    kind: WireKind,
+    style: &Style,
+    background: &str,
+) {
+    let width = style.width.unwrap_or(18.0);
+    writeln!(
+        output,
+        "  quill.gate({}, x: {x}, y: {row}, box: false, width: {width:.3}pt),",
+        typst_value_transition_body(label, kind, style, background)
+    )
+    .expect("writing to a String cannot fail");
+}
+
+fn typst_value_transition_body(
+    label: &str,
+    kind: WireKind,
+    style: &Style,
+    background: &str,
+) -> String {
+    let width = style.width.unwrap_or(18.0);
+    let height = style.height.unwrap_or(12.0);
+    let edge = if kind == WireKind::Hidden { 0.0 } else { width };
+    let fill = typst_color(style.fill.as_deref().unwrap_or(background), style.opacity);
+    let stroke = typst_stroke(style).unwrap_or_else(|| "black".into());
+    let text_color = typst_color(style.stroke.as_deref().unwrap_or("black"), style.opacity);
+    format!(
+        "box(width: {width:.3}pt, height: {height:.3}pt, inset: 0pt, fill: {fill}, [#place(line(start: ({edge:.3}pt, 0pt), end: ({edge:.3}pt, {height:.3}pt), stroke: {stroke})) #align(center + horizon, text(fill: {text_color}, \"{}\"))])",
         typst_string(label)
     )
 }

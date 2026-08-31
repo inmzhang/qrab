@@ -73,7 +73,7 @@ An unlabeled `measure q` draws a meter. `measure q as "Z"` draws a D-shaped resu
 
 The compiler packs operations into the earliest non-overlapping column while preserving source order. A barrier occupies its selected wire interval; an empty barrier wire list means every wire.
 
-`set wires to quantum|classical|hidden` changes wire rendering. `start` and `end` defer or stop selected wires and may carry an `as "label"`. `bundle` draws a bundle slash, while `label` centers text across a wire span. `permute` lists selected wires in their new visual order; later operations and output labels follow that order. `space` reserves invisible room and `touch` aligns later operations with the preceding slice. Omitting the wire list for `start`, `end`, `label`, `space`, or `touch` selects every wire.
+`set wires to quantum|classical|hidden` changes wire rendering. A transition to `hidden` or `quantum` may add `as "value"` to draw a known-value exit or entry marker. `start` and `end` defer or stop selected wires and may carry an `as "label"`. `bundle` draws a bundle slash, while `label` centers text across a wire span. `permute` lists selected wires in their new visual order; later operations and output labels follow that order. `space` reserves invisible room and `touch` aligns later operations with the preceding slice. Omitting the wire list for `start`, `end`, `label`, `space`, or `touch` selects every wire.
 
 Circuit annotations are portable too:
 
