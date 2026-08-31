@@ -118,8 +118,23 @@ const QPIC_MANUAL_EXAMPLES: &[&str] = &[
     "teleport",
 ];
 
+const PAGE_SIZE_BASELINES: &[(&str, f32, f32)] = &[
+    ("teleportation", 460.62, 92.86),
+    ("teleportation-typst", 276.945, 106.24),
+    ("qpic-QFT4vert", 139.42, 440.98),
+    ("qpic-QFT4vert-typst", 176.025, 311.142),
+    ("qpic-manual-ex.comment", 172.91, 128.62),
+    ("qpic-manual-ex.comment-typst", 137.4, 111.4),
+    ("qpic-manual-ex.MIXGATES", 209.99, 117.32),
+    ("qpic-manual-ex.MIXGATES-typst", 167.78, 122.82),
+    ("qpic-Steane_NOOP", 1034.29, 394.83),
+    ("qpic-Steane_NOOP-typst", 593.74, 416.62),
+    ("imports", 232.33, 60.61),
+    ("imports-typst", 166.125, 65.66),
+];
+
 #[test]
-#[ignore = "requires tectonic, typst, and network access for their first package download"]
+#[ignore = "requires tectonic, typst, pdfinfo, and network access for their first package download"]
 fn generated_backends_compile_to_pdfs() {
     let output_dir = PathBuf::from("target/artifact-tests");
     fs::create_dir_all(&output_dir).expect("create artifact test directory");
@@ -187,6 +202,35 @@ fn generated_backends_compile_to_pdfs() {
             .unwrap_or_else(|error| panic!("missing qpic manual fixture `{name}`: {error}"));
         compile_fixture(&format!("qpic-manual-{name}"), &source, &output_dir);
     }
+    for (name, width, height) in PAGE_SIZE_BASELINES {
+        assert_page_size(&output_dir.join(format!("{name}.pdf")), *width, *height);
+    }
+}
+
+fn assert_page_size(path: &std::path::Path, expected_width: f32, expected_height: f32) {
+    let output = Command::new("pdfinfo")
+        .arg(path)
+        .output()
+        .unwrap_or_else(|error| panic!("could not run pdfinfo: {error}"));
+    assert!(
+        output.status.success(),
+        "pdfinfo failed for {}",
+        path.display()
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let fields = stdout
+        .lines()
+        .find(|line| line.starts_with("Page size:"))
+        .unwrap_or_else(|| panic!("pdfinfo omitted page size for {}", path.display()))
+        .split_whitespace()
+        .collect::<Vec<_>>();
+    let width = fields[2].parse::<f32>().expect("numeric PDF width");
+    let height = fields[4].parse::<f32>().expect("numeric PDF height");
+    assert!(
+        (width - expected_width).abs() <= 3.0 && (height - expected_height).abs() <= 3.0,
+        "{} changed from {expected_width:.3} x {expected_height:.3} pt to {width:.3} x {height:.3} pt",
+        path.display()
+    );
 }
 
 fn compile_fixture(name: &str, source: &str, output_dir: &std::path::Path) {
