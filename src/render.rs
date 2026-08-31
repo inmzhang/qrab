@@ -886,18 +886,10 @@ fn render_typst(circuit: &Circuit) -> String {
     )
     .expect("writing to a String cannot fail");
 
+    write_typst_wire_streams(&mut output, circuit, &scheduled, end_column);
+
     for (wire_index, wire) in circuit.wires.iter().enumerate() {
         let (initial_kind, transitions) = wire_transitions(circuit, &scheduled, wire_index);
-        let count = wire_count(initial_kind);
-        let stroke = typst_stroke(&wire.style);
-        if count != 1 || stroke.is_some() {
-            let stroke = stroke.map_or_else(String::new, |value| format!(", stroke: {value}"));
-            writeln!(
-                output,
-                "  quill.setwire({count}{stroke}, x: 0, y: {wire_index}),"
-            )
-            .expect("writing to a String cannot fail");
-        }
         if initial_kind != WireKind::Hidden {
             let input = wire.input.as_deref().unwrap_or(&wire.name);
             writeln!(
@@ -956,8 +948,6 @@ fn render_typst(circuit: &Circuit) -> String {
                         typst_measure_style(operation.style)
                     )
                     .expect("writing to a String cannot fail");
-                    writeln!(output, "  quill.setwire(2, x: {}, y: {row}),", x + 1)
-                        .expect("writing to a String cannot fail");
                 }
             }
             OperationKind::Swap { left, right } => {
@@ -987,36 +977,10 @@ fn render_typst(circuit: &Circuit) -> String {
                 )
                 .expect("writing to a String cannot fail");
             }
-            OperationKind::WireChange { wires, kind } => {
+            OperationKind::WireChange { .. } => {}
+            OperationKind::Endpoint { wires, label, .. } => {
                 for wire in expanded_wires(wires, circuit.wires.len()) {
                     let row = operation.positions[wire];
-                    writeln!(
-                        output,
-                        "  quill.setwire({}{}, x: {x}, y: {row}),",
-                        wire_count(*kind),
-                        typst_setwire_style(operation.style)
-                    )
-                    .expect("writing to a String cannot fail");
-                }
-            }
-            OperationKind::Endpoint {
-                wires,
-                start,
-                label,
-            } => {
-                for wire in expanded_wires(wires, circuit.wires.len()) {
-                    let row = operation.positions[wire];
-                    let count = if *start {
-                        wire_count(circuit.wires[wire].kind)
-                    } else {
-                        0
-                    };
-                    writeln!(
-                        output,
-                        "  quill.setwire({count}{}, x: {x}, y: {row}),",
-                        typst_setwire_style(operation.style)
-                    )
-                    .expect("writing to a String cannot fail");
                     if let Some(label) = label {
                         writeln!(
                             output,
@@ -1099,28 +1063,6 @@ fn render_typst(circuit: &Circuit) -> String {
                     )
                 )
                 .expect("writing to a String cannot fail");
-
-                for wire in span_wires {
-                    let row = if wires.contains(wire) {
-                        permuted_row(*wire, wires, &operation.positions)
-                    } else {
-                        operation.positions[*wire]
-                    };
-                    let count = wire_count(wire_kind_before(
-                        circuit,
-                        &scheduled,
-                        operation_index,
-                        *wire,
-                    ));
-                    let stroke =
-                        typst_stroke(&circuit.wires[*wire].style).unwrap_or_else(|| "black".into());
-                    writeln!(
-                        output,
-                        "  quill.setwire({count}, stroke: {stroke}, x: {}, y: {row}),",
-                        x + 1
-                    )
-                    .expect("writing to a String cannot fail");
-                }
             }
             OperationKind::Phantom { wires } => {
                 for wire in expanded_wires(wires, circuit.wires.len()) {
@@ -1162,6 +1104,90 @@ fn render_typst(circuit: &Circuit) -> String {
         output.push_str("]\n");
     }
     output
+}
+
+fn write_typst_wire_streams(
+    output: &mut String,
+    circuit: &Circuit,
+    scheduled: &[Scheduled<'_>],
+    end_column: usize,
+) {
+    let mut kinds = (0..circuit.wires.len())
+        .map(|wire| initial_wire_kind(circuit, scheduled, wire))
+        .collect::<Vec<_>>();
+    let strokes = circuit
+        .wires
+        .iter()
+        .map(|wire| typst_stroke(&wire.style).unwrap_or_else(|| "black".into()))
+        .collect::<Vec<_>>();
+    let mut events = kinds
+        .iter()
+        .enumerate()
+        .map(|(wire, kind)| vec![(0, wire_count(*kind), strokes[wire].clone())])
+        .collect::<Vec<_>>();
+
+    for operation in scheduled {
+        let column = operation.column + 1;
+        for wire in 0..circuit.wires.len() {
+            if let Some(kind) = wire_kind_transition(circuit, operation.kind, wire) {
+                kinds[wire] = kind;
+                events[operation.positions[wire]].push((
+                    column,
+                    wire_count(kind),
+                    strokes[wire].clone(),
+                ));
+            }
+        }
+        if let OperationKind::Permute { wires } = operation.kind {
+            let mut row_wires = vec![0; circuit.wires.len()];
+            for (wire, row) in operation.positions.iter().enumerate() {
+                row_wires[*row] = wire;
+            }
+            for wire in &row_wires[operation.first..=operation.last] {
+                let row = if wires.contains(wire) {
+                    permuted_row(*wire, wires, &operation.positions)
+                } else {
+                    operation.positions[*wire]
+                };
+                events[row].push((column, wire_count(kinds[*wire]), strokes[*wire].clone()));
+            }
+        }
+    }
+
+    let row_count = events.len();
+    for (row, row_events) in events.iter_mut().enumerate() {
+        row_events.sort_by_key(|event| event.0);
+        let (_, count, stroke) = &row_events[0];
+        writeln!(output, "  quill.setwire({count}, stroke: {stroke}),")
+            .expect("writing to a String cannot fail");
+        let mut cursor = 0;
+        let mut drew_segment = false;
+        for (column, count, stroke) in &row_events[1..] {
+            let length = if drew_segment {
+                column - cursor
+            } else {
+                column + 1
+            };
+            if length > 0 {
+                writeln!(output, "  {length},").expect("writing to a String cannot fail");
+                drew_segment = true;
+                cursor = *column;
+            }
+            writeln!(output, "  quill.setwire({count}, stroke: {stroke}),")
+                .expect("writing to a String cannot fail");
+        }
+        let remaining = if drew_segment {
+            end_column - cursor
+        } else {
+            end_column + 1
+        };
+        if remaining > 0 {
+            writeln!(output, "  {remaining},").expect("writing to a String cannot fail");
+        }
+        if row + 1 < row_count {
+            output.push_str("  [\\ ],\n");
+        }
+    }
 }
 
 fn draw_typst_gate(
@@ -1332,10 +1358,6 @@ fn typst_barrier_stroke(style: &Style) -> String {
         .as_deref()
         .map_or_else(|| "black".into(), |color| typst_color(color, style.opacity));
     format!("(paint: {paint}, thickness: 0.7pt, dash: \"dashed\")")
-}
-
-fn typst_setwire_style(style: &Style) -> String {
-    typst_stroke(style).map_or_else(String::new, |stroke| format!(", stroke: {stroke}"))
 }
 
 fn typst_label_style(style: &Style) -> String {
@@ -1514,5 +1536,24 @@ mod tests {
                 .collect::<Vec<_>>(),
             [0, 1, 0, 0, 1]
         );
+    }
+
+    #[test]
+    fn quill_wire_changes_stay_on_their_physical_row() {
+        let circuit = parse(
+            r#"
+                circuit measured_second_wire {
+                  qubit q[2]
+                  measure q[1]
+                }
+            "#,
+        )
+        .expect("valid measurement");
+        let typst = render_typst(&circuit);
+        let rows = typst.split("[\\ ],").collect::<Vec<_>>();
+
+        assert!(!rows[0].contains("quill.setwire(2"));
+        assert!(rows[1].contains("quill.setwire(2, stroke: black)"));
+        assert!(!typst.contains("setwire(2, x:"));
     }
 }
