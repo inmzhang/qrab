@@ -1,4 +1,4 @@
-use std::fmt::Write as _;
+use std::{collections::BTreeSet, fmt::Write as _};
 
 use crate::ast::{
     BraceSide, Circuit, Control, Group, OperationKind, Orientation, Shape, Style, Wire, WireKind,
@@ -147,6 +147,15 @@ fn render_latex(circuit: &Circuit) -> String {
     output.push_str("\\documentclass[tikz,border=6pt]{standalone}\n");
     output.push_str("\\usepackage{tikz}\n");
     output.push_str("\\usetikzlibrary{decorations.pathreplacing,shapes.geometric}\n");
+    for color in circuit_hex_colors(circuit) {
+        writeln!(
+            output,
+            "\\definecolor{{{}}}{{HTML}}{{{}}}",
+            latex_color(color),
+            &color[1..]
+        )
+        .expect("writing to a String cannot fail");
+    }
     output.push_str("\\begin{document}\n");
     let rotation = if circuit.layout.orientation == Orientation::Vertical {
         ",rotate=90"
@@ -165,7 +174,7 @@ fn render_latex(circuit: &Circuit) -> String {
         writeln!(
             output,
             "  \\fill[{}] ({:.3},{:.3}) rectangle ({:.3},1);",
-            circuit.layout.background,
+            latex_color(&circuit.layout.background),
             -circuit.layout.column_gap,
             -(circuit.wires.len() as f32) * circuit.layout.wire_gap,
             end_x + circuit.layout.column_gap
@@ -686,7 +695,7 @@ fn draw_latex_brace(
             if mirror { ",mirror" } else { "" }
         ));
         if let Some(stroke) = &style.stroke {
-            options.push(format!("color={stroke}"));
+            options.push(format!("color={}", latex_color(stroke)));
         }
         if let Some(opacity) = style.opacity {
             options.push(format!("opacity={opacity:.3}"));
@@ -919,7 +928,7 @@ fn draw_latex_cross(output: &mut String, x: f32, y: f32, style: &Style) {
 fn latex_line_options(style: &Style) -> String {
     let mut options = Vec::new();
     if let Some(stroke) = &style.stroke {
-        options.push(format!("color={stroke}"));
+        options.push(format!("color={}", latex_color(stroke)));
     }
     if style.dashed {
         options.push("dashed".into());
@@ -933,7 +942,7 @@ fn latex_line_options(style: &Style) -> String {
 fn latex_arrow_options(style: &Style) -> String {
     let mut options = vec!["->".into()];
     if let Some(stroke) = &style.stroke {
-        options.push(format!("color={stroke}"));
+        options.push(format!("color={}", latex_color(stroke)));
     }
     if style.dashed {
         options.push("dashed".into());
@@ -950,7 +959,10 @@ fn latex_circle_options(style: &Style, filled: bool) -> String {
         .fill
         .as_deref()
         .unwrap_or(if filled { stroke } else { "white" });
-    let mut options = vec![format!("draw={stroke}"), format!("fill={fill}")];
+    let mut options = vec![
+        format!("draw={}", latex_color(stroke)),
+        format!("fill={}", latex_color(fill)),
+    ];
     if style.dashed {
         options.push("dashed".into());
     }
@@ -964,8 +976,14 @@ fn latex_node_options(style: &Style, default_width: &str, default_height: &str) 
     let mut options = match style.shape {
         Some(Shape::None) => vec!["draw=none".into(), "fill=none".into()],
         _ => vec![
-            format!("draw={}", style.stroke.as_deref().unwrap_or("black")),
-            format!("fill={}", style.fill.as_deref().unwrap_or("white")),
+            format!(
+                "draw={}",
+                latex_color(style.stroke.as_deref().unwrap_or("black"))
+            ),
+            format!(
+                "fill={}",
+                latex_color(style.fill.as_deref().unwrap_or("white"))
+            ),
         ],
     };
     match style.shape {
@@ -997,28 +1015,28 @@ fn latex_node_options(style: &Style, default_width: &str, default_height: &str) 
 fn latex_label_options(style: &Style) -> String {
     let mut options = vec!["inner sep=2pt".into()];
     if let Some(stroke) = &style.stroke {
-        options.push(format!("text={stroke}"));
+        options.push(format!("text={}", latex_color(stroke)));
     }
     if let Some(fill) = &style.fill {
-        options.push(format!("fill={fill}"));
+        options.push(format!("fill={}", latex_color(fill)));
     }
     match style.shape {
         Some(Shape::Box) => options.push(format!(
             "draw={}",
-            style.stroke.as_deref().unwrap_or("black")
+            latex_color(style.stroke.as_deref().unwrap_or("black"))
         )),
         Some(Shape::Circle) => {
             options.push("circle".into());
             options.push(format!(
                 "draw={}",
-                style.stroke.as_deref().unwrap_or("black")
+                latex_color(style.stroke.as_deref().unwrap_or("black"))
             ));
         }
         Some(Shape::Ellipse) => {
             options.push("ellipse".into());
             options.push(format!(
                 "draw={}",
-                style.stroke.as_deref().unwrap_or("black")
+                latex_color(style.stroke.as_deref().unwrap_or("black"))
             ));
         }
         Some(Shape::None) | None => {}
@@ -1033,13 +1051,16 @@ fn latex_group_options(style: &Style) -> String {
     let mut options = vec![
         format!(
             "draw={}",
-            if style.shape == Some(Shape::None) {
+            latex_color(if style.shape == Some(Shape::None) {
                 "none"
             } else {
                 style.stroke.as_deref().unwrap_or("black")
-            }
+            })
         ),
-        format!("fill={}", style.fill.as_deref().unwrap_or("none")),
+        format!(
+            "fill={}",
+            latex_color(style.fill.as_deref().unwrap_or("none"))
+        ),
     ];
     if style.dashed {
         options.push("dashed".into());
@@ -1059,6 +1080,35 @@ fn latex_options(options: Vec<String>) -> String {
     } else {
         format!("[{}]", options.join(","))
     }
+}
+
+fn circuit_hex_colors(circuit: &Circuit) -> BTreeSet<&str> {
+    let mut colors = BTreeSet::new();
+    if circuit.layout.background.starts_with('#') {
+        colors.insert(circuit.layout.background.as_str());
+    }
+    for style in circuit
+        .wires
+        .iter()
+        .map(|wire| &wire.style)
+        .chain(circuit.operations.iter().map(|operation| &operation.style))
+        .chain(circuit.groups.iter().map(|group| &group.style))
+    {
+        for color in [style.stroke.as_deref(), style.fill.as_deref()]
+            .into_iter()
+            .flatten()
+            .filter(|color| color.starts_with('#'))
+        {
+            colors.insert(color);
+        }
+    }
+    colors
+}
+
+fn latex_color(color: &str) -> String {
+    color
+        .strip_prefix('#')
+        .map_or_else(|| color.into(), |hex| format!("qrab{hex}"))
 }
 
 fn occupied_bounds(targets: &[usize], controls: &[Control]) -> (usize, usize) {

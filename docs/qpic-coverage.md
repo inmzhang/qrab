@@ -34,7 +34,7 @@ Legend: **done** is implemented in both backends and exercised by a runnable tes
 | Horizontal/vertical orientation | `layout.orientation` | done |
 | Global gate size, corners, and comment size | remaining `layout` properties | next |
 | Measurement shapes | measurement options | next |
-| Custom colors | portable color values | next |
+| Custom colors | named colors or quoted `#RRGGBB` values | done |
 | DEFINE composition | parsed `fn` declarations, never text macros | partial — nested wire-operation functions are done; value/style declarations remain |
 | PREAMBLE/PRETIKZ/POSTTIKZ/HEADER/HYPERTARGET | explicit backend escape blocks | next |
 | AUTOWIRES | intentionally replaced by checked declarations | next |

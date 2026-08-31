@@ -1269,6 +1269,14 @@ impl Parser {
     fn take_color(&mut self, expected: &str) -> Result<String, Diagnostic> {
         let span = self.current().span;
         let color = self.take_label(expected)?;
+        if color.len() == 7
+            && color.starts_with('#')
+            && color[1..]
+                .chars()
+                .all(|character| character.is_ascii_hexdigit())
+        {
+            return Ok(color.to_ascii_uppercase());
+        }
         if [
             "black", "white", "gray", "red", "green", "blue", "teal", "purple", "orange", "yellow",
             "olive", "lime",
@@ -1278,7 +1286,9 @@ impl Parser {
             Ok(color)
         } else {
             Err(Diagnostic::new(
-                format!("{expected} `{color}` is not a portable named color"),
+                format!(
+                    "{expected} `{color}` is not a portable named color or six-digit hex color"
+                ),
                 span,
             ))
         }
@@ -1457,25 +1467,30 @@ mod tests {
     #[test]
     fn parses_structured_layout_and_portable_styles() {
         let circuit = parse(
-            r#"
+            r##"
                 circuit styled {
                   layout {
                     orientation: vertical
                     scale: 1.25
-                    background: white
+                    background: "#f7f8fc"
                   }
-                  qubit q[2] with stroke: blue
+                  qubit q[2] with stroke: "#336699"
                   h q[0] with fill: yellow, shape: circle, size: 20
                 }
-            "#,
+            "##,
         )
         .expect("valid styled circuit");
 
         assert_eq!(circuit.layout.orientation, Orientation::Vertical);
         assert_eq!(circuit.layout.scale, 1.25);
-        assert_eq!(circuit.wires[0].style.stroke.as_deref(), Some("blue"));
+        assert_eq!(circuit.layout.background, "#F7F8FC");
+        assert_eq!(circuit.wires[0].style.stroke.as_deref(), Some("#336699"));
         assert_eq!(circuit.operations[0].style.shape, Some(Shape::Circle));
         assert_eq!(circuit.operations[0].style.width, Some(20.0));
+
+        let error = parse("circuit bad { qubit q with stroke: \"#12ZZ99\" }")
+            .expect_err("invalid hex color should fail");
+        assert!(error.message.contains("six-digit hex color"));
     }
 
     #[test]
