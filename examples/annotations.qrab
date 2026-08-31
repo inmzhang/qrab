@@ -1,0 +1,12 @@
+circuit annotations {
+  qubit q[3]: "|0>" -> "out"
+
+  labels "data", "work", "flag" on q[0..3] with fill: yellow
+  brace left "input" on q[0..3] with stroke: blue
+  h q[0]
+  note "decode" on q[1]
+  brace right "result" on q[0..3] with stroke: purple
+  cut on q[0..3] as "stage" with stroke: red
+  x q[2] if q[0]
+  brace both "repeat" on q[0..3] with stroke: blue
+}

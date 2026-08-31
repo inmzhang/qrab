@@ -1,6 +1,8 @@
 use std::fmt::Write as _;
 
-use crate::ast::{Circuit, Control, OperationKind, Orientation, Shape, Style, Wire, WireKind};
+use crate::ast::{
+    BraceSide, Circuit, Control, OperationKind, Orientation, Shape, Style, Wire, WireKind,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Target {
@@ -101,7 +103,7 @@ fn render_latex(circuit: &Circuit) -> String {
     let mut output = String::new();
     output.push_str("\\documentclass[tikz,border=6pt]{standalone}\n");
     output.push_str("\\usepackage{tikz}\n");
-    output.push_str("\\usetikzlibrary{shapes.geometric}\n");
+    output.push_str("\\usetikzlibrary{decorations.pathreplacing,shapes.geometric}\n");
     output.push_str("\\begin{document}\n");
     let rotation = if circuit.layout.orientation == Orientation::Vertical {
         ",rotate=90"
@@ -279,6 +281,81 @@ fn render_latex(circuit: &Circuit) -> String {
                         output,
                         "  \\draw{} ({x:.3},{top:.3}) -- ({x:.3},{bottom:.3});",
                         latex_line_options(operation.style)
+                    )
+                    .expect("writing to a String cannot fail");
+                }
+            }
+            OperationKind::WireLabels { wires, labels } => {
+                let wires = selected_wires(wires, circuit.wires.len());
+                for (index, wire) in wires.iter().enumerate() {
+                    let label = if labels.len() == 1 {
+                        &labels[0]
+                    } else {
+                        &labels[index]
+                    };
+                    let y = -(operation.positions[*wire] as f32) * circuit.layout.wire_gap;
+                    writeln!(
+                        output,
+                        "  \\node{} at ({x:.3},{y:.3}) {{{}}};",
+                        latex_label_options(operation.style),
+                        latex_text(label)
+                    )
+                    .expect("writing to a String cannot fail");
+                }
+            }
+            OperationKind::Brace { wires, label, side } => {
+                let mut rows = selected_wires(wires, circuit.wires.len())
+                    .iter()
+                    .map(|wire| operation.positions[*wire])
+                    .collect::<Vec<_>>();
+                rows.sort_unstable();
+                draw_latex_brace(
+                    &mut output,
+                    x,
+                    circuit.layout.wire_gap,
+                    *rows.first().expect("circuit has a wire"),
+                    *rows.last().expect("circuit has a wire"),
+                    label,
+                    *side,
+                    operation.style,
+                    &circuit.layout.background,
+                );
+            }
+            OperationKind::Note { wires, text } => {
+                let mut rows = selected_wires(wires, circuit.wires.len())
+                    .iter()
+                    .map(|wire| operation.positions[*wire])
+                    .collect::<Vec<_>>();
+                rows.sort_unstable();
+                let midpoint = (*rows.first().expect("circuit has a wire")
+                    + *rows.last().expect("circuit has a wire"))
+                    as f32
+                    * circuit.layout.wire_gap
+                    / -2.0;
+                writeln!(
+                    output,
+                    "  \\node[anchor=south] at ({x:.3},{:.3}) {{{}}};",
+                    midpoint + 0.24,
+                    latex_text(text)
+                )
+                .expect("writing to a String cannot fail");
+            }
+            OperationKind::Cut { label, .. } => {
+                let top = -(operation.first as f32) * circuit.layout.wire_gap + 0.42;
+                let bottom = -(operation.last as f32) * circuit.layout.wire_gap - 0.42;
+                let mut cut_style = operation.style.clone();
+                cut_style.dashed = true;
+                writeln!(
+                    output,
+                    "  \\draw{} ({x:.3},{top:.3}) -- ({x:.3},{bottom:.3});",
+                    latex_line_options(&cut_style)
+                )
+                .expect("writing to a String cannot fail");
+                if let Some(label) = label {
+                    writeln!(
+                        output,
+                        "  \\node[anchor=south] at ({x:.3},{top:.3}) {{{}}};",
+                        latex_text(label)
                     )
                     .expect("writing to a String cannot fail");
                 }
@@ -516,16 +593,74 @@ fn merged_line_style(base: &Style, overlay: &Style) -> Style {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
+fn draw_latex_brace(
+    output: &mut String,
+    x: f32,
+    wire_gap: f32,
+    first: usize,
+    last: usize,
+    label: &str,
+    side: BraceSide,
+    style: &Style,
+    background: &str,
+) {
+    let top = -(first as f32) * wire_gap + 0.34;
+    let bottom = -(last as f32) * wire_gap - 0.34;
+    for (offset, mirror) in match side {
+        BraceSide::Left => [Some((-0.22, false)), None],
+        BraceSide::Right => [Some((0.22, true)), None],
+        BraceSide::Both => [Some((-0.22, false)), Some((0.22, true))],
+    }
+    .into_iter()
+    .flatten()
+    {
+        let mut options = vec!["decorate".into()];
+        options.push(format!(
+            "decoration={{brace,amplitude=4pt{}}}",
+            if mirror { ",mirror" } else { "" }
+        ));
+        if let Some(stroke) = &style.stroke {
+            options.push(format!("color={stroke}"));
+        }
+        if let Some(opacity) = style.opacity {
+            options.push(format!("opacity={opacity:.3}"));
+        }
+        writeln!(
+            output,
+            "  \\draw{} ({:.3},{bottom:.3}) -- ({:.3},{top:.3});",
+            latex_options(options),
+            x + offset,
+            x + offset
+        )
+        .expect("writing to a String cannot fail");
+    }
+    let mut label_style = style.clone();
+    label_style.fill.get_or_insert_with(|| background.into());
+    writeln!(
+        output,
+        "  \\node{} at ({x:.3},{:.3}) {{{}}};",
+        latex_label_options(&label_style),
+        (top + bottom) / 2.0,
+        latex_text(label)
+    )
+    .expect("writing to a String cannot fail");
+}
+
 fn includes_wire(wires: &[usize], wire: usize, wire_count: usize) -> bool {
     (wires.is_empty() && wire < wire_count) || wires.contains(&wire)
 }
 
-fn expanded_wires(wires: &[usize], wire_count: usize) -> Vec<usize> {
-    let mut expanded = if wires.is_empty() {
+fn selected_wires(wires: &[usize], wire_count: usize) -> Vec<usize> {
+    if wires.is_empty() {
         (0..wire_count).collect()
     } else {
         wires.to_vec()
-    };
+    }
+}
+
+fn expanded_wires(wires: &[usize], wire_count: usize) -> Vec<usize> {
+    let mut expanded = selected_wires(wires, wire_count);
     expanded.sort_unstable();
     expanded
 }
@@ -1088,6 +1223,74 @@ fn render_typst(circuit: &Circuit) -> String {
                     .expect("writing to a String cannot fail");
                 }
             }
+            OperationKind::WireLabels { wires, labels } => {
+                let wires = selected_wires(wires, circuit.wires.len());
+                for (index, wire) in wires.iter().enumerate() {
+                    let label = if labels.len() == 1 {
+                        &labels[0]
+                    } else {
+                        &labels[index]
+                    };
+                    writeln!(
+                        output,
+                        "  quill.midstick(text(\"{}\"), x: {x}, y: {}{}),",
+                        typst_string(label),
+                        operation.positions[*wire],
+                        typst_label_style(operation.style)
+                    )
+                    .expect("writing to a String cannot fail");
+                }
+            }
+            OperationKind::Brace { wires, label, side } => {
+                let mut rows = selected_wires(wires, circuit.wires.len())
+                    .iter()
+                    .map(|wire| operation.positions[*wire])
+                    .collect::<Vec<_>>();
+                rows.sort_unstable();
+                let first = *rows.first().expect("circuit has a wire");
+                let last = *rows.last().expect("circuit has a wire");
+                let n = last - first + 1;
+                writeln!(
+                    output,
+                    "  quill.mqgate({}, n: {n}, x: {x}, y: {first}, fill: {}, stroke: none),",
+                    typst_brace_body(label, *side, n, operation.style),
+                    typst_color(
+                        operation
+                            .style
+                            .fill
+                            .as_deref()
+                            .unwrap_or(&circuit.layout.background),
+                        operation.style.opacity
+                    )
+                )
+                .expect("writing to a String cannot fail");
+            }
+            OperationKind::Note { wires, text } => {
+                let first = selected_wires(wires, circuit.wires.len())
+                    .iter()
+                    .map(|wire| operation.positions[*wire])
+                    .min()
+                    .expect("circuit has a wire");
+                writeln!(
+                    output,
+                    "  quill.gate(none, box: false, x: {x}, y: {first}, label: (content: text(\"{}\"), pos: top)),",
+                    typst_string(text)
+                )
+                .expect("writing to a String cannot fail");
+            }
+            OperationKind::Cut { label, .. } => {
+                let label = label.as_ref().map_or_else(String::new, |label| {
+                    format!(", label: text(\"{}\")", typst_string(label))
+                });
+                writeln!(
+                    output,
+                    "  quill.slice(n: {}, x: {x}, y: {}, stroke: {}{label}),",
+                    operation.last - operation.first + 1,
+                    operation.first,
+                    typst_barrier_stroke(operation.style)
+                )
+                .expect("writing to a String cannot fail");
+            }
         }
     }
 
@@ -1364,6 +1567,20 @@ fn typst_label_style(style: &Style) -> String {
     style.fill.as_ref().map_or_else(String::new, |fill| {
         format!(", fill: {}", typst_color(fill, style.opacity))
     })
+}
+
+fn typst_brace_body(label: &str, side: BraceSide, wires: usize, style: &Style) -> String {
+    let size = (wires as f32 * 12.0).max(18.0);
+    let color = typst_color(style.stroke.as_deref().unwrap_or("black"), style.opacity);
+    let left = format!("#text(size: {size:.3}pt, fill: {color}, \"{{\")");
+    let right = format!("#text(size: {size:.3}pt, fill: {color}, \"}}\")");
+    let label = format!("#text(\"{}\")", typst_string(label));
+    let body = match side {
+        BraceSide::Left => format!("{left} #h(3pt) {label}"),
+        BraceSide::Right => format!("{label} #h(3pt) {right}"),
+        BraceSide::Both => format!("{left} #h(3pt) {label} #h(3pt) {right}"),
+    };
+    format!("box([{body}])")
 }
 
 fn typst_permute_style(style: &Style, wire_counts: &[usize], wire_strokes: &[String]) -> String {

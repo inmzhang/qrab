@@ -81,6 +81,13 @@ pub enum Shape {
     None,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BraceSide {
+    Left,
+    Right,
+    Both,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum OperationKind {
     Gate {
@@ -125,6 +132,23 @@ pub enum OperationKind {
     Touch {
         wires: Vec<usize>,
     },
+    WireLabels {
+        wires: Vec<usize>,
+        labels: Vec<String>,
+    },
+    Brace {
+        wires: Vec<usize>,
+        label: String,
+        side: BraceSide,
+    },
+    Note {
+        wires: Vec<usize>,
+        text: String,
+    },
+    Cut {
+        wires: Vec<usize>,
+        label: Option<String>,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -153,6 +177,10 @@ impl OperationKind {
             | Self::Permute { wires }
             | Self::Phantom { wires }
             | Self::Touch { wires }
+            | Self::WireLabels { wires, .. }
+            | Self::Brace { wires, .. }
+            | Self::Note { wires, .. }
+            | Self::Cut { wires, .. }
                 if wires.is_empty() =>
             {
                 (0..wire_count).collect()
@@ -162,7 +190,11 @@ impl OperationKind {
             | Self::Label { wires, .. }
             | Self::Permute { wires }
             | Self::Phantom { wires }
-            | Self::Touch { wires } => wires.clone(),
+            | Self::Touch { wires }
+            | Self::WireLabels { wires, .. }
+            | Self::Brace { wires, .. }
+            | Self::Note { wires, .. }
+            | Self::Cut { wires, .. } => wires.clone(),
             Self::Bundle { wire, .. } => vec![*wire],
         }
     }
@@ -238,6 +270,36 @@ impl OperationKind {
             },
             Self::Touch { wires: targets } => Self::Touch {
                 wires: selected(targets),
+            },
+            Self::WireLabels {
+                wires: targets,
+                labels,
+            } => Self::WireLabels {
+                wires: selected(targets),
+                labels: labels.clone(),
+            },
+            Self::Brace {
+                wires: targets,
+                label,
+                side,
+            } => Self::Brace {
+                wires: selected(targets),
+                label: label.clone(),
+                side: *side,
+            },
+            Self::Note {
+                wires: targets,
+                text,
+            } => Self::Note {
+                wires: selected(targets),
+                text: text.clone(),
+            },
+            Self::Cut {
+                wires: targets,
+                label,
+            } => Self::Cut {
+                wires: selected(targets),
+                label: label.clone(),
             },
         }
     }

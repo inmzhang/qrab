@@ -3,8 +3,8 @@ mod parser;
 mod render;
 
 pub use ast::{
-    Circuit, Control, Layout, Operation, OperationKind, Orientation, Shape, Span, Style, Wire,
-    WireKind,
+    BraceSide, Circuit, Control, Layout, Operation, OperationKind, Orientation, Shape, Span, Style,
+    Wire, WireKind,
 };
 pub use parser::{Diagnostic, parse};
 pub use render::{Target, render};

@@ -73,6 +73,18 @@ The compiler packs operations into the earliest non-overlapping column while pre
 
 `set wires to quantum|classical|hidden` changes wire rendering. `start` and `end` defer or stop selected wires and may carry an `as "label"`. `bundle` draws a bundle slash, while `label` centers text across a wire span. `permute` lists selected wires in their new visual order; later operations and output labels follow that order. `space` reserves invisible room and `touch` aligns later operations with the preceding slice. Omitting the wire list for `start`, `end`, `label`, `space`, or `touch` selects every wire.
 
+Circuit annotations are portable too:
+
+```qrab
+labels "data", "work", "flag" on q[0..3] with fill: yellow
+brace left "input" on q[0..3] with stroke: blue
+note "decode" on q[1]
+cut on q[0..3] as "stage" with stroke: red
+brace both "repeat" on q[0..3]
+```
+
+`labels` accepts either one repeated label or one label per selected wire. Braces may be `left`, `right`, or `both`. A source-local `cut` occupies its own separator column; qpic-style global numbered cut rules are not yet part of the language.
+
 `layout` configures orientation, scale, abstract column/wire gaps, and background. A trailing `with` clause accepts portable `stroke`, `fill`, `width`, `height`, `size`, `shape`, `dash`, and `opacity` properties. Shapes are `box`, `circle`, `ellipse`, or `none`; numeric dimensions are points and opacity ranges from 0 to 1. Colors are checked named colors understood by both backends.
 
 ## Planned syntax

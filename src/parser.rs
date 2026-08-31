@@ -3,8 +3,8 @@ use std::error::Error;
 use std::fmt;
 
 use crate::ast::{
-    Circuit, Control, Layout, Operation, OperationKind, Orientation, Shape, Span, Style, Wire,
-    WireKind,
+    BraceSide, Circuit, Control, Layout, Operation, OperationKind, Orientation, Shape, Span, Style,
+    Wire, WireKind,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -270,6 +270,10 @@ fn is_reserved_statement(name: &str) -> bool {
             | "touch"
             | "repeat"
             | "parallel"
+            | "labels"
+            | "brace"
+            | "note"
+            | "cut"
             | "if"
             | "on"
             | "as"
@@ -456,6 +460,10 @@ impl Parser {
             "touch" => self.parse_touch(span),
             "repeat" => self.parse_repeat(span),
             "parallel" => self.parse_parallel(span),
+            "labels" => self.parse_wire_labels(span),
+            "brace" => self.parse_brace(span),
+            "note" => self.parse_note(span),
+            "cut" => self.parse_cut(span),
             name if self.functions.contains_key(name) => self.parse_function_call(name, span),
             _ => Err(Diagnostic::new(
                 format!("unknown statement `{keyword}`"),
@@ -789,6 +797,111 @@ impl Parser {
         self.ensure_unique(&wires, span, "label wire")?;
         self.operations.push(Operation {
             kind: OperationKind::Label { wires, label },
+            span,
+            style,
+        });
+        Ok(())
+    }
+
+    fn parse_wire_labels(&mut self, span: Span) -> Result<(), Diagnostic> {
+        let mut labels = vec![self.take_label("wire label")?];
+        while self.consume(&TokenKind::Comma) {
+            labels.push(self.take_label("wire label")?);
+        }
+        let wires = if self.consume_keyword("on") {
+            self.parse_wire_list()?
+        } else {
+            Vec::new()
+        };
+        let style = self.parse_style()?;
+        self.expect_statement_end()?;
+        self.ensure_unique(&wires, span, "label wire")?;
+        let wire_count = if wires.is_empty() {
+            self.wires.len()
+        } else {
+            wires.len()
+        };
+        if labels.len() != 1 && labels.len() != wire_count {
+            return Err(Diagnostic::new(
+                format!(
+                    "labels needs one label or one per selected wire ({wire_count}), but got {}",
+                    labels.len()
+                ),
+                span,
+            ));
+        }
+        self.operations.push(Operation {
+            kind: OperationKind::WireLabels { wires, labels },
+            span,
+            style,
+        });
+        Ok(())
+    }
+
+    fn parse_brace(&mut self, span: Span) -> Result<(), Diagnostic> {
+        let side_span = self.current().span;
+        let side = match self.take_identifier("`left`, `right`, or `both`")?.as_str() {
+            "left" => BraceSide::Left,
+            "right" => BraceSide::Right,
+            "both" => BraceSide::Both,
+            _ => {
+                return Err(Diagnostic::new(
+                    "brace side must be `left`, `right`, or `both`",
+                    side_span,
+                ));
+            }
+        };
+        let label = self.take_label("brace label")?;
+        let wires = if self.consume_keyword("on") {
+            self.parse_wire_list()?
+        } else {
+            Vec::new()
+        };
+        let style = self.parse_style()?;
+        self.expect_statement_end()?;
+        self.ensure_unique(&wires, span, "brace wire")?;
+        self.operations.push(Operation {
+            kind: OperationKind::Brace { wires, label, side },
+            span,
+            style,
+        });
+        Ok(())
+    }
+
+    fn parse_note(&mut self, span: Span) -> Result<(), Diagnostic> {
+        let text = self.take_label("note text")?;
+        let wires = if self.consume_keyword("on") {
+            self.parse_wire_list()?
+        } else {
+            Vec::new()
+        };
+        let style = self.parse_style()?;
+        self.expect_statement_end()?;
+        self.ensure_unique(&wires, span, "note wire")?;
+        self.operations.push(Operation {
+            kind: OperationKind::Note { wires, text },
+            span,
+            style,
+        });
+        Ok(())
+    }
+
+    fn parse_cut(&mut self, span: Span) -> Result<(), Diagnostic> {
+        let wires = if self.consume_keyword("on") {
+            self.parse_wire_list()?
+        } else {
+            Vec::new()
+        };
+        let label = if self.consume_keyword("as") {
+            Some(self.take_label("cut label")?)
+        } else {
+            None
+        };
+        let style = self.parse_style()?;
+        self.expect_statement_end()?;
+        self.ensure_unique(&wires, span, "cut wire")?;
+        self.operations.push(Operation {
+            kind: OperationKind::Cut { wires, label },
             span,
             style,
         });
@@ -1437,5 +1550,39 @@ mod tests {
             .expect_err("range target should fail");
 
         assert!(error.message.contains("where one wire is required"));
+    }
+
+    #[test]
+    fn parses_labels_braces_notes_and_cuts() {
+        let circuit = parse(
+            r#"
+                circuit annotations {
+                  qubit q[3]
+                  labels "a", "b", "c" on q[0..3]
+                  brace both "register" on q[0..3]
+                  note "decode" on q[1]
+                  cut on q[0..2] as "stage" with stroke: blue
+                }
+            "#,
+        )
+        .expect("valid annotations");
+
+        assert!(matches!(
+            circuit.operations[0].kind,
+            OperationKind::WireLabels { ref wires, ref labels }
+                if wires == &[0, 1, 2] && labels == &["a", "b", "c"]
+        ));
+        assert!(matches!(
+            circuit.operations[1].kind,
+            OperationKind::Brace {
+                side: BraceSide::Both,
+                ..
+            }
+        ));
+        assert!(matches!(
+            circuit.operations[3].kind,
+            OperationKind::Cut { ref wires, ref label }
+                if wires == &[0, 1] && label.as_deref() == Some("stage")
+        ));
     }
 }
