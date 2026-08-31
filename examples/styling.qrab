@@ -1,0 +1,17 @@
+circuit styled_controls {
+  layout {
+    orientation: vertical
+    scale: 1.1
+    column_gap: 1.7
+    wire_gap: 1.2
+    background: white
+  }
+
+  qubit q[3]: "|0>" with stroke: blue
+
+  h q[0] with fill: yellow, stroke: blue, size: 24, shape: circle
+  gate "U" on q[0], q[2] if !q[1] with fill: green, stroke: blue, width: 30, dash: dashed, opacity: 0.65
+  phase "theta/2" on q[2] with fill: yellow, stroke: red, size: 22
+  swap q[0], q[2] with stroke: red, width: 9
+  measure q[0] as "Z" with fill: yellow, stroke: blue
+}

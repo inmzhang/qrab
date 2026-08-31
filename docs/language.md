@@ -8,8 +8,16 @@ Newlines terminate statements; `;` is accepted when several short statements bel
 
 ```qrab
 circuit teleportation {
+  layout {
+    orientation: horizontal
+    scale: 1.2
+    column_gap: 1.5
+    wire_gap: 1
+    background: white
+  }
+
   qubit message: "|psi>" -> "|psi>"
-  qubit work[2]: "|0>"
+  qubit work[2]: "|0>" with stroke: blue
   bit result: "0"
   hidden spacer
 
@@ -17,7 +25,7 @@ circuit teleportation {
   x work[1] if work[0]
   x work[0] if message
   z work[1] if !message
-  gate "oracle" on work[0], work[1] if message
+  gate "oracle" on work[0], work[1] if message with fill: yellow, stroke: blue, width: 24
   phase "theta/2" on work[0]
   swap work[0], work[1]
   measure message, work[0] as "Z"
@@ -31,17 +39,13 @@ Built-in gates are `h`, `x`, `y`, `z`, `s`, and `t`. A gate's controls follow `i
 
 The compiler packs operations into the earliest non-overlapping column while preserving source order. A barrier occupies its selected wire interval; an empty barrier wire list means every wire.
 
+`layout` configures orientation, scale, abstract column/wire gaps, and background. A trailing `with` clause accepts portable `stroke`, `fill`, `width`, `height`, `size`, `shape`, `dash`, and `opacity` properties. Shapes are `box`, `circle`, `ellipse`, or `none`; numeric dimensions are points and opacity ranges from 0 to 1. Colors are checked named colors understood by both backends.
+
 ## Planned syntax
 
 The remaining qpic surface will extend the same grammar rather than add uppercase directives:
 
 ```qrab
-layout {
-  orientation: vertical
-  gate-size: 12pt
-  wire-gap: 3pt
-}
-
 fn majority(a, b, c) {
   x b if a
   x c if a, b

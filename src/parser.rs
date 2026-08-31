@@ -2,7 +2,10 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
 
-use crate::ast::{Circuit, Control, Operation, OperationKind, Span, Wire, WireKind};
+use crate::ast::{
+    Circuit, Control, Layout, Operation, OperationKind, Orientation, Shape, Span, Style, Wire,
+    WireKind,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Diagnostic {
@@ -35,7 +38,7 @@ impl Error for Diagnostic {}
 enum TokenKind {
     Identifier(String),
     String(String),
-    Number(usize),
+    Number(String),
     LeftBrace,
     RightBrace,
     LeftBracket,
@@ -177,11 +180,23 @@ fn lex(source: &str) -> Result<Vec<Token>, Diagnostic> {
                     value.push(chars.next().expect("peeked character exists"));
                     column += 1;
                 }
-                let number = value
-                    .parse()
-                    .map_err(|_| Diagnostic::new(format!("number `{value}` is too large"), span))?;
+                if chars.peek() == Some(&'.') {
+                    chars.next();
+                    value.push('.');
+                    column += 1;
+                    if !chars.peek().is_some_and(char::is_ascii_digit) {
+                        return Err(Diagnostic::new(
+                            "a decimal point must be followed by a digit",
+                            span,
+                        ));
+                    }
+                    while chars.peek().is_some_and(char::is_ascii_digit) {
+                        value.push(chars.next().expect("peeked character exists"));
+                        column += 1;
+                    }
+                }
                 tokens.push(Token {
-                    kind: TokenKind::Number(number),
+                    kind: TokenKind::Number(value),
                     span,
                 });
             }
@@ -211,6 +226,7 @@ struct Parser {
     wires: Vec<Wire>,
     wire_indices: HashMap<String, usize>,
     operations: Vec<Operation>,
+    layout: Layout,
 }
 
 impl Parser {
@@ -221,6 +237,7 @@ impl Parser {
             wires: Vec::new(),
             wire_indices: HashMap::new(),
             operations: Vec::new(),
+            layout: Layout::default(),
         }
     }
 
@@ -251,6 +268,7 @@ impl Parser {
 
         Ok(Circuit {
             name,
+            layout: self.layout,
             wires: self.wires,
             operations: self.operations,
         })
@@ -260,6 +278,7 @@ impl Parser {
         let span = self.current().span;
         let keyword = self.take_identifier("statement")?;
         match keyword.as_str() {
+            "layout" => self.parse_layout(),
             "qubit" => self.parse_wire_declaration(WireKind::Quantum),
             "bit" => self.parse_wire_declaration(WireKind::Classical),
             "hidden" => self.parse_wire_declaration(WireKind::Hidden),
@@ -276,6 +295,51 @@ impl Parser {
                 span,
             )),
         }
+    }
+
+    fn parse_layout(&mut self) -> Result<(), Diagnostic> {
+        self.expect(TokenKind::LeftBrace, "`{`")?;
+        self.skip_newlines();
+        while !self.at(&TokenKind::RightBrace) {
+            let span = self.current().span;
+            let property = self.take_identifier("layout property")?;
+            self.expect(TokenKind::Colon, "`:`")?;
+            match property.as_str() {
+                "orientation" => {
+                    let value = self.take_identifier("`horizontal` or `vertical`")?;
+                    self.layout.orientation = match value.as_str() {
+                        "horizontal" => Orientation::Horizontal,
+                        "vertical" => Orientation::Vertical,
+                        _ => {
+                            return Err(Diagnostic::new(
+                                "orientation must be `horizontal` or `vertical`",
+                                span,
+                            ));
+                        }
+                    };
+                }
+                "scale" => {
+                    self.layout.scale = self.take_positive_scalar("layout scale")?;
+                }
+                "column_gap" => {
+                    self.layout.column_gap = self.take_positive_scalar("column gap")?;
+                }
+                "wire_gap" => {
+                    self.layout.wire_gap = self.take_positive_scalar("wire gap")?;
+                }
+                "background" => self.layout.background = self.take_color("background color")?,
+                _ => {
+                    return Err(Diagnostic::new(
+                        format!("unknown layout property `{property}`"),
+                        span,
+                    ));
+                }
+            }
+            self.expect_statement_end()?;
+            self.skip_newlines();
+        }
+        self.advance();
+        self.expect_statement_end()
     }
 
     fn parse_wire_declaration(&mut self, kind: WireKind) -> Result<(), Diagnostic> {
@@ -301,6 +365,7 @@ impl Parser {
         } else {
             None
         };
+        let style = self.parse_style()?;
         self.expect_statement_end()?;
 
         let names = count.map_or_else(
@@ -325,6 +390,7 @@ impl Parser {
                 kind,
                 input: input.clone(),
                 output: output.clone(),
+                style: style.clone(),
             });
         }
         Ok(())
@@ -333,8 +399,9 @@ impl Parser {
     fn parse_builtin_gate(&mut self, label: String, span: Span) -> Result<(), Diagnostic> {
         let target = self.parse_wire_reference()?;
         let controls = self.parse_controls()?;
+        let style = self.parse_style()?;
         self.expect_statement_end()?;
-        self.push_gate(label, vec![target], controls, span)
+        self.push_gate(label, vec![target], controls, style, span)
     }
 
     fn parse_named_gate(&mut self, span: Span) -> Result<(), Diagnostic> {
@@ -342,8 +409,9 @@ impl Parser {
         self.expect_keyword("on")?;
         let targets = self.parse_wire_list()?;
         let controls = self.parse_controls()?;
+        let style = self.parse_style()?;
         self.expect_statement_end()?;
-        self.push_gate(label, targets, controls, span)
+        self.push_gate(label, targets, controls, style, span)
     }
 
     fn parse_phase_gate(&mut self, span: Span) -> Result<(), Diagnostic> {
@@ -351,8 +419,10 @@ impl Parser {
         self.expect_keyword("on")?;
         let target = self.parse_wire_reference()?;
         let controls = self.parse_controls()?;
+        let mut style = self.parse_style()?;
+        style.shape.get_or_insert(Shape::Circle);
         self.expect_statement_end()?;
-        self.push_gate(format!("P({phase})"), vec![target], controls, span)
+        self.push_gate(format!("P({phase})"), vec![target], controls, style, span)
     }
 
     fn parse_measure(&mut self, span: Span) -> Result<(), Diagnostic> {
@@ -362,11 +432,13 @@ impl Parser {
         } else {
             None
         };
+        let style = self.parse_style()?;
         self.expect_statement_end()?;
         self.ensure_unique(&targets, span, "measurement target")?;
         self.operations.push(Operation {
             kind: OperationKind::Measure { targets, label },
             span,
+            style,
         });
         Ok(())
     }
@@ -375,6 +447,7 @@ impl Parser {
         let left = self.parse_wire_reference()?;
         self.expect(TokenKind::Comma, "`,`")?;
         let right = self.parse_wire_reference()?;
+        let style = self.parse_style()?;
         self.expect_statement_end()?;
         if left == right {
             return Err(Diagnostic::new(
@@ -385,21 +458,24 @@ impl Parser {
         self.operations.push(Operation {
             kind: OperationKind::Swap { left, right },
             span,
+            style,
         });
         Ok(())
     }
 
     fn parse_barrier(&mut self, span: Span) -> Result<(), Diagnostic> {
-        let wires = if self.at_statement_end() {
+        let wires = if self.at_statement_end() || self.at_keyword("with") {
             Vec::new()
         } else {
             self.parse_wire_list()?
         };
+        let style = self.parse_style()?;
         self.expect_statement_end()?;
         self.ensure_unique(&wires, span, "barrier wire")?;
         self.operations.push(Operation {
             kind: OperationKind::Barrier { wires },
             span,
+            style,
         });
         Ok(())
     }
@@ -409,6 +485,7 @@ impl Parser {
         label: String,
         targets: Vec<usize>,
         controls: Vec<Control>,
+        style: Style,
         span: Span,
     ) -> Result<(), Diagnostic> {
         self.ensure_unique(&targets, span, "gate target")?;
@@ -433,6 +510,7 @@ impl Parser {
                 controls,
             },
             span,
+            style,
         });
         Ok(())
     }
@@ -453,6 +531,72 @@ impl Parser {
             }
         }
         Ok(controls)
+    }
+
+    fn parse_style(&mut self) -> Result<Style, Diagnostic> {
+        if !self.consume_keyword("with") {
+            return Ok(Style::default());
+        }
+
+        let mut style = Style::default();
+        loop {
+            let span = self.current().span;
+            let property = self.take_identifier("style property")?;
+            self.expect(TokenKind::Colon, "`:`")?;
+            match property.as_str() {
+                "stroke" => style.stroke = Some(self.take_color("stroke color")?),
+                "fill" => style.fill = Some(self.take_color("fill color")?),
+                "width" => style.width = Some(self.take_positive_scalar("gate width")?),
+                "height" => style.height = Some(self.take_positive_scalar("gate height")?),
+                "size" => {
+                    let size = self.take_positive_scalar("gate size")?;
+                    style.width = Some(size);
+                    style.height = Some(size);
+                }
+                "shape" => {
+                    let value = self.take_identifier("shape")?;
+                    style.shape = Some(match value.as_str() {
+                        "box" => Shape::Box,
+                        "circle" => Shape::Circle,
+                        "ellipse" => Shape::Ellipse,
+                        "none" => Shape::None,
+                        _ => {
+                            return Err(Diagnostic::new(
+                                "shape must be `box`, `circle`, `ellipse`, or `none`",
+                                span,
+                            ));
+                        }
+                    });
+                }
+                "dash" => {
+                    let value = self.take_identifier("`dashed` or `solid`")?;
+                    style.dashed = match value.as_str() {
+                        "dashed" | "true" => true,
+                        "solid" | "false" => false,
+                        _ => {
+                            return Err(Diagnostic::new("dash must be `dashed` or `solid`", span));
+                        }
+                    };
+                }
+                "opacity" => {
+                    let opacity = self.take_scalar("opacity")?;
+                    if !(0.0..=1.0).contains(&opacity) {
+                        return Err(Diagnostic::new("opacity must be between 0 and 1", span));
+                    }
+                    style.opacity = Some(opacity);
+                }
+                _ => {
+                    return Err(Diagnostic::new(
+                        format!("unknown style property `{property}`"),
+                        span,
+                    ));
+                }
+            }
+            if !self.consume(&TokenKind::Comma) {
+                break;
+            }
+        }
+        Ok(style)
     }
 
     fn parse_wire_list(&mut self) -> Result<Vec<usize>, Diagnostic> {
@@ -507,6 +651,24 @@ impl Parser {
         }
     }
 
+    fn take_color(&mut self, expected: &str) -> Result<String, Diagnostic> {
+        let span = self.current().span;
+        let color = self.take_label(expected)?;
+        if [
+            "black", "white", "gray", "red", "green", "blue", "teal", "purple", "orange", "yellow",
+            "olive", "lime",
+        ]
+        .contains(&color.as_str())
+        {
+            Ok(color)
+        } else {
+            Err(Diagnostic::new(
+                format!("{expected} `{color}` is not a portable named color"),
+                span,
+            ))
+        }
+    }
+
     fn take_identifier(&mut self, expected: &str) -> Result<String, Diagnostic> {
         if let TokenKind::Identifier(value) = &self.current().kind {
             let value = value.clone();
@@ -528,11 +690,39 @@ impl Parser {
     }
 
     fn take_number(&mut self, expected: &str) -> Result<usize, Diagnostic> {
-        if let TokenKind::Number(value) = self.current().kind {
+        if let TokenKind::Number(value) = &self.current().kind {
+            let value = value.parse().map_err(|_| {
+                self.error(format!("expected {expected} as a non-negative integer"))
+            })?;
             self.advance();
             Ok(value)
         } else {
             Err(self.error(format!("expected {expected}")))
+        }
+    }
+
+    fn take_scalar(&mut self, expected: &str) -> Result<f32, Diagnostic> {
+        if let TokenKind::Number(value) = &self.current().kind {
+            let value = value
+                .parse()
+                .map_err(|_| self.error(format!("invalid {expected}")))?;
+            self.advance();
+            Ok(value)
+        } else {
+            Err(self.error(format!("expected {expected}")))
+        }
+    }
+
+    fn take_positive_scalar(&mut self, expected: &str) -> Result<f32, Diagnostic> {
+        let span = self.current().span;
+        let value = self.take_scalar(expected)?;
+        if value > 0.0 {
+            Ok(value)
+        } else {
+            Err(Diagnostic::new(
+                format!("{expected} must be greater than zero"),
+                span,
+            ))
         }
     }
 
@@ -545,12 +735,15 @@ impl Parser {
     }
 
     fn consume_keyword(&mut self, keyword: &str) -> bool {
-        let matches =
-            matches!(&self.current().kind, TokenKind::Identifier(value) if value == keyword);
+        let matches = self.at_keyword(keyword);
         if matches {
             self.advance();
         }
         matches
+    }
+
+    fn at_keyword(&self, keyword: &str) -> bool {
+        matches!(&self.current().kind, TokenKind::Identifier(value) if value == keyword)
     }
 
     fn expect(&mut self, kind: TokenKind, expected: &str) -> Result<(), Diagnostic> {
@@ -644,5 +837,29 @@ mod tests {
 
         assert_eq!(error.span, Span { line: 3, column: 5 });
         assert!(error.message.contains("unknown wire `missing`"));
+    }
+
+    #[test]
+    fn parses_structured_layout_and_portable_styles() {
+        let circuit = parse(
+            r#"
+                circuit styled {
+                  layout {
+                    orientation: vertical
+                    scale: 1.25
+                    background: white
+                  }
+                  qubit q[2] with stroke: blue
+                  h q[0] with fill: yellow, shape: circle, size: 20
+                }
+            "#,
+        )
+        .expect("valid styled circuit");
+
+        assert_eq!(circuit.layout.orientation, Orientation::Vertical);
+        assert_eq!(circuit.layout.scale, 1.25);
+        assert_eq!(circuit.wires[0].style.stroke.as_deref(), Some("blue"));
+        assert_eq!(circuit.operations[0].style.shape, Some(Shape::Circle));
+        assert_eq!(circuit.operations[0].style.width, Some(20.0));
     }
 }

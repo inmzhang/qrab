@@ -29,3 +29,5 @@ just test-artifacts
 ```
 
 The frontend reference is in [docs/language.md](docs/language.md). The phased parity plan and its evidence are tracked in [docs/qpic-coverage.md](docs/qpic-coverage.md) and [docs/roadmap.md](docs/roadmap.md).
+
+See [examples/styling.qrab](examples/styling.qrab) for portable layout and gate/wire styling.

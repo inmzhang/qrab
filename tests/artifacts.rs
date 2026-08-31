@@ -7,12 +7,24 @@ use qrab::{Target, compile};
 #[test]
 #[ignore = "requires tectonic, typst, and network access for their first package download"]
 fn generated_backends_compile_to_pdfs() {
-    let source = include_str!("../examples/teleportation.qrab");
     let output_dir = PathBuf::from("target/artifact-tests");
     fs::create_dir_all(&output_dir).expect("create artifact test directory");
 
-    let latex = output_dir.join("teleportation.tex");
-    let typst = output_dir.join("teleportation.typ");
+    compile_fixture(
+        "teleportation",
+        include_str!("../examples/teleportation.qrab"),
+        &output_dir,
+    );
+    compile_fixture(
+        "styling",
+        include_str!("../examples/styling.qrab"),
+        &output_dir,
+    );
+}
+
+fn compile_fixture(name: &str, source: &str, output_dir: &std::path::Path) {
+    let latex = output_dir.join(format!("{name}.tex"));
+    let typst = output_dir.join(format!("{name}.typ"));
     fs::write(
         &latex,
         compile(source, Target::Latex).expect("compile LaTeX source"),
@@ -32,7 +44,7 @@ fn generated_backends_compile_to_pdfs() {
             output_dir.to_string_lossy().as_ref(),
         ],
     );
-    let typst_pdf = output_dir.join("teleportation-typst.pdf");
+    let typst_pdf = output_dir.join(format!("{name}-typst.pdf"));
     run(
         "typst",
         &[
@@ -42,7 +54,7 @@ fn generated_backends_compile_to_pdfs() {
         ],
     );
 
-    assert!(output_dir.join("teleportation.pdf").is_file());
+    assert!(output_dir.join(format!("{name}.pdf")).is_file());
     assert!(typst_pdf.is_file());
 }
 

@@ -15,8 +15,9 @@ Legend: **done** is implemented in both backends and exercised by a runnable tes
 | SWAP | `swap a, b` | done |
 | Automatic placement and barriers | scheduler and `barrier [wires]` | done |
 | Wire bundles, ellipses, slashes, IN/OUT, START/END | structured wire/endpoint statements | next |
-| Gate dimensions, colors, fill, stroke/style, hyperlinks | named option blocks | next |
-| Shapes and custom target operators | typed shape/operator values | next |
+| Portable dimensions, colors, fill, dash, and opacity | trailing `with` properties | done |
+| Box, circle, ellipse, and unboxed shapes | `with shape: ...` | done |
+| Custom target operators and hyperlinks | typed operator/link values | next |
 | Mid-circuit labels, equals, and braces | label/brace statements | next |
 | Comments beside operations | annotation statements | next |
 | Marks and highlighted `@` regions | `mark` and `group ... from ... to ...` | next |
@@ -24,12 +25,13 @@ Legend: **done** is implemented in both backends and exercised by a runnable tes
 | PERMUTE | `permute` statement | next |
 | Repeat/reverse (`R`) | `repeat ... from ... to ...`, `reverse` | next |
 | CUT separators | `cut` statement | next |
-| Global spacing, size, corners, opacity, scale, background | `layout { ... }` | next |
-| Horizontal/vertical orientation | `layout.orientation` | next |
+| Global spacing, scale, and background | `layout { ... }` | done |
+| Horizontal/vertical orientation | `layout.orientation` | done |
+| Global gate size, corners, and comment size | remaining `layout` properties | next |
 | Measurement shapes | measurement options | next |
 | Custom colors | portable color values | next |
 | DEFINE composition | parsed `fn` declarations, never text macros | next |
 | PREAMBLE/PRETIKZ/POSTTIKZ/HEADER/HYPERTARGET | explicit backend escape blocks | next |
 | AUTOWIRES | intentionally replaced by checked declarations | next |
 
-`tests/artifacts.rs` currently compiles the representative teleportation fixture to both PDFs. Phase 4 expands this into one parity fixture per upstream golden test and manual example; generated TikZ text is not compared byte-for-byte because qrab has a different frontend and renderer, but every backend artifact must compile and match its circuit-level visual baseline.
+`tests/artifacts.rs` currently compiles representative teleportation and styled/vertical fixtures to both PDFs. Phase 4 expands this into one parity fixture per upstream golden test and manual example; generated TikZ text is not compared byte-for-byte because qrab has a different frontend and renderer, but every backend artifact must compile and match its circuit-level visual baseline.

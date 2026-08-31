@@ -2,7 +2,10 @@ mod ast;
 mod parser;
 mod render;
 
-pub use ast::{Circuit, Control, Operation, OperationKind, Span, Wire, WireKind};
+pub use ast::{
+    Circuit, Control, Layout, Operation, OperationKind, Orientation, Shape, Span, Style, Wire,
+    WireKind,
+};
 pub use parser::{Diagnostic, parse};
 pub use render::{Target, render};
 
