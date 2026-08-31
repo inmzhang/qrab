@@ -1,0 +1,35 @@
+# qpic parity ledger
+
+Reference: qpic commit `a1f052c4a8d995b80605a6aef06243a4242494f3` (44 golden test circuits and 64 manual examples). Typst output targets Quill `0.8.0`.
+
+Legend: **done** is implemented in both backends and exercised by a runnable test; **next** is designed but not yet complete.
+
+| qpic capability | `.qrab` model | Status |
+| --- | --- | --- |
+| Declared quantum, classical, and off wires | `qubit`, `bit`, `hidden` | done |
+| Wire arrays and input/output labels | `qubit q[8]: "in" -> "out"` | done |
+| H, X/N/CNOT, Y, Z, S, T | lowercase gate statements | done |
+| Positive and negative controls | `x target if control, !open` | done |
+| Arbitrary one/multi-wire G/P gates | `gate "name" on targets`, `phase` | done |
+| Measurement and quantum-to-classical transition | `measure wires [as "label"]` | done |
+| SWAP | `swap a, b` | done |
+| Automatic placement and barriers | scheduler and `barrier [wires]` | done |
+| Wire bundles, ellipses, slashes, IN/OUT, START/END | structured wire/endpoint statements | next |
+| Gate dimensions, colors, fill, stroke/style, hyperlinks | named option blocks | next |
+| Shapes and custom target operators | typed shape/operator values | next |
+| Mid-circuit labels, equals, and braces | label/brace statements | next |
+| Comments beside operations | annotation statements | next |
+| Marks and highlighted `@` regions | `mark` and `group ... from ... to ...` | next |
+| MIXGATES, TOUCH, LB/LE, PHANTOM, explicit time slices | `parallel`, `touch`, `space` | next |
+| PERMUTE | `permute` statement | next |
+| Repeat/reverse (`R`) | `repeat ... from ... to ...`, `reverse` | next |
+| CUT separators | `cut` statement | next |
+| Global spacing, size, corners, opacity, scale, background | `layout { ... }` | next |
+| Horizontal/vertical orientation | `layout.orientation` | next |
+| Measurement shapes | measurement options | next |
+| Custom colors | portable color values | next |
+| DEFINE composition | parsed `fn` declarations, never text macros | next |
+| PREAMBLE/PRETIKZ/POSTTIKZ/HEADER/HYPERTARGET | explicit backend escape blocks | next |
+| AUTOWIRES | intentionally replaced by checked declarations | next |
+
+`tests/artifacts.rs` currently compiles the representative teleportation fixture to both PDFs. Phase 4 expands this into one parity fixture per upstream golden test and manual example; generated TikZ text is not compared byte-for-byte because qrab has a different frontend and renderer, but every backend artifact must compile and match its circuit-level visual baseline.
