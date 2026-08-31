@@ -2,6 +2,26 @@
 
 The design follows three rules: declarations read like declarations, operations read in execution order, and backend syntax never leaks into the common circuit model.
 
+Typed values and reusable styles may precede functions and the circuit:
+
+```qrab
+let oracle_name = "U_f"
+let accent = "#DDEEFF"
+
+style oracle {
+  fill: accent
+  stroke: blue
+  shape: circle
+}
+
+circuit styled_value {
+  qubit q
+  gate oracle_name on q with oracle, opacity: 0.7
+}
+```
+
+`let` binds a label or color value, while `style` binds checked style fields. A use may add comma-separated overrides. Both are resolved to typed AST values; neither performs textual substitution.
+
 Functions are parsed before the circuit and take wire parameters:
 
 ```qrab

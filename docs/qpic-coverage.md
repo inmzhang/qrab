@@ -35,7 +35,7 @@ Legend: **done** is implemented in both backends and exercised by a runnable tes
 | Global gate size, corners, and comment size | `layout.gate_size`, `corner_radius`, `comment_width` | done |
 | Measurement shapes | named measurements default to D; `using tag` selects a tag | done |
 | Custom colors | named colors or quoted `#RRGGBB` values | done |
-| DEFINE composition | parsed `fn` declarations, never text macros | partial — nested wire-operation functions are done; value/style declarations remain |
+| DEFINE composition | parsed `fn`, `let`, and named `style` declarations, never text macros | done |
 | PREAMBLE/PRETIKZ/POSTTIKZ/HEADER/HYPERTARGET | isolated `backend latex|typst` escape blocks | done |
 | AUTOWIRES | intentionally replaced by checked declarations | next |
 

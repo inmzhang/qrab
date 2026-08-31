@@ -46,6 +46,7 @@ enum TokenKind {
     LeftBracket,
     RightBracket,
     Colon,
+    Equal,
     Comma,
     Bang,
     Arrow,
@@ -100,6 +101,7 @@ fn lex(source: &str) -> Result<Vec<Token>, Diagnostic> {
             '[' => push_token(&mut tokens, TokenKind::LeftBracket, span, &mut column),
             ']' => push_token(&mut tokens, TokenKind::RightBracket, span, &mut column),
             ':' => push_token(&mut tokens, TokenKind::Colon, span, &mut column),
+            '=' => push_token(&mut tokens, TokenKind::Equal, span, &mut column),
             ',' => push_token(&mut tokens, TokenKind::Comma, span, &mut column),
             '!' => push_token(&mut tokens, TokenKind::Bang, span, &mut column),
             '-' if chars.peek() == Some(&'>') => {
@@ -245,6 +247,8 @@ fn is_reserved_statement(name: &str) -> bool {
         name,
         "circuit"
             | "fn"
+            | "let"
+            | "style"
             | "layout"
             | "backend"
             | "qubit"
@@ -297,6 +301,13 @@ fn is_reserved_statement(name: &str) -> bool {
     )
 }
 
+fn is_style_property(name: &str) -> bool {
+    matches!(
+        name,
+        "stroke" | "fill" | "link" | "width" | "height" | "size" | "shape" | "dash" | "opacity"
+    )
+}
+
 struct Parser {
     tokens: Vec<Token>,
     position: usize,
@@ -305,6 +316,8 @@ struct Parser {
     operations: Vec<Operation>,
     layout: Layout,
     functions: HashMap<String, Function>,
+    values: HashMap<String, String>,
+    styles: HashMap<String, Style>,
     in_function: bool,
     operation_block_depth: usize,
     marks: HashMap<String, usize>,
@@ -328,6 +341,8 @@ impl Parser {
             operations: Vec::new(),
             layout: Layout::default(),
             functions: HashMap::new(),
+            values: HashMap::new(),
+            styles: HashMap::new(),
             in_function: false,
             operation_block_depth: 0,
             marks: HashMap::new(),
@@ -338,8 +353,14 @@ impl Parser {
 
     fn parse_circuit(mut self) -> Result<Circuit, Diagnostic> {
         self.skip_newlines();
-        while self.at_keyword("fn") {
-            self.parse_function_definition()?;
+        while self.at_keyword("fn") || self.at_keyword("let") || self.at_keyword("style") {
+            if self.at_keyword("fn") {
+                self.parse_function_definition()?;
+            } else if self.at_keyword("let") {
+                self.parse_value_definition()?;
+            } else {
+                self.parse_style_definition()?;
+            }
             self.skip_newlines();
         }
         self.expect_keyword("circuit")?;
@@ -375,6 +396,56 @@ impl Parser {
         })
     }
 
+    fn parse_value_definition(&mut self) -> Result<(), Diagnostic> {
+        let span = self.current().span;
+        self.expect_keyword("let")?;
+        let name = self.take_identifier("value name")?;
+        if is_reserved_statement(&name)
+            || self.values.contains_key(&name)
+            || self.styles.contains_key(&name)
+            || self.functions.contains_key(&name)
+        {
+            return Err(Diagnostic::new(
+                format!("definition name `{name}` is reserved or already used"),
+                span,
+            ));
+        }
+        self.expect(TokenKind::Equal, "`=`")?;
+        let value = self.take_label("string or earlier value")?;
+        self.expect_statement_end()?;
+        self.values.insert(name, value);
+        Ok(())
+    }
+
+    fn parse_style_definition(&mut self) -> Result<(), Diagnostic> {
+        let span = self.current().span;
+        self.expect_keyword("style")?;
+        let name = self.take_identifier("style name")?;
+        if is_reserved_statement(&name)
+            || is_style_property(&name)
+            || self.values.contains_key(&name)
+            || self.styles.contains_key(&name)
+            || self.functions.contains_key(&name)
+        {
+            return Err(Diagnostic::new(
+                format!("definition name `{name}` is reserved or already used"),
+                span,
+            ));
+        }
+        self.expect(TokenKind::LeftBrace, "`{`")?;
+        let mut style = Style::default();
+        self.skip_newlines();
+        while !self.at(&TokenKind::RightBrace) {
+            self.parse_style_property(&mut style)?;
+            self.expect_statement_end()?;
+            self.skip_newlines();
+        }
+        self.advance();
+        self.expect_statement_end()?;
+        self.styles.insert(name, style);
+        Ok(())
+    }
+
     fn parse_function_definition(&mut self) -> Result<(), Diagnostic> {
         let span = self.current().span;
         self.expect_keyword("fn")?;
@@ -385,7 +456,10 @@ impl Parser {
                 span,
             ));
         }
-        if self.functions.contains_key(&name) {
+        if self.functions.contains_key(&name)
+            || self.values.contains_key(&name)
+            || self.styles.contains_key(&name)
+        {
             return Err(Diagnostic::new(
                 format!("function `{name}` is already defined"),
                 span,
@@ -1320,66 +1394,79 @@ impl Parser {
             return Ok(Style::default());
         }
 
-        let mut style = Style::default();
-        loop {
-            let span = self.current().span;
-            let property = self.take_identifier("style property")?;
-            self.expect(TokenKind::Colon, "`:`")?;
-            match property.as_str() {
-                "stroke" => style.stroke = Some(self.take_color("stroke color")?),
-                "fill" => style.fill = Some(self.take_color("fill color")?),
-                "link" => style.link = Some(self.take_link()?),
-                "width" => style.width = Some(self.take_positive_scalar("gate width")?),
-                "height" => style.height = Some(self.take_positive_scalar("gate height")?),
-                "size" => {
-                    let size = self.take_positive_scalar("gate size")?;
-                    style.width = Some(size);
-                    style.height = Some(size);
-                }
-                "shape" => {
-                    let value = self.take_identifier("shape")?;
-                    style.shape = Some(match value.as_str() {
-                        "box" => Shape::Box,
-                        "circle" => Shape::Circle,
-                        "ellipse" => Shape::Ellipse,
-                        "none" => Shape::None,
-                        _ => {
-                            return Err(Diagnostic::new(
-                                "shape must be `box`, `circle`, `ellipse`, or `none`",
-                                span,
-                            ));
-                        }
-                    });
-                }
-                "dash" => {
-                    let value = self.take_identifier("`dashed` or `solid`")?;
-                    style.dashed = match value.as_str() {
-                        "dashed" | "true" => true,
-                        "solid" | "false" => false,
-                        _ => {
-                            return Err(Diagnostic::new("dash must be `dashed` or `solid`", span));
-                        }
-                    };
-                }
-                "opacity" => {
-                    let opacity = self.take_scalar("opacity")?;
-                    if !(0.0..=1.0).contains(&opacity) {
-                        return Err(Diagnostic::new("opacity must be between 0 and 1", span));
-                    }
-                    style.opacity = Some(opacity);
-                }
-                _ => {
-                    return Err(Diagnostic::new(
-                        format!("unknown style property `{property}`"),
-                        span,
-                    ));
-                }
+        let mut style = if let TokenKind::Identifier(name) = &self.current().kind
+            && let Some(style) = self.styles.get(name).cloned()
+        {
+            self.advance();
+            if !self.consume(&TokenKind::Comma) {
+                return Ok(style);
             }
+            style
+        } else {
+            Style::default()
+        };
+        loop {
+            self.parse_style_property(&mut style)?;
             if !self.consume(&TokenKind::Comma) {
                 break;
             }
         }
         Ok(style)
+    }
+
+    fn parse_style_property(&mut self, style: &mut Style) -> Result<(), Diagnostic> {
+        let span = self.current().span;
+        let property = self.take_identifier("style property")?;
+        self.expect(TokenKind::Colon, "`:`")?;
+        match property.as_str() {
+            "stroke" => style.stroke = Some(self.take_color("stroke color")?),
+            "fill" => style.fill = Some(self.take_color("fill color")?),
+            "link" => style.link = Some(self.take_link()?),
+            "width" => style.width = Some(self.take_positive_scalar("gate width")?),
+            "height" => style.height = Some(self.take_positive_scalar("gate height")?),
+            "size" => {
+                let size = self.take_positive_scalar("gate size")?;
+                style.width = Some(size);
+                style.height = Some(size);
+            }
+            "shape" => {
+                let value = self.take_identifier("shape")?;
+                style.shape = Some(match value.as_str() {
+                    "box" => Shape::Box,
+                    "circle" => Shape::Circle,
+                    "ellipse" => Shape::Ellipse,
+                    "none" => Shape::None,
+                    _ => {
+                        return Err(Diagnostic::new(
+                            "shape must be `box`, `circle`, `ellipse`, or `none`",
+                            span,
+                        ));
+                    }
+                });
+            }
+            "dash" => {
+                let value = self.take_identifier("`dashed` or `solid`")?;
+                style.dashed = match value.as_str() {
+                    "dashed" | "true" => true,
+                    "solid" | "false" => false,
+                    _ => return Err(Diagnostic::new("dash must be `dashed` or `solid`", span)),
+                };
+            }
+            "opacity" => {
+                let opacity = self.take_scalar("opacity")?;
+                if !(0.0..=1.0).contains(&opacity) {
+                    return Err(Diagnostic::new("opacity must be between 0 and 1", span));
+                }
+                style.opacity = Some(opacity);
+            }
+            _ => {
+                return Err(Diagnostic::new(
+                    format!("unknown style property `{property}`"),
+                    span,
+                ));
+            }
+        }
+        Ok(())
     }
 
     fn parse_wire_list(&mut self) -> Result<Vec<usize>, Diagnostic> {
@@ -1457,9 +1544,13 @@ impl Parser {
     }
 
     fn take_label(&mut self, expected: &str) -> Result<String, Diagnostic> {
-        match &self.current().kind {
-            TokenKind::String(value) | TokenKind::Identifier(value) => {
-                let value = value.clone();
+        match self.current().kind.clone() {
+            TokenKind::String(value) => {
+                self.advance();
+                Ok(value)
+            }
+            TokenKind::Identifier(name) => {
+                let value = self.values.get(&name).cloned().unwrap_or(name);
                 self.advance();
                 Ok(value)
             }
@@ -1925,6 +2016,42 @@ mod tests {
             circuit.operations[4].kind,
             OperationKind::Barrier { ref wires } if wires == &[2, 0, 1]
         ));
+    }
+
+    #[test]
+    fn resolves_typed_values_and_named_styles() {
+        let circuit = parse(
+            r##"
+                let operator = "U"
+                let accent = "#ddeeff"
+
+                style highlighted {
+                  fill: accent
+                  stroke: blue
+                  shape: circle
+                }
+
+                circuit declarations {
+                  qubit q
+                  gate operator on q with highlighted, opacity: 0.5
+                }
+            "##,
+        )
+        .expect("valid typed declarations");
+
+        assert!(matches!(
+            circuit.operations[0].kind,
+            OperationKind::Gate { ref label, .. } if label == "U"
+        ));
+        assert_eq!(circuit.operations[0].style.fill.as_deref(), Some("#DDEEFF"));
+        assert_eq!(circuit.operations[0].style.shape, Some(Shape::Circle));
+        assert_eq!(circuit.operations[0].style.opacity, Some(0.5));
+        assert!(
+            parse("let h = \"bad\"; circuit bad { qubit q }")
+                .expect_err("reserved definition name should fail")
+                .message
+                .contains("reserved or already used")
+        );
     }
 
     #[test]

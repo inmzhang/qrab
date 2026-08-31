@@ -1,6 +1,15 @@
+let entangler = "E"
+let accent = "#DDEEFF"
+
+style highlighted {
+  fill: accent
+  stroke: blue
+  shape: circle
+}
+
 fn entangle(control, target) {
   h control
-  x target if control
+  gate entangler on target if control with highlighted
 }
 
 fn prepare_ghz(first, second, third) {
@@ -13,5 +22,6 @@ circuit function_composition {
   qubit q[3]: "|0>" -> "GHZ"
 
   prepare_ghz(q[0], q[1], q[2])
+  gate entangler on q[0], q[2] with highlighted, opacity: 0.7
   measure q[0], q[1], q[2]
 }
