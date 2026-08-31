@@ -19,7 +19,7 @@ Legend: **done** is implemented in both backends and exercised by a runnable tes
 | Ellipsis wires and IN/OUT value bullets | `ellipsis` declarations and `set ... as "value"` | done |
 | Portable dimensions, colors, fill, dash, and opacity | trailing `with` properties | done |
 | Box, circle, ellipse, and unboxed shapes | `with shape: ...` | done |
-| Custom target operators and hyperlinks | typed operator/link values | next |
+| Custom target operators and hyperlinks | labeled/shaped gates and checked `with link: "..."` URLs | done |
 | Centered mid-circuit labels | `label "text" [on wires]` | done |
 | Per-wire labels and left/right braces | `labels`, `brace` | done |
 | Equals shorthand and qpic brace defaults | `equals [label] [on wires] [braced side]` | done |

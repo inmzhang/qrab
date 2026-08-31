@@ -84,6 +84,7 @@ pub struct Operation {
 pub struct Style {
     pub stroke: Option<String>,
     pub fill: Option<String>,
+    pub link: Option<String>,
     pub width: Option<f32>,
     pub height: Option<f32>,
     pub shape: Option<Shape>,

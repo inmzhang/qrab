@@ -147,6 +147,13 @@ fn render_latex(circuit: &Circuit) -> String {
     let mut output = String::new();
     output.push_str("\\documentclass[tikz,border=6pt]{standalone}\n");
     output.push_str("\\usepackage{tikz}\n");
+    if circuit
+        .operations
+        .iter()
+        .any(|operation| operation.style.link.is_some())
+    {
+        output.push_str("\\usepackage{hyperref}\n");
+    }
     output.push_str("\\usetikzlibrary{decorations.pathreplacing,shapes.geometric}\n");
     for color in circuit_hex_colors(circuit) {
         writeln!(
@@ -881,14 +888,14 @@ fn draw_latex_gate(
             output,
             "  \\node{} at ({x:.3},{midpoint:.3}) {{{}}};",
             latex_node_options(style, &width, &height),
-            latex_text(label)
+            latex_linked_text(label, style)
         )
         .expect("writing to a String cannot fail");
         return;
     }
 
     let y = -(targets[0] as f32) * wire_gap;
-    if !controls.is_empty() && label == "X" {
+    if !controls.is_empty() && label == "X" && style.link.is_none() {
         writeln!(
             output,
             "  \\draw{} ({x:.3},{y:.3}) circle[radius=4.0pt];",
@@ -905,7 +912,7 @@ fn draw_latex_gate(
             y + 0.14
         )
         .expect("writing to a String cannot fail");
-    } else if !controls.is_empty() && label == "Z" {
+    } else if !controls.is_empty() && label == "Z" && style.link.is_none() {
         writeln!(
             output,
             "  \\draw{} ({x:.3},{y:.3}) circle[radius=2.2pt];",
@@ -918,7 +925,7 @@ fn draw_latex_gate(
             output,
             "  \\node{} at ({x:.3},{y:.3}) {{{}}};",
             latex_node_options(style, &size, &size),
-            latex_text(label)
+            latex_linked_text(label, style)
         )
         .expect("writing to a String cannot fail");
     }
@@ -1010,7 +1017,7 @@ fn draw_latex_named_measurement(
     writeln!(
         output,
         "  \\node at ({x:.3},{y:.3}) {{{}}};",
-        latex_text(label)
+        latex_linked_text(label, style)
     )
     .expect("writing to a String cannot fail");
 }
@@ -1807,14 +1814,14 @@ fn draw_typst_gate(
     }
 
     let target = targets[0];
-    if !controls.is_empty() && label == "X" {
+    if !controls.is_empty() && label == "X" && style.link.is_none() {
         writeln!(
             output,
             "  quill.targ(x: {x}, y: {target}{}),",
             typst_control_style(style)
         )
         .expect("writing to a String cannot fail");
-    } else if !controls.is_empty() && label == "Z" {
+    } else if !controls.is_empty() && label == "Z" && style.link.is_none() {
         writeln!(
             output,
             "  quill.ctrl(x: {x}, y: {target}{}),",
@@ -1882,9 +1889,9 @@ fn typst_measure_tag_body(label: &str, style: &Style, background: &str, gate_siz
     let fill = typst_color(style.fill.as_deref().unwrap_or(background), style.opacity);
     let stroke = typst_stroke(style).unwrap_or_else(|| "black".into());
     format!(
-        "box(width: {width:.3}pt, height: {height:.3}pt, inset: 0pt, [#place(polygon(fill: {fill}, stroke: {stroke}, (0pt, {:.3}pt), ({point:.3}pt, 0pt), ({width:.3}pt, 0pt), ({width:.3}pt, {height:.3}pt), ({point:.3}pt, {height:.3}pt))) #align(center + horizon, text(\"{}\"))])",
+        "box(width: {width:.3}pt, height: {height:.3}pt, inset: 0pt, [#place(polygon(fill: {fill}, stroke: {stroke}, (0pt, {:.3}pt), ({point:.3}pt, 0pt), ({width:.3}pt, 0pt), ({width:.3}pt, {height:.3}pt), ({point:.3}pt, {height:.3}pt))) #align(center + horizon, {})])",
         height / 2.0,
-        typst_string(label)
+        typst_linked_text(label, style)
     )
 }
 
@@ -1925,7 +1932,7 @@ fn typst_value_transition_body(
 }
 
 fn typst_gate_body(label: &str, style: &Style) -> String {
-    let text = format!("text(\"{}\")", typst_string(label));
+    let text = typst_linked_text(label, style);
     style.height.map_or(text.clone(), |height| {
         format!("box(height: {height:.3}pt, {text})")
     })
@@ -2164,6 +2171,33 @@ fn latex_text(value: &str) -> String {
     escaped
 }
 
+fn latex_linked_text(value: &str, style: &Style) -> String {
+    let text = latex_text(value);
+    style.link.as_ref().map_or_else(
+        || text.clone(),
+        |link| format!("\\href{{{}}}{{{text}}}", latex_url(link)),
+    )
+}
+
+fn latex_url(value: &str) -> String {
+    let mut escaped = String::new();
+    for character in value.chars() {
+        escaped.push_str(match character {
+            '#' => "\\#",
+            '$' => "\\$",
+            '%' => "\\%",
+            '&' => "\\&",
+            '_' => "\\_",
+            '~' => "\\string~",
+            _ => {
+                escaped.push(character);
+                continue;
+            }
+        });
+    }
+    escaped
+}
+
 fn latex_comment(value: &str) -> String {
     value.replace(['\n', '\r'], " ").replace('%', "")
 }
@@ -2174,6 +2208,13 @@ fn typst_string(value: &str) -> String {
         .replace('"', "\\\"")
         .replace('\n', "\\n")
         .replace('\r', "\\r")
+}
+
+fn typst_linked_text(value: &str, style: &Style) -> String {
+    let text = format!("text(\"{}\")", typst_string(value));
+    style.link.as_ref().map_or(text.clone(), |link| {
+        format!("link(\"{}\", {text})", typst_string(link))
+    })
 }
 
 #[cfg(test)]

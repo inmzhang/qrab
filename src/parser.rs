@@ -1250,6 +1250,7 @@ impl Parser {
             match property.as_str() {
                 "stroke" => style.stroke = Some(self.take_color("stroke color")?),
                 "fill" => style.fill = Some(self.take_color("fill color")?),
+                "link" => style.link = Some(self.take_link()?),
                 "width" => style.width = Some(self.take_positive_scalar("gate width")?),
                 "height" => style.height = Some(self.take_positive_scalar("gate height")?),
                 "size" => {
@@ -1411,6 +1412,25 @@ impl Parser {
                 format!(
                     "{expected} `{color}` is not a portable named color or six-digit hex color"
                 ),
+                span,
+            ))
+        }
+    }
+
+    fn take_link(&mut self) -> Result<String, Diagnostic> {
+        let span = self.current().span;
+        let link = self.take_string("link URL")?;
+        let valid_scheme = ["https://", "http://", "mailto:"]
+            .iter()
+            .any(|scheme| link.starts_with(scheme));
+        let safe_characters = link.chars().all(|character| {
+            character.is_ascii_alphanumeric() || ":/?#[]@!$&'()*+,-._~=%".contains(character)
+        });
+        if valid_scheme && safe_characters {
+            Ok(link)
+        } else {
+            Err(Diagnostic::new(
+                "link must be a safe absolute http, https, or mailto URL",
                 span,
             ))
         }
@@ -1600,7 +1620,7 @@ mod tests {
                     background: "#f7f8fc"
                   }
                   qubit q[2] with stroke: "#336699"
-                  h q[0] with fill: yellow, shape: circle, size: 20
+                  h q[0] with fill: yellow, shape: circle, size: 20, link: "https://example.com/gate?id=H"
                 }
             "##,
         )
@@ -1615,10 +1635,20 @@ mod tests {
         assert_eq!(circuit.wires[0].style.stroke.as_deref(), Some("#336699"));
         assert_eq!(circuit.operations[0].style.shape, Some(Shape::Circle));
         assert_eq!(circuit.operations[0].style.width, Some(20.0));
+        assert_eq!(
+            circuit.operations[0].style.link.as_deref(),
+            Some("https://example.com/gate?id=H")
+        );
 
         let error = parse("circuit bad { qubit q with stroke: \"#12ZZ99\" }")
             .expect_err("invalid hex color should fail");
         assert!(error.message.contains("six-digit hex color"));
+        assert!(
+            parse("circuit bad { qubit q; h q with link: \"javascript:alert(1)\" }")
+                .expect_err("unsafe link should fail")
+                .message
+                .contains("safe absolute")
+        );
     }
 
     #[test]

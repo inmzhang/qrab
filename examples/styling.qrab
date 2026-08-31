@@ -10,7 +10,8 @@ circuit styled_controls {
   qubit q[3]: "|0>" with stroke: "#1F4E79"
 
   h q[0] with fill: "#FCE8A2", stroke: "#1F4E79", size: 24, shape: circle
-  gate "U" on q[0], q[2] if !q[1] with fill: green, stroke: blue, width: 30, dash: dashed, opacity: 0.65
+  gate "U" on q[0], q[2] if !q[1] with fill: green, stroke: blue, width: 30, dash: dashed, opacity: 0.65, link: "https://example.com/qrab?gate=U"
+  gate "+" on q[1] if q[0] with shape: circle, fill: white, stroke: teal
   phase "theta/2" on q[2] with fill: yellow, stroke: red, size: 22
   swap q[0], q[2] with stroke: red, width: 9
   measure q[0] as "Z" with fill: yellow, stroke: blue
