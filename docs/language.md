@@ -2,6 +2,27 @@
 
 The design follows three rules: declarations read like declarations, operations read in execution order, and backend syntax never leaks into the common circuit model.
 
+Functions are parsed before the circuit and take wire parameters:
+
+```qrab
+fn entangle(control, target) {
+  h control
+  x target if control
+}
+
+fn prepare_ghz(a, b, c) {
+  entangle(a, b)
+  x c if b
+}
+
+circuit ghz {
+  qubit q[3]
+  prepare_ghz(q[0], q[1], q[2])
+}
+```
+
+Function bodies contain operations or calls to earlier functions. Calls have exact arity and cannot alias two parameters to the same wire. The compiler lowers typed operation trees; it never performs token or string substitution, so a parameter name appearing in a gate label remains ordinary label text. Declarations, captures, forward calls, and recursion are intentionally not part of the current function subset.
+
 ## Current grammar
 
 Newlines terminate statements; `;` is accepted when several short statements belong on one line. `//` starts a comment.
@@ -55,11 +76,6 @@ The compiler packs operations into the earliest non-overlapping column while pre
 The remaining qpic surface will extend the same grammar rather than add uppercase directives:
 
 ```qrab
-fn majority(a, b, c) {
-  x b if a
-  x c if a, b
-}
-
 parallel {
   h q[0]
   h q[1]
@@ -72,4 +88,4 @@ group "encoding" from start to here on q[0], q[1] {
 }
 ```
 
-Functions will bind wire parameters in the parsed syntax tree; qrab will not implement qpic-style textual `DEFINE` substitution. Backend-only escape blocks will be explicit and isolated for the few qpic preamble/TikZ hooks that cannot be represented portably.
+Backend-only escape blocks will be explicit and isolated for the few qpic preamble/TikZ hooks that cannot be represented portably.

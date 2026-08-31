@@ -1,0 +1,17 @@
+fn entangle(control, target) {
+  h control
+  x target if control
+}
+
+fn prepare_ghz(first, second, third) {
+  entangle(first, second)
+  x third if second
+  barrier
+}
+
+circuit function_composition {
+  qubit q[3]: "|0>" -> "GHZ"
+
+  prepare_ghz(q[0], q[1], q[2])
+  measure q[0], q[1], q[2]
+}

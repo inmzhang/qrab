@@ -166,4 +166,79 @@ impl OperationKind {
             Self::Bundle { wire, .. } => vec![*wire],
         }
     }
+
+    pub(crate) fn remap_wires(&self, mapping: &[usize]) -> Self {
+        let wires = |items: &[usize]| items.iter().map(|wire| mapping[*wire]).collect();
+        let selected = |items: &[usize]| {
+            if items.is_empty() {
+                mapping.to_vec()
+            } else {
+                wires(items)
+            }
+        };
+        match self {
+            Self::Gate {
+                label,
+                targets,
+                controls,
+            } => Self::Gate {
+                label: label.clone(),
+                targets: wires(targets),
+                controls: controls
+                    .iter()
+                    .map(|control| Control {
+                        wire: mapping[control.wire],
+                        positive: control.positive,
+                    })
+                    .collect(),
+            },
+            Self::Measure { targets, label } => Self::Measure {
+                targets: wires(targets),
+                label: label.clone(),
+            },
+            Self::Swap { left, right } => Self::Swap {
+                left: mapping[*left],
+                right: mapping[*right],
+            },
+            Self::Barrier { wires: targets } => Self::Barrier {
+                wires: selected(targets),
+            },
+            Self::WireChange {
+                wires: targets,
+                kind,
+            } => Self::WireChange {
+                wires: wires(targets),
+                kind: *kind,
+            },
+            Self::Endpoint {
+                wires: targets,
+                start,
+                label,
+            } => Self::Endpoint {
+                wires: selected(targets),
+                start: *start,
+                label: label.clone(),
+            },
+            Self::Label {
+                wires: targets,
+                label,
+            } => Self::Label {
+                wires: selected(targets),
+                label: label.clone(),
+            },
+            Self::Bundle { wire, label } => Self::Bundle {
+                wire: mapping[*wire],
+                label: label.clone(),
+            },
+            Self::Permute { wires: targets } => Self::Permute {
+                wires: wires(targets),
+            },
+            Self::Phantom { wires: targets } => Self::Phantom {
+                wires: selected(targets),
+            },
+            Self::Touch { wires: targets } => Self::Touch {
+                wires: selected(targets),
+            },
+        }
+    }
 }

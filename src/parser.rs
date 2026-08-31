@@ -41,6 +41,8 @@ enum TokenKind {
     Number(String),
     LeftBrace,
     RightBrace,
+    LeftParen,
+    RightParen,
     LeftBracket,
     RightBracket,
     Colon,
@@ -92,6 +94,8 @@ fn lex(source: &str) -> Result<Vec<Token>, Diagnostic> {
             }
             '{' => push_token(&mut tokens, TokenKind::LeftBrace, span, &mut column),
             '}' => push_token(&mut tokens, TokenKind::RightBrace, span, &mut column),
+            '(' => push_token(&mut tokens, TokenKind::LeftParen, span, &mut column),
+            ')' => push_token(&mut tokens, TokenKind::RightParen, span, &mut column),
             '[' => push_token(&mut tokens, TokenKind::LeftBracket, span, &mut column),
             ']' => push_token(&mut tokens, TokenKind::RightBracket, span, &mut column),
             ':' => push_token(&mut tokens, TokenKind::Colon, span, &mut column),
@@ -220,6 +224,42 @@ fn push_token(tokens: &mut Vec<Token>, kind: TokenKind, span: Span, column: &mut
     *column += 1;
 }
 
+fn is_reserved_statement(name: &str) -> bool {
+    matches!(
+        name,
+        "circuit"
+            | "fn"
+            | "layout"
+            | "qubit"
+            | "bit"
+            | "hidden"
+            | "h"
+            | "x"
+            | "y"
+            | "z"
+            | "s"
+            | "t"
+            | "gate"
+            | "phase"
+            | "measure"
+            | "swap"
+            | "barrier"
+            | "set"
+            | "start"
+            | "end"
+            | "label"
+            | "bundle"
+            | "permute"
+            | "space"
+            | "touch"
+            | "if"
+            | "on"
+            | "as"
+            | "to"
+            | "with"
+    )
+}
+
 struct Parser {
     tokens: Vec<Token>,
     position: usize,
@@ -227,6 +267,14 @@ struct Parser {
     wire_indices: HashMap<String, usize>,
     operations: Vec<Operation>,
     layout: Layout,
+    functions: HashMap<String, Function>,
+    in_function: bool,
+}
+
+#[derive(Clone)]
+struct Function {
+    parameters: Vec<String>,
+    body: Vec<Operation>,
 }
 
 impl Parser {
@@ -238,11 +286,17 @@ impl Parser {
             wire_indices: HashMap::new(),
             operations: Vec::new(),
             layout: Layout::default(),
+            functions: HashMap::new(),
+            in_function: false,
         }
     }
 
     fn parse_circuit(mut self) -> Result<Circuit, Diagnostic> {
         self.skip_newlines();
+        while self.at_keyword("fn") {
+            self.parse_function_definition()?;
+            self.skip_newlines();
+        }
         self.expect_keyword("circuit")?;
         let name = self.take_identifier("circuit name")?;
         self.expect(TokenKind::LeftBrace, "`{`")?;
@@ -274,9 +328,89 @@ impl Parser {
         })
     }
 
+    fn parse_function_definition(&mut self) -> Result<(), Diagnostic> {
+        let span = self.current().span;
+        self.expect_keyword("fn")?;
+        let name = self.take_identifier("function name")?;
+        if is_reserved_statement(&name) {
+            return Err(Diagnostic::new(
+                format!("function name `{name}` is reserved"),
+                span,
+            ));
+        }
+        if self.functions.contains_key(&name) {
+            return Err(Diagnostic::new(
+                format!("function `{name}` is already defined"),
+                span,
+            ));
+        }
+        self.expect(TokenKind::LeftParen, "`(`")?;
+        let mut parameters = Vec::new();
+        if !self.at(&TokenKind::RightParen) {
+            loop {
+                let parameter_span = self.current().span;
+                let parameter = self.take_identifier("parameter name")?;
+                if parameters.contains(&parameter) {
+                    return Err(Diagnostic::new(
+                        format!("parameter `{parameter}` is repeated"),
+                        parameter_span,
+                    ));
+                }
+                parameters.push(parameter);
+                if !self.consume(&TokenKind::Comma) {
+                    break;
+                }
+            }
+        }
+        self.expect(TokenKind::RightParen, "`)`")?;
+        self.expect(TokenKind::LeftBrace, "`{`")?;
+
+        let circuit_wires = std::mem::take(&mut self.wires);
+        let circuit_indices = std::mem::take(&mut self.wire_indices);
+        let circuit_operations = std::mem::take(&mut self.operations);
+        self.wires = parameters
+            .iter()
+            .map(|parameter| Wire {
+                name: parameter.clone(),
+                kind: WireKind::Quantum,
+                input: None,
+                output: None,
+                style: Style::default(),
+            })
+            .collect();
+        self.wire_indices = parameters
+            .iter()
+            .enumerate()
+            .map(|(index, parameter)| (parameter.clone(), index))
+            .collect();
+        self.in_function = true;
+        self.skip_newlines();
+        while !self.at(&TokenKind::RightBrace) {
+            if self.at(&TokenKind::End) {
+                return Err(self.error("expected `}` to close the function"));
+            }
+            self.parse_statement()?;
+            self.skip_newlines();
+        }
+        self.advance();
+        let body = std::mem::take(&mut self.operations);
+        self.wires = circuit_wires;
+        self.wire_indices = circuit_indices;
+        self.operations = circuit_operations;
+        self.in_function = false;
+        self.functions.insert(name, Function { parameters, body });
+        self.expect_statement_end()
+    }
+
     fn parse_statement(&mut self) -> Result<(), Diagnostic> {
         let span = self.current().span;
         let keyword = self.take_identifier("statement")?;
+        if self.in_function && matches!(keyword.as_str(), "layout" | "qubit" | "bit" | "hidden") {
+            return Err(Diagnostic::new(
+                "functions may contain operations and function calls, not declarations",
+                span,
+            ));
+        }
         match keyword.as_str() {
             "layout" => self.parse_layout(),
             "qubit" => self.parse_wire_declaration(WireKind::Quantum),
@@ -298,11 +432,50 @@ impl Parser {
             "permute" => self.parse_permute(span),
             "space" => self.parse_phantom(span),
             "touch" => self.parse_touch(span),
+            name if self.functions.contains_key(name) => self.parse_function_call(name, span),
             _ => Err(Diagnostic::new(
                 format!("unknown statement `{keyword}`"),
                 span,
             )),
         }
+    }
+
+    fn parse_function_call(&mut self, name: &str, span: Span) -> Result<(), Diagnostic> {
+        self.expect(TokenKind::LeftParen, "`(` after the function name")?;
+        let mut arguments = Vec::new();
+        if !self.at(&TokenKind::RightParen) {
+            loop {
+                arguments.push(self.parse_wire_reference()?);
+                if !self.consume(&TokenKind::Comma) {
+                    break;
+                }
+            }
+        }
+        self.expect(TokenKind::RightParen, "`)`")?;
+        self.expect_statement_end()?;
+        let function = self
+            .functions
+            .get(name)
+            .cloned()
+            .expect("function dispatch checked the name");
+        if arguments.len() != function.parameters.len() {
+            return Err(Diagnostic::new(
+                format!(
+                    "function `{name}` expects {} wire argument(s), but got {}",
+                    function.parameters.len(),
+                    arguments.len()
+                ),
+                span,
+            ));
+        }
+        self.ensure_unique(&arguments, span, "function argument")?;
+        self.operations
+            .extend(function.body.into_iter().map(|operation| Operation {
+                kind: operation.kind.remap_wires(&arguments),
+                span,
+                style: operation.style,
+            }));
+        Ok(())
     }
 
     fn parse_layout(&mut self) -> Result<(), Diagnostic> {
@@ -1051,5 +1224,64 @@ mod tests {
             circuit.operations[6].kind,
             OperationKind::Touch { ref wires } if wires == &[0, 2]
         ));
+    }
+
+    #[test]
+    fn parses_and_lowers_typed_function_calls() {
+        let circuit = parse(
+            r#"
+                fn entangle(control, target) {
+                  h control
+                  x target if control
+                  gate "control" on target
+                }
+
+                fn ghz(a, b, c) {
+                  entangle(a, b)
+                  x c if b
+                  barrier
+                }
+
+                circuit functions {
+                  qubit q[3]
+                  ghz(q[2], q[0], q[1])
+                }
+            "#,
+        )
+        .expect("valid functions");
+
+        assert_eq!(circuit.operations.len(), 5);
+        assert!(matches!(
+            circuit.operations[1].kind,
+            OperationKind::Gate {
+                ref label,
+                ref targets,
+                ref controls,
+            } if label == "X"
+                && targets == &[0]
+                && controls == &[Control { wire: 2, positive: true }]
+        ));
+        assert!(matches!(
+            circuit.operations[2].kind,
+            OperationKind::Gate { ref label, .. } if label == "control"
+        ));
+        assert!(matches!(
+            circuit.operations[4].kind,
+            OperationKind::Barrier { ref wires } if wires == &[2, 0, 1]
+        ));
+    }
+
+    #[test]
+    fn reports_function_arity_at_the_call() {
+        let error =
+            parse("fn one(a) { h a }\n\ncircuit bad {\n  qubit q[2]\n  one(q[0], q[1])\n}\n")
+                .expect_err("wrong arity should fail");
+
+        assert_eq!(error.span, Span { line: 5, column: 3 });
+        assert!(
+            error
+                .message
+                .contains("expects 1 wire argument(s), but got 2")
+        );
     }
 }

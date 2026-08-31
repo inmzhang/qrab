@@ -34,8 +34,8 @@ Legend: **done** is implemented in both backends and exercised by a runnable tes
 | Global gate size, corners, and comment size | remaining `layout` properties | next |
 | Measurement shapes | measurement options | next |
 | Custom colors | portable color values | next |
-| DEFINE composition | parsed `fn` declarations, never text macros | next |
+| DEFINE composition | parsed `fn` declarations, never text macros | partial — nested wire-operation functions are done; value/style declarations remain |
 | PREAMBLE/PRETIKZ/POSTTIKZ/HEADER/HYPERTARGET | explicit backend escape blocks | next |
 | AUTOWIRES | intentionally replaced by checked declarations | next |
 
-`tests/artifacts.rs` currently compiles representative teleportation, styled/vertical, and wire-lifecycle/permutation fixtures to both PDFs. Phase 4 expands this into one parity fixture per upstream golden test and manual example; generated TikZ text is not compared byte-for-byte because qrab has a different frontend and renderer, but every backend artifact must compile and match its circuit-level visual baseline.
+`tests/artifacts.rs` currently compiles representative teleportation, styled/vertical, wire-lifecycle/permutation, and nested-function fixtures to both PDFs. Phase 4 expands this into one parity fixture per upstream golden test and manual example; generated TikZ text is not compared byte-for-byte because qrab has a different frontend and renderer, but every backend artifact must compile and match its circuit-level visual baseline.
