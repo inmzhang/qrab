@@ -25,9 +25,9 @@ Legend: **done** is implemented in both backends and exercised by a runnable tes
 | Comments beside operations | annotation statements | next |
 | Marks and highlighted `@` regions | `mark` and `group ... from ... to ...` | next |
 | TOUCH and PHANTOM | `touch`, `space` | partial — PHANTOM subslices remain |
-| MIXGATES, LB/LE, explicit time slices | `parallel` blocks | next |
+| MIXGATES, LB/LE, explicit time slices | `parallel` blocks | partial — non-overlapping operations align; nested forced-overlap levels remain |
 | PERMUTE and persistent wire reordering | `permute` statement | done |
-| Repeat/reverse (`R`) | `repeat ... from ... to ...`, `reverse` | next |
+| Repeat/reverse (`R`) | typed `repeat count { ... }`, later marked ranges/reverse | partial |
 | CUT separators | `cut` statement | next |
 | Global spacing, scale, and background | `layout { ... }` | done |
 | Horizontal/vertical orientation | `layout.orientation` | done |
@@ -38,4 +38,4 @@ Legend: **done** is implemented in both backends and exercised by a runnable tes
 | PREAMBLE/PRETIKZ/POSTTIKZ/HEADER/HYPERTARGET | explicit backend escape blocks | next |
 | AUTOWIRES | intentionally replaced by checked declarations | next |
 
-`tests/artifacts.rs` currently compiles representative teleportation, styled/vertical, wire-lifecycle/permutation, and nested-function fixtures to both PDFs. Phase 4 expands this into one parity fixture per upstream golden test and manual example; generated TikZ text is not compared byte-for-byte because qrab has a different frontend and renderer, but every backend artifact must compile and match its circuit-level visual baseline.
+`tests/artifacts.rs` currently compiles representative teleportation, styled/vertical, wire-lifecycle/permutation, nested-function, and structured-programming fixtures to both PDFs. Phase 4 expands this into one parity fixture per upstream golden test and manual example; generated TikZ text is not compared byte-for-byte because qrab has a different frontend and renderer, but every backend artifact must compile and match its circuit-level visual baseline.

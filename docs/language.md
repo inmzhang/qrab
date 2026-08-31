@@ -23,6 +23,10 @@ circuit ghz {
 
 Function bodies contain operations or calls to earlier functions. Calls have exact arity and cannot alias two parameters to the same wire. The compiler lowers typed operation trees; it never performs token or string substitution, so a parameter name appearing in a gate label remains ordinary label text. Declarations, captures, forward calls, and recursion are intentionally not part of the current function subset.
 
+Array slices are end-exclusive: `q[1..4]` selects `q[1]`, `q[2]`, and `q[3]` anywhere a wire list is accepted. A single-wire statement such as `h` rejects a range.
+
+`repeat count { ... }` repeats a parsed operation block, including function calls. `parallel { ... }` aligns independent operations after any prior work and aligns following work after the block. Operations whose visual wire spans overlap are safely serialized rather than drawn on top of one another.
+
 ## Current grammar
 
 Newlines terminate statements; `;` is accepted when several short statements belong on one line. `//` starts a comment.
@@ -76,11 +80,6 @@ The compiler packs operations into the earliest non-overlapping column while pre
 The remaining qpic surface will extend the same grammar rather than add uppercase directives:
 
 ```qrab
-parallel {
-  h q[0]
-  h q[1]
-}
-
 mark start
 group "encoding" from start to here on q[0], q[1] {
   fill: green

@@ -1,0 +1,20 @@
+fn local_layer(first, second, third) {
+  parallel {
+    h first
+    x second
+    y third
+  }
+}
+
+circuit structured_programming {
+  qubit q[4]: "|0>" -> "out"
+
+  h q[0]
+  h q[0]
+  local_layer(q[0], q[1], q[2])
+  gate "U" on q[0..3] with fill: yellow
+  repeat 2 {
+    x q[3] if q[2]
+  }
+  measure q[0..4]
+}

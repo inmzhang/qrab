@@ -30,6 +30,11 @@ fn generated_backends_compile_to_pdfs() {
         include_str!("../examples/functions.qrab"),
         &output_dir,
     );
+    compile_fixture(
+        "programming",
+        include_str!("../examples/programming.qrab"),
+        &output_dir,
+    );
 }
 
 fn compile_fixture(name: &str, source: &str, output_dir: &std::path::Path) {

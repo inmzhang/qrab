@@ -49,6 +49,7 @@ enum TokenKind {
     Comma,
     Bang,
     Arrow,
+    DotDot,
     Newline,
     End,
 }
@@ -105,6 +106,14 @@ fn lex(source: &str) -> Result<Vec<Token>, Diagnostic> {
                 chars.next();
                 tokens.push(Token {
                     kind: TokenKind::Arrow,
+                    span,
+                });
+                column += 2;
+            }
+            '.' if chars.peek() == Some(&'.') => {
+                chars.next();
+                tokens.push(Token {
+                    kind: TokenKind::DotDot,
                     span,
                 });
                 column += 2;
@@ -184,7 +193,14 @@ fn lex(source: &str) -> Result<Vec<Token>, Diagnostic> {
                     value.push(chars.next().expect("peeked character exists"));
                     column += 1;
                 }
-                if chars.peek() == Some(&'.') {
+                let decimal = if chars.peek() == Some(&'.') {
+                    let mut lookahead = chars.clone();
+                    lookahead.next();
+                    lookahead.peek().is_some_and(char::is_ascii_digit)
+                } else {
+                    false
+                };
+                if decimal {
                     chars.next();
                     value.push('.');
                     column += 1;
@@ -252,6 +268,8 @@ fn is_reserved_statement(name: &str) -> bool {
             | "permute"
             | "space"
             | "touch"
+            | "repeat"
+            | "parallel"
             | "if"
             | "on"
             | "as"
@@ -269,6 +287,7 @@ struct Parser {
     layout: Layout,
     functions: HashMap<String, Function>,
     in_function: bool,
+    operation_block_depth: usize,
 }
 
 #[derive(Clone)]
@@ -288,6 +307,7 @@ impl Parser {
             layout: Layout::default(),
             functions: HashMap::new(),
             in_function: false,
+            operation_block_depth: 0,
         }
     }
 
@@ -405,9 +425,11 @@ impl Parser {
     fn parse_statement(&mut self) -> Result<(), Diagnostic> {
         let span = self.current().span;
         let keyword = self.take_identifier("statement")?;
-        if self.in_function && matches!(keyword.as_str(), "layout" | "qubit" | "bit" | "hidden") {
+        if (self.in_function || self.operation_block_depth > 0)
+            && matches!(keyword.as_str(), "layout" | "qubit" | "bit" | "hidden")
+        {
             return Err(Diagnostic::new(
-                "functions may contain operations and function calls, not declarations",
+                "operation blocks may contain operations and function calls, not declarations",
                 span,
             ));
         }
@@ -432,6 +454,8 @@ impl Parser {
             "permute" => self.parse_permute(span),
             "space" => self.parse_phantom(span),
             "touch" => self.parse_touch(span),
+            "repeat" => self.parse_repeat(span),
+            "parallel" => self.parse_parallel(span),
             name if self.functions.contains_key(name) => self.parse_function_call(name, span),
             _ => Err(Diagnostic::new(
                 format!("unknown statement `{keyword}`"),
@@ -445,7 +469,7 @@ impl Parser {
         let mut arguments = Vec::new();
         if !self.at(&TokenKind::RightParen) {
             loop {
-                arguments.push(self.parse_wire_reference()?);
+                arguments.extend(self.parse_wire_selection(true)?);
                 if !self.consume(&TokenKind::Comma) {
                     break;
                 }
@@ -476,6 +500,57 @@ impl Parser {
                 style: operation.style,
             }));
         Ok(())
+    }
+
+    fn parse_repeat(&mut self, span: Span) -> Result<(), Diagnostic> {
+        let count = self.take_number("repeat count")?;
+        let body = self.parse_operation_block("repeat")?;
+        let added = body
+            .len()
+            .checked_mul(count)
+            .ok_or_else(|| Diagnostic::new("repeat block is too large", span))?;
+        self.operations
+            .try_reserve(added)
+            .map_err(|_| Diagnostic::new("repeat block is too large", span))?;
+        for _ in 0..count {
+            self.operations.extend(body.iter().cloned());
+        }
+        Ok(())
+    }
+
+    fn parse_parallel(&mut self, span: Span) -> Result<(), Diagnostic> {
+        let body = self.parse_operation_block("parallel")?;
+        if body.is_empty() {
+            return Ok(());
+        }
+        let touch = || Operation {
+            kind: OperationKind::Touch { wires: Vec::new() },
+            span,
+            style: Style::default(),
+        };
+        self.operations.push(touch());
+        self.operations.extend(body);
+        self.operations.push(touch());
+        Ok(())
+    }
+
+    fn parse_operation_block(&mut self, name: &str) -> Result<Vec<Operation>, Diagnostic> {
+        self.expect(TokenKind::LeftBrace, "`{`")?;
+        let start = self.operations.len();
+        self.operation_block_depth += 1;
+        self.skip_newlines();
+        while !self.at(&TokenKind::RightBrace) {
+            if self.at(&TokenKind::End) {
+                return Err(self.error(format!("expected `}}` to close the {name} block")));
+            }
+            self.parse_statement()?;
+            self.skip_newlines();
+        }
+        self.advance();
+        self.operation_block_depth -= 1;
+        let body = self.operations.split_off(start);
+        self.expect_statement_end()?;
+        Ok(body)
     }
 
     fn parse_layout(&mut self) -> Result<(), Diagnostic> {
@@ -840,10 +915,11 @@ impl Parser {
         let mut controls = Vec::new();
         loop {
             let positive = !self.consume(&TokenKind::Bang);
-            controls.push(Control {
-                wire: self.parse_wire_reference()?,
-                positive,
-            });
+            controls.extend(
+                self.parse_wire_selection(true)?
+                    .into_iter()
+                    .map(|wire| Control { wire, positive }),
+            );
             if !self.consume(&TokenKind::Comma) {
                 break;
             }
@@ -918,22 +994,55 @@ impl Parser {
     }
 
     fn parse_wire_list(&mut self) -> Result<Vec<usize>, Diagnostic> {
-        let mut wires = vec![self.parse_wire_reference()?];
+        let mut wires = self.parse_wire_selection(true)?;
         while self.consume(&TokenKind::Comma) {
-            wires.push(self.parse_wire_reference()?);
+            wires.extend(self.parse_wire_selection(true)?);
         }
         Ok(wires)
     }
 
     fn parse_wire_reference(&mut self) -> Result<usize, Diagnostic> {
+        Ok(self
+            .parse_wire_selection(false)?
+            .into_iter()
+            .next()
+            .expect("a wire selection is not empty"))
+    }
+
+    fn parse_wire_selection(&mut self, allow_range: bool) -> Result<Vec<usize>, Diagnostic> {
         let span = self.current().span;
-        let mut name = self.take_identifier("wire name")?;
+        let base = self.take_identifier("wire name")?;
         if self.consume(&TokenKind::LeftBracket) {
-            let index = self.take_number("wire index")?;
+            let start = self.take_number("wire index")?;
+            if self.consume(&TokenKind::DotDot) {
+                if !allow_range {
+                    return Err(Diagnostic::new(
+                        "a wire range is not valid where one wire is required",
+                        span,
+                    ));
+                }
+                let end = self.take_number("wire range end")?;
+                self.expect(TokenKind::RightBracket, "`]`")?;
+                if start >= end {
+                    return Err(Diagnostic::new(
+                        "a wire range must have an end greater than its start",
+                        span,
+                    ));
+                }
+                return (start..end)
+                    .map(|index| self.resolve_wire(&format!("{base}[{index}]"), span))
+                    .collect();
+            }
             self.expect(TokenKind::RightBracket, "`]`")?;
-            name = format!("{name}[{index}]");
+            return self
+                .resolve_wire(&format!("{base}[{start}]"), span)
+                .map(|wire| vec![wire]);
         }
-        self.wire_indices.get(&name).copied().ok_or_else(|| {
+        self.resolve_wire(&base, span).map(|wire| vec![wire])
+    }
+
+    fn resolve_wire(&self, name: &str, span: Span) -> Result<usize, Diagnostic> {
+        self.wire_indices.get(name).copied().ok_or_else(|| {
             Diagnostic::new(
                 format!("unknown wire `{name}`; declare it before use"),
                 span,
@@ -1283,5 +1392,50 @@ mod tests {
                 .message
                 .contains("expects 1 wire argument(s), but got 2")
         );
+    }
+
+    #[test]
+    fn expands_ranges_and_structured_operation_blocks() {
+        let circuit = parse(
+            r#"
+                fn pair(a, b) {
+                  parallel {
+                    h a
+                    h b
+                  }
+                }
+
+                circuit structured {
+                  qubit q[4]
+                  pair(q[1..3])
+                  repeat 2 {
+                    measure q[0..2]
+                  }
+                }
+            "#,
+        )
+        .expect("valid structured blocks");
+
+        assert_eq!(circuit.operations.len(), 6);
+        assert!(matches!(
+            circuit.operations[0].kind,
+            OperationKind::Touch { ref wires } if wires == &[1, 2]
+        ));
+        assert!(matches!(
+            circuit.operations[4].kind,
+            OperationKind::Measure { ref targets, .. } if targets == &[0, 1]
+        ));
+        assert!(matches!(
+            circuit.operations[5].kind,
+            OperationKind::Measure { ref targets, .. } if targets == &[0, 1]
+        ));
+    }
+
+    #[test]
+    fn rejects_a_range_where_one_wire_is_required() {
+        let error = parse("circuit bad {\n  qubit q[2]\n  h q[0..2]\n}\n")
+            .expect_err("range target should fail");
+
+        assert!(error.message.contains("where one wire is required"));
     }
 }

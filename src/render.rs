@@ -1556,4 +1556,31 @@ mod tests {
         assert!(rows[1].contains("quill.setwire(2, stroke: black)"));
         assert!(!typst.contains("setwire(2, x:"));
     }
+
+    #[test]
+    fn parallel_block_aligns_independent_wires_after_prior_work() {
+        let circuit = parse(
+            r#"
+                circuit parallel_work {
+                  qubit q[2]
+                  h q[0]
+                  h q[0]
+                  parallel {
+                    h q[0]
+                    h q[1]
+                  }
+                }
+            "#,
+        )
+        .expect("valid parallel block");
+        let (scheduled, _) = schedule(&circuit);
+
+        assert_eq!(
+            scheduled
+                .iter()
+                .map(|operation| operation.column)
+                .collect::<Vec<_>>(),
+            [0, 1, 1, 2, 2, 2]
+        );
+    }
 }

@@ -30,4 +30,4 @@ just test-artifacts
 
 The frontend reference is in [docs/language.md](docs/language.md). The phased parity plan and its evidence are tracked in [docs/qpic-coverage.md](docs/qpic-coverage.md) and [docs/roadmap.md](docs/roadmap.md).
 
-See [examples/styling.qrab](examples/styling.qrab) for portable layout and styling, [examples/lifecycle.qrab](examples/lifecycle.qrab) for wire changes and persistent permutations, and [examples/functions.qrab](examples/functions.qrab) for parsed function composition.
+See [examples/styling.qrab](examples/styling.qrab) for portable styling, [examples/lifecycle.qrab](examples/lifecycle.qrab) for persistent permutations, and [examples/programming.qrab](examples/programming.qrab) for functions, ranges, repeats, and parallel blocks.
