@@ -28,7 +28,7 @@ Legend: **done** is implemented in both backends and exercised by a runnable tes
 | TOUCH and PHANTOM | `touch`, `space` | partial — PHANTOM subslices remain |
 | MIXGATES, LB/LE, explicit time slices | `parallel` blocks | partial — non-overlapping operations align; nested forced-overlap levels remain |
 | PERMUTE and persistent wire reordering | `permute` statement | done |
-| Repeat/reverse (`R`) | typed `repeat count { ... }`, later marked ranges/reverse | partial |
+| Repeat/reverse (`R`) | typed `repeat count { ... }` and `reverse { ... }` blocks | partial — drawing-safe reverse is done; stateful/marked replay remains |
 | CUT separators | source-local `cut` statement | partial — global numbered cut rules remain |
 | Global spacing, scale, and background | `layout { ... }` | done |
 | Horizontal/vertical orientation | `layout.orientation` | done |

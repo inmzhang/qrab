@@ -25,7 +25,7 @@ Function bodies contain operations or calls to earlier functions. Calls have exa
 
 Array slices are end-exclusive: `q[1..4]` selects `q[1]`, `q[2]`, and `q[3]` anywhere a wire list is accepted. A single-wire statement such as `h` rejects a range.
 
-`repeat count { ... }` repeats a parsed operation block, including function calls. `parallel { ... }` aligns independent operations after any prior work and aligns following work after the block. Operations whose visual wire spans overlap are safely serialized rather than drawn on top of one another.
+`repeat count { ... }` repeats a parsed operation block, including function calls. `reverse { ... }` emits drawing-safe operations in reverse source order; measurement, lifecycle changes, and permutations are rejected because silently guessing their inverse would change the circuit. `parallel { ... }` aligns independent operations after any prior work and aligns following work after the block. Operations whose visual wire spans overlap are safely serialized rather than drawn on top of one another.
 
 ## Current grammar
 

@@ -16,5 +16,10 @@ circuit structured_programming {
   repeat 2 {
     x q[3] if q[2]
   }
+  reverse {
+    s q[0]
+    t q[1]
+    x q[2] if q[1]
+  }
   measure q[0..4]
 }

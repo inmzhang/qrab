@@ -271,6 +271,7 @@ fn is_reserved_statement(name: &str) -> bool {
             | "space"
             | "touch"
             | "repeat"
+            | "reverse"
             | "parallel"
             | "labels"
             | "brace"
@@ -478,6 +479,7 @@ impl Parser {
             "space" => self.parse_phantom(span),
             "touch" => self.parse_touch(span),
             "repeat" => self.parse_repeat(span),
+            "reverse" => self.parse_reverse(span),
             "parallel" => self.parse_parallel(span),
             "labels" => self.parse_wire_labels(span),
             "brace" => self.parse_brace(span),
@@ -544,6 +546,27 @@ impl Parser {
         for _ in 0..count {
             self.operations.extend(body.iter().cloned());
         }
+        Ok(())
+    }
+
+    fn parse_reverse(&mut self, _span: Span) -> Result<(), Diagnostic> {
+        let mut body = self.parse_operation_block("reverse")?;
+        if let Some(operation) = body.iter().find(|operation| {
+            matches!(
+                operation.kind,
+                OperationKind::Measure { .. }
+                    | OperationKind::WireChange { .. }
+                    | OperationKind::Endpoint { .. }
+                    | OperationKind::Permute { .. }
+            )
+        }) {
+            return Err(Diagnostic::new(
+                "reverse blocks cannot contain measurement, wire lifecycle changes, or permutations",
+                operation.span,
+            ));
+        }
+        body.reverse();
+        self.operations.extend(body);
         Ok(())
     }
 
@@ -1875,6 +1898,39 @@ mod tests {
             circuit.operations[5].kind,
             OperationKind::Measure { ref targets, .. } if targets == &[0, 1]
         ));
+    }
+
+    #[test]
+    fn reverses_drawing_safe_operation_blocks() {
+        let circuit = parse(
+            r#"
+                circuit reverse_order {
+                  qubit q[3]
+                  reverse {
+                    h q[0]
+                    x q[1]
+                    z q[2]
+                  }
+                }
+            "#,
+        )
+        .expect("valid reverse block");
+
+        let labels = circuit
+            .operations
+            .iter()
+            .map(|operation| match &operation.kind {
+                OperationKind::Gate { label, .. } => label.as_str(),
+                _ => panic!("reverse fixture only contains gates"),
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(labels, ["Z", "X", "H"]);
+        assert!(
+            parse("circuit bad { qubit q; reverse { measure q } }")
+                .expect_err("measurement is not reversibly drawable")
+                .message
+                .contains("cannot contain measurement")
+        );
     }
 
     #[test]
