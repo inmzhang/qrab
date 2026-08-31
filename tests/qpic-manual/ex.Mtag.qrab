@@ -1,0 +1,5 @@
+circuit manual_measure_tag {
+  qubit q[2]
+  measure q[0] as "X" using tag
+  measure q[1] as "Z" using tag with fill: yellow
+}

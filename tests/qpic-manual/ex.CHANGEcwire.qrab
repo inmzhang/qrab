@@ -1,0 +1,7 @@
+circuit manual_classical_change {
+  qubit q[2]
+  h q[0]
+  set q[0] to classical
+  x q[1] if q[0]
+  measure q[1]
+}

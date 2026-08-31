@@ -1,0 +1,7 @@
+circuit manual_wires {
+  qubit a: "a_in" -> "a_out"
+  bit b: "0" -> "b"
+  hidden spacer
+  h a
+  measure a
+}

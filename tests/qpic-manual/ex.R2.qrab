@@ -1,0 +1,8 @@
+circuit manual_reverse {
+  qubit q[3]
+  reverse {
+    h q[0]
+    x q[1] if q[0]
+    phase "theta" on q[2] if q[1]
+  }
+}

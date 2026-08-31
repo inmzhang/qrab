@@ -1,0 +1,7 @@
+circuit manual_phantom {
+  qubit q[3]
+  h q[0]
+  space q[1] with width: 30
+  space q[0], q[2] with width: 12, height: 8
+  x q[2]
+}

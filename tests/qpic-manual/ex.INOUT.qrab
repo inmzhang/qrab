@@ -1,0 +1,7 @@
+circuit manual_in_out {
+  qubit q
+  set q to hidden as "0"
+  space q with width: 24
+  set q to quantum as "1"
+  h q
+}

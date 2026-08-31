@@ -1,0 +1,5 @@
+circuit manual_equals {
+  qubit q[3]
+  equals
+  equals "A = B" on q[0..3]
+}

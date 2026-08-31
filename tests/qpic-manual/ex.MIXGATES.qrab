@@ -1,0 +1,11 @@
+circuit manual_mixed_gates {
+  qubit q[4]
+  h q[0]
+  parallel {
+    x q[0]
+    y q[1]
+    z q[2]
+    t q[3]
+  }
+  gate "span" on q[0], q[3]
+}

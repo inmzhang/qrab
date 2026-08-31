@@ -1,0 +1,7 @@
+circuit manual_operator {
+  qubit q[4]
+  gate "+" on q[0] with shape: circle
+  gate "*" on q[1] with shape: box
+  gate "-" on q[2] with shape: ellipse
+  gate "/" on q[3] with shape: none
+}

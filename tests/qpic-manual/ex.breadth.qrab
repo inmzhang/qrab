@@ -1,0 +1,7 @@
+circuit manual_wire_breadth {
+  layout {
+    wire_gap: 1.6
+  }
+  qubit q[3]
+  gate "wide span" on q[0..3] with height: 42
+}

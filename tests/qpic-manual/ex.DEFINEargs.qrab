@@ -1,0 +1,8 @@
+fn controlled_u(control, target) {
+  gate "U" on target if control
+}
+circuit manual_define_arguments {
+  qubit q[3]
+  controlled_u(q[0], q[1])
+  controlled_u(q[1], q[2])
+}

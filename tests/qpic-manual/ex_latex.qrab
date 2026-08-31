@@ -1,0 +1,11 @@
+circuit manual_latex_escape {
+  backend latex {
+    preamble: "\\newcommand{\\manualhook}{manual}"
+    before: "\\node at (0,0.5) {\\manualhook};"
+  }
+  backend typst {
+    before: "#align(center)[manual]"
+  }
+  qubit q
+  h q
+}

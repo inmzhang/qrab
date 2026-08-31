@@ -51,6 +51,73 @@ const QPIC_GOLDEN_TESTS: &[&str] = &[
     "wiretest",
 ];
 
+const QPIC_MANUAL_EXAMPLES: &[&str] = &[
+    "Adder_CDKM_MAJ",
+    "QFT3v1",
+    "ShorNutshell",
+    "ex.BARRIER",
+    "ex.C",
+    "ex.CHANGEcwire",
+    "ex.CUT",
+    "ex.DEFINE",
+    "ex.DEFINEargs",
+    "ex.G",
+    "ex.GG",
+    "ex.Gbar",
+    "ex.HX",
+    "ex.INOUT",
+    "ex.M",
+    "ex.MIXGATES",
+    "ex.Mtag",
+    "ex.N",
+    "ex.P",
+    "ex.PERMUTE",
+    "ex.PHANTOM",
+    "ex.Pwidth",
+    "ex.R1",
+    "ex.R2",
+    "ex.Rmark",
+    "ex.S",
+    "ex.STARTEND",
+    "ex.SWAP",
+    "ex.T",
+    "ex.TOUCH",
+    "ex.W",
+    "ex.Z",
+    "ex.at",
+    "ex.atfill",
+    "ex.breadth",
+    "ex.color",
+    "ex.comment",
+    "ex.delay",
+    "ex.ellipsis",
+    "ex.equals",
+    "ex.equals2",
+    "ex.fill",
+    "ex.hyperlink",
+    "ex.hypertarget",
+    "ex.label",
+    "ex.level",
+    "ex.nW",
+    "ex.noTOUCH",
+    "ex.none",
+    "ex.operator",
+    "ex.operator2",
+    "ex.operatorquotes",
+    "ex.plus",
+    "ex.qcowire",
+    "ex.semicolon",
+    "ex.setsize",
+    "ex.shape",
+    "ex.size",
+    "ex.sizevert",
+    "ex.slash",
+    "ex.style",
+    "ex_latex",
+    "reverse-8",
+    "teleport",
+];
+
 #[test]
 #[ignore = "requires tectonic, typst, and network access for their first package download"]
 fn generated_backends_compile_to_pdfs() {
@@ -112,6 +179,11 @@ fn generated_backends_compile_to_pdfs() {
         let source = fs::read_to_string(format!("tests/qpic/{name}.qrab"))
             .unwrap_or_else(|error| panic!("missing qpic parity fixture `{name}`: {error}"));
         compile_fixture(&format!("qpic-{name}"), &source, &output_dir);
+    }
+    for name in QPIC_MANUAL_EXAMPLES {
+        let source = fs::read_to_string(format!("tests/qpic-manual/{name}.qrab"))
+            .unwrap_or_else(|error| panic!("missing qpic manual fixture `{name}`: {error}"));
+        compile_fixture(&format!("qpic-manual-{name}"), &source, &output_dir);
     }
 }
 

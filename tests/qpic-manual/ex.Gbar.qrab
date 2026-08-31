@@ -1,0 +1,5 @@
+circuit manual_barred_gate {
+  qubit q[4]
+  gate "upper" on q[0], q[2] with fill: "#DDEEFF"
+  gate "lower" on q[1], q[3] with dash: dashed
+}

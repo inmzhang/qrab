@@ -1,0 +1,10 @@
+circuit manual_marked_repeat {
+  qubit q[3]
+  mark repeated
+  repeat 2 {
+    h q[0]
+    x q[1] if q[0]
+    z q[2] if q[1]
+  }
+  group "repeated range" from repeated to here with fill: yellow, opacity: 0.15
+}

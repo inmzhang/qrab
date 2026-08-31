@@ -1,0 +1,5 @@
+circuit manual_s_gate {
+  qubit q[2]
+  s q[0]
+  s q[1] if q[0]
+}

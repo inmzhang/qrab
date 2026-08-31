@@ -1,0 +1,5 @@
+circuit manual_multi_wire_declaration {
+  qubit q[5]: "x" -> "y"
+  labels "q0", "q1", "q2", "q3", "q4" on q[0..5]
+  brace left "register" on q[0..5]
+}

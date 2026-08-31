@@ -1,0 +1,9 @@
+circuit manual_vertical_sizes {
+  layout {
+    orientation: vertical
+  }
+  qubit q[3]
+  gate "wide" on q[0] with width: 48
+  gate "tall" on q[1] with height: 36
+  gate "both" on q[2] with size: 30
+}

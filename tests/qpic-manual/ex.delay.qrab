@@ -1,0 +1,8 @@
+circuit manual_delay {
+  qubit q[3]
+  h q[0]
+  space q[1] with width: 40
+  x q[2]
+  touch q[0], q[2]
+  gate "after delay" on q[1]
+}

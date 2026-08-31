@@ -1,0 +1,6 @@
+circuit manual_unboxed {
+  qubit q[3]
+  gate "plain" on q[0] with shape: none
+  gate "+" on q[1] with shape: none, stroke: blue
+  label "floating" on q[2]
+}

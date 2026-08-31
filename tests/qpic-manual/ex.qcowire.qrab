@@ -1,0 +1,9 @@
+circuit manual_wire_types {
+  qubit quantum
+  bit classical
+  hidden off
+  h quantum
+  set quantum to classical
+  set classical to quantum
+  set off to quantum as "0"
+}

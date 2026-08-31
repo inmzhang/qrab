@@ -1,0 +1,15 @@
+circuit manual_teleport {
+  layout {
+    orientation: vertical
+  }
+  qubit message: "|psi>"
+  qubit bell[2]: "|0>" -> "|psi>"
+  h bell[0]
+  x bell[1] if bell[0]
+  x bell[0] if message
+  h message
+  measure message
+  measure bell[0]
+  x bell[1] if bell[0]
+  z bell[1] if message
+}

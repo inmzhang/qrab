@@ -1,0 +1,6 @@
+circuit manual_sizes {
+  qubit q[3]
+  h q[0] with size: 14
+  x q[1] with size: 24
+  gate "U" on q[2] with size: 36
+}

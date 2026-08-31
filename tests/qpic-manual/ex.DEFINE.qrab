@@ -1,0 +1,10 @@
+let operator = "U"
+style defined_gate {
+  fill: yellow
+  stroke: blue
+}
+circuit manual_define {
+  qubit q[2]
+  gate operator on q[0] with defined_gate
+  gate operator on q[1] with defined_gate, opacity: 0.6
+}

@@ -39,4 +39,4 @@ Legend: **done** is implemented in both backends and exercised by a runnable tes
 | PREAMBLE/PRETIKZ/POSTTIKZ/HEADER/HYPERTARGET | isolated `backend latex|typst` escape blocks | done |
 | AUTOWIRES | intentionally replaced by checked declarations | next |
 
-`tests/qpic/` contains a checked `.qrab` translation for every one of qpic's 44 golden-test stems. `tests/artifacts.rs` requires that exact list and currently compiles those plus 10 focused qrab examples to 108 PDFs on every artifact run. The remaining Phase 4 corpus is qpic's 64 manual examples and stored visual baselines; generated TikZ text is not compared byte-for-byte because qrab has a different frontend and renderer.
+`tests/qpic/` contains a checked `.qrab` translation for every one of qpic's 44 golden-test stems, and `tests/qpic-manual/` contains all 64 documented example stems. `tests/artifacts.rs` requires both exact lists and compiles them plus 10 focused qrab examples through both backends: 118 source fixtures and 236 PDFs per artifact run. Stored visual baselines remain Phase 4 work; generated TikZ text is not compared byte-for-byte because qrab has a different frontend and renderer.

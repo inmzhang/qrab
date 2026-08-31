@@ -1,0 +1,8 @@
+circuit manual_adjacent_gates {
+  qubit q[4]
+  parallel {
+    gate "A" on q[0], q[1]
+    gate "B" on q[2], q[3]
+  }
+  gate "AB" on q[0..4]
+}

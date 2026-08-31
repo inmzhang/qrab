@@ -1,0 +1,6 @@
+circuit manual_ellipsis {
+  qubit first: "x_1" -> "y_1"
+  ellipsis omitted
+  qubit last: "x_n" -> "y_n"
+  label "..." on omitted
+}

@@ -1,0 +1,6 @@
+circuit manual_z_gate {
+  qubit q[3]
+  z q[0]
+  z q[1] if q[0]
+  z q[2] if !q[1]
+}

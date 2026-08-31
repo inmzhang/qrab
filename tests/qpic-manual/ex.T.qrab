@@ -1,0 +1,5 @@
+circuit manual_t_gate {
+  qubit q[2]
+  t q[0]
+  t q[1] if q[0]
+}

@@ -1,0 +1,7 @@
+circuit manual_permute {
+  qubit q[4]: "in" -> "out"
+  h q[0]
+  permute q[3], q[0], q[2], q[1] with stroke: purple
+  x q[3]
+  permute q[0], q[1], q[2], q[3]
+}

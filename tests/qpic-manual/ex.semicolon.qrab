@@ -1,0 +1,3 @@
+circuit manual_semicolons {
+  qubit q[3]; h q[0]; x q[1] if q[0]; z q[2] if q[1]
+}

@@ -1,0 +1,6 @@
+circuit manual_phase {
+  qubit q[3]
+  phase "theta" on q[0]
+  phase "pi/2" on q[1] if q[0]
+  phase "pi/4" on q[2] if q[0], q[1]
+}
