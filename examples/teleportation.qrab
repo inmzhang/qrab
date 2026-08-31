@@ -1,0 +1,15 @@
+circuit teleportation {
+  qubit message: "|psi>" -> "|psi>"
+  qubit alice: "|0>"
+  qubit bob: "|0>" -> "|psi>"
+
+  h alice
+  x bob if alice
+  barrier
+
+  x alice if message
+  h message
+  measure message, alice
+  x bob if alice
+  z bob if message
+}

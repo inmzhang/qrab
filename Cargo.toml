@@ -1,0 +1,17 @@
+[package]
+name = "qrab"
+version = "0.1.0"
+edition = "2024"
+description = "A readable quantum-circuit compiler for TikZ and Typst"
+
+[dependencies]
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = "warn"
+
+[profile.release]
+lto = "thin"
+strip = true
