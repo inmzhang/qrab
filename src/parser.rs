@@ -246,6 +246,7 @@ fn is_reserved_statement(name: &str) -> bool {
     matches!(
         name,
         "circuit"
+            | "import"
             | "fn"
             | "let"
             | "style"

@@ -2,6 +2,19 @@
 
 The design follows three rules: declarations read like declarations, operations read in execution order, and backend syntax never leaks into the common circuit model.
 
+Declaration-only modules can be imported before the circuit. Paths are relative to the importing file; duplicate imports load once and cycles are rejected:
+
+```qrab
+import "modules/gates.qrab"
+
+circuit main {
+  qubit q[2]
+  entangle(q[0], q[1])
+}
+```
+
+Modules may contain `import`, `let`, `style`, and `fn` declarations, but the root file owns the single `circuit`. Path-aware loading is used by the CLI and is also available as `qrab::load_source` for library callers.
+
 Typed values and reusable styles may precede functions and the circuit:
 
 ```qrab
@@ -146,4 +159,4 @@ Each block may repeat `preamble`, `before`, or `after`. These strings are emitte
 
 `layout` configures orientation, scale, abstract column/wire gaps, default `gate_size`, permutation `corner_radius`, note `comment_width`, and background. The three size properties use points. A trailing `with` clause accepts portable `stroke`, `fill`, `width`, `height`, `size`, `shape`, `dash`, `opacity`, and `link` properties. Shapes are `box`, `circle`, `ellipse`, or `none`; numeric dimensions are points and opacity ranges from 0 to 1. Colors are checked names understood by both backends or quoted six-digit values such as `"#336699"`. A link is a checked absolute HTTP(S) or mailto URL and wraps the visible gate body in both outputs. Custom target operators use an ordinary gate label and shape, for example `gate "+" on target if control with shape: circle`.
 
-The remaining qpic surface will extend the same grammar rather than add uppercase directives.
+The language extends this grammar rather than add uppercase directives.

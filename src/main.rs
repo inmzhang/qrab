@@ -3,7 +3,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use qrab::{Target, compile, parse};
+use qrab::{Diagnostic, LoadedSource, Target, compile, load_source, parse};
 
 const USAGE: &str = "\
 qrab — readable quantum circuits for TikZ and Typst/Quill
@@ -50,7 +50,7 @@ fn check_command(arguments: &[String]) -> Result<(), String> {
         return Err("check expects exactly one input file".into());
     }
     let source = read_source(Path::new(&arguments[0]))?;
-    let circuit = parse(&source).map_err(|error| error.to_string())?;
+    let circuit = parse(source.as_str()).map_err(|error| format_diagnostic(&source, &error))?;
     println!(
         "{}: {} wire(s), {} operation(s)",
         circuit.name,
@@ -114,16 +114,35 @@ fn output_path(input: &Path, output: Option<PathBuf>, extension: &str) -> PathBu
     output.unwrap_or_else(|| input.with_extension(extension))
 }
 
-fn read_source(path: &Path) -> Result<String, String> {
-    fs::read_to_string(path).map_err(|error| format!("cannot read {}: {error}", path.display()))
+fn read_source(path: &Path) -> Result<LoadedSource, String> {
+    load_source(path).map_err(|error| error.to_string())
 }
 
-fn write_compiled(source: &str, target: Target, path: PathBuf) -> Result<(), String> {
-    let rendered = compile(source, target).map_err(|error| error.to_string())?;
+fn write_compiled(source: &LoadedSource, target: Target, path: PathBuf) -> Result<(), String> {
+    let rendered =
+        compile(source.as_str(), target).map_err(|error| format_diagnostic(source, &error))?;
     fs::write(&path, rendered)
         .map_err(|error| format!("cannot write {}: {error}", path.display()))?;
     println!("wrote {}", path.display());
     Ok(())
+}
+
+fn format_diagnostic(source: &LoadedSource, diagnostic: &Diagnostic) -> String {
+    let (path, line) = source
+        .origin(diagnostic.span.line)
+        .unwrap_or((Path::new("<expanded>"), diagnostic.span.line));
+    let source_line = source
+        .as_str()
+        .lines()
+        .nth(diagnostic.span.line.saturating_sub(1))
+        .unwrap_or("");
+    format!(
+        "{}:{line}:{}: {}\n  {source_line}\n  {}^",
+        path.display(),
+        diagnostic.span.column,
+        diagnostic.message,
+        " ".repeat(diagnostic.span.column.saturating_sub(1))
+    )
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

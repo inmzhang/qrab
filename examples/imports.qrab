@@ -1,0 +1,7 @@
+import "modules/bell.qrab"
+
+circuit imported_bell {
+  qubit q[2]: "|0>" -> "bell"
+  make_bell(q[0], q[1])
+  measure q[0], q[1]
+}

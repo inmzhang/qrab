@@ -1,0 +1,8 @@
+style prepared {
+  fill: yellow
+}
+
+fn make_bell(control, target) {
+  h control with prepared
+  x target if control
+}

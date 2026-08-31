@@ -28,7 +28,9 @@ just check
 just test-artifacts
 ```
 
-The artifact suite requires all 44 translated qpic golden tests and all 64 documented examples, then compiles those plus 10 focused qrab fixtures through both Tectonic and Typst/Quill (236 PDFs total).
+Declaration-only modules use `import "relative/path.qrab"`; imports resolve relative to each source file, load once, and reject cycles. See [examples/imports.qrab](examples/imports.qrab).
+
+The artifact suite requires all 44 translated qpic golden tests and all 64 documented examples, then compiles those plus 11 focused qrab fixtures through both Tectonic and Typst/Quill (238 PDFs total).
 
 The frontend reference is in [docs/language.md](docs/language.md). The phased parity plan and its evidence are tracked in [docs/qpic-coverage.md](docs/qpic-coverage.md) and [docs/roadmap.md](docs/roadmap.md).
 

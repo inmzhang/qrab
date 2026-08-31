@@ -2,7 +2,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
-use qrab::{Target, compile};
+use qrab::{Target, compile, load_source};
 
 const QPIC_GOLDEN_TESTS: &[&str] = &[
     "2Bitcomp",
@@ -174,6 +174,8 @@ fn generated_backends_compile_to_pdfs() {
         include_str!("../examples/escapes.qrab"),
         &output_dir,
     );
+    let imports = load_source("examples/imports.qrab").expect("load imported example");
+    compile_fixture("imports", imports.as_str(), &output_dir);
 
     for name in QPIC_GOLDEN_TESTS {
         let source = fs::read_to_string(format!("tests/qpic/{name}.qrab"))
