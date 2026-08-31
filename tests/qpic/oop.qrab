@@ -1,0 +1,19 @@
+let operator = "*"
+let accent = "#DBEAFE"
+
+style round_operator {
+  fill: accent
+  stroke: blue
+  shape: circle
+}
+
+circuit operator_options {
+  qubit q[5]
+
+  gate operator on q[0] with round_operator
+  gate "+" on q[1] with shape: box
+  gate "-" on q[2] with shape: ellipse, width: 30
+  gate "/" on q[3] with shape: none
+  gate "linked" on q[4] with link: "https://example.com/operator"
+  gate operator on q[2] if q[0], !q[4] with round_operator, opacity: 0.7
+}

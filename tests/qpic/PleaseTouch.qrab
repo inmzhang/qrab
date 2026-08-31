@@ -1,0 +1,17 @@
+circuit please_touch {
+  qubit q[4]
+
+  h q[0]
+  h q[0]
+  h q[3]
+  touch q[1], q[2]
+  parallel {
+    x q[0]
+    y q[1]
+    z q[2]
+  }
+  barrier q[0..4]
+  space q[0], q[3] with width: 20
+  touch with stroke: blue, dash: dashed
+  x q[3] if q[0]
+}

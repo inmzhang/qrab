@@ -1,0 +1,35 @@
+let accent = "#6B7280"
+
+style sink_gate {
+  fill: "#EDE9FE"
+  stroke: purple
+}
+
+circuit kitchen_sink {
+  layout {
+    orientation: vertical
+    comment_width: 120
+  }
+
+  qubit a: "a" -> "b"
+  qubit b: "c" -> "d" with stroke: blue
+  qubit c: "e" -> "f" with stroke: red
+  ellipsis omitted
+  qubit d: "g" -> "h"
+  qubit e: "i" -> "j" with stroke: orange
+
+  t c if a, b with stroke: green
+  x e if !d with stroke: teal
+  h a
+  y c if b with stroke: accent
+  z e if a, b, c, d with fill: "#CFFAFE"
+  gate "AAA" on c if a with sink_gate, width: 25
+  labels "u", "v+w", "x", "...", "y", "123456789"
+  gate "B" on d, e if a, c with fill: yellow
+  set d to hidden as "0"
+  phase "F" on e if b
+  mark first_half
+  label "..." on omitted
+  gate "CD" on a, e if b, !c with stroke: purple
+  group "first half" from first_half to here with fill: yellow, opacity: 0.15
+}

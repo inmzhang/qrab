@@ -1,0 +1,17 @@
+circuit permutation_test {
+  layout {
+    corner_radius: 4
+  }
+
+  qubit q[4]: "in" -> "out"
+  bit c: "bit" -> "bit"
+
+  h q[0]
+  permute q[3], q[0], c, q[2], q[1] with stroke: purple, width: 36
+  parallel {
+    x q[3]
+    y q[0]
+    z q[1]
+  }
+  permute q[0], q[1], q[2], q[3], c with stroke: teal, width: 28
+}

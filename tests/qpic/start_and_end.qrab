@@ -1,0 +1,16 @@
+circuit start_and_end {
+  qubit a: "a0" -> "a1"
+  qubit b: "b0" -> "b1"
+  qubit c: "c0" -> "c1"
+  qubit d: "d0" -> "d1"
+
+  start c as "late"
+  h a
+  end a as "pause"
+  start d as "late"
+  x b if c
+  end b as "done"
+  start a as "resume"
+  h d
+  end c
+}

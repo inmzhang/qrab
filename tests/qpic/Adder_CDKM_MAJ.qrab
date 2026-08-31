@@ -1,0 +1,11 @@
+circuit adder_cdkm_majority {
+  qubit a: "a" -> "a xor c"
+  qubit b: "b" -> "b xor c"
+  qubit c: "c" -> "majority"
+
+  gate "MAJ" on a, b, c
+  equals
+  x b if c
+  x a if c
+  x c if a, b
+}

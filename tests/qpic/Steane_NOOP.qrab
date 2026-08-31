@@ -1,0 +1,26 @@
+fn parity(a, b, c, syndrome) {
+  x syndrome if a
+  x syndrome if b
+  x syndrome if c
+}
+
+circuit steane_noop {
+  qubit data[7]: "|psi_L>" -> "|psi_L>"
+  qubit syndrome[6]: "|0>" -> "s"
+
+  mark extraction
+  parity(data[0], data[2], data[4], syndrome[0])
+  parity(data[1], data[2], data[5], syndrome[1])
+  parity(data[3], data[4], data[5], syndrome[2])
+  parallel {
+    h syndrome[3]
+    h syndrome[4]
+    h syndrome[5]
+  }
+  parity(data[0], data[1], data[3], syndrome[3])
+  parity(data[2], data[4], data[6], syndrome[4])
+  parity(data[1], data[5], data[6], syndrome[5])
+  measure syndrome[0..6] as "s"
+  group "Steane syndrome extraction" from extraction to here with fill: "#DCFCE7", stroke: green, opacity: 0.18
+  gate "correct" on data[0..7] if syndrome[0], syndrome[1], syndrome[2] with fill: yellow
+}

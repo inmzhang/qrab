@@ -1,0 +1,13 @@
+circuit vertical_shape_examples {
+  layout {
+    orientation: vertical
+    gate_size: 24
+  }
+
+  qubit q[4]
+  gate "box" on q[0] with fill: yellow
+  gate "round" on q[1] with shape: circle, fill: green
+  gate "oval" on q[2] with shape: ellipse, width: 36
+  gate "open" on q[3] with shape: none
+  gate "multi" on q[0..4] with fill: "#EDE9FE", stroke: purple
+}

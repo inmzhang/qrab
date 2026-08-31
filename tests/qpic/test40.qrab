@@ -1,0 +1,21 @@
+circuit operator_shape_grid {
+  qubit a
+  qubit b
+  qubit c
+  qubit d
+
+  x d if a, !b, !c with stroke: red
+  phase "P" on d with size: 20
+  gate "G" on a with size: 20
+  gate "G" on b, c with size: 20
+  gate "+" on a with shape: circle, stroke: red
+  gate "g" on b if c with shape: none, stroke: blue
+  gate "/" on d if a with shape: box
+  gate "*" on c, d if a, b with fill: yellow
+  parallel {
+    gate "6" on a with shape: circle
+    gate "7" on b with shape: ellipse
+    gate "8" on c with shape: box
+    gate "9" on d with shape: none
+  }
+}

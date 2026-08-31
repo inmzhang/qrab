@@ -1,0 +1,21 @@
+let carry_name = "CARRY"
+let sum_name = "SUM"
+
+style linked_box {
+  fill: "#EEF5FF"
+  stroke: blue
+  link: "https://example.com/vbe"
+}
+
+circuit adder_vbe {
+  qubit low[4]: "low" -> "sum"
+  ellipsis omitted
+  qubit high[4]: "high" -> "sum"
+
+  gate carry_name on low[0..4] with linked_box
+  label "..." on omitted
+  gate carry_name on high[0..4] with linked_box
+  x high[2] if high[1]
+  gate sum_name on high[0..3] with fill: yellow
+  gate sum_name on low[0..3] with fill: yellow
+}

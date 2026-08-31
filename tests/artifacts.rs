@@ -4,6 +4,53 @@ use std::process::Command;
 
 use qrab::{Target, compile};
 
+const QPIC_GOLDEN_TESTS: &[&str] = &[
+    "2Bitcomp",
+    "Adder_CDKM",
+    "Adder_CDKM_MAJ",
+    "Adder_CDKM_UMA",
+    "Adder_VBE",
+    "Adder_VBE_Carry",
+    "Adder_VBE_Sum",
+    "AutoTest",
+    "BasicTeleportation",
+    "CoherentSuperDenseCoding",
+    "ModAdder",
+    "ModExp",
+    "NestedLevels",
+    "PleaseTouch",
+    "QFT3v1",
+    "QFT3v2",
+    "QFT4",
+    "QFT4vert",
+    "QuantumTeleportation",
+    "RecursiveQFT",
+    "RecursiveQFTv2",
+    "ShapeExamples",
+    "ShapeExamplesVertical",
+    "ShorNutshell",
+    "Simon",
+    "Steane_NOOP",
+    "SuperDenseCoding",
+    "Teleport",
+    "boxtest",
+    "cswap",
+    "gatecompare",
+    "measure",
+    "measure_tag",
+    "oop",
+    "permute",
+    "phantom_test",
+    "reverse-8",
+    "sink",
+    "start_and_end",
+    "starwars",
+    "test-rotate",
+    "test40",
+    "through",
+    "wiretest",
+];
+
 #[test]
 #[ignore = "requires tectonic, typst, and network access for their first package download"]
 fn generated_backends_compile_to_pdfs() {
@@ -60,6 +107,12 @@ fn generated_backends_compile_to_pdfs() {
         include_str!("../examples/escapes.qrab"),
         &output_dir,
     );
+
+    for name in QPIC_GOLDEN_TESTS {
+        let source = fs::read_to_string(format!("tests/qpic/{name}.qrab"))
+            .unwrap_or_else(|error| panic!("missing qpic parity fixture `{name}`: {error}"));
+        compile_fixture(&format!("qpic-{name}"), &source, &output_dir);
+    }
 }
 
 fn compile_fixture(name: &str, source: &str, output_dir: &std::path::Path) {

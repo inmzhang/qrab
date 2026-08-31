@@ -1,0 +1,16 @@
+circuit phantom_spacing {
+  qubit q[4]
+
+  h q[0]
+  space q[1] with width: 36, height: 10
+  space q[2], q[3] with width: 12
+  touch q[0], q[3]
+  parallel {
+    x q[0]
+    y q[1]
+    z q[2]
+  }
+  space with width: 24
+  barrier q[0..4]
+  touch with stroke: red, dash: dashed
+}

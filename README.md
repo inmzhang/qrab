@@ -28,6 +28,8 @@ just check
 just test-artifacts
 ```
 
+The artifact suite requires all 44 translated qpic golden-test fixtures under `tests/qpic/` and compiles every one through both Tectonic and Typst/Quill.
+
 The frontend reference is in [docs/language.md](docs/language.md). The phased parity plan and its evidence are tracked in [docs/qpic-coverage.md](docs/qpic-coverage.md) and [docs/roadmap.md](docs/roadmap.md).
 
 See [examples/styling.qrab](examples/styling.qrab) for portable styling, [examples/lifecycle.qrab](examples/lifecycle.qrab) for persistent permutations, [examples/programming.qrab](examples/programming.qrab) for structured code, [examples/measurements.qrab](examples/measurements.qrab) for measurement shapes, [examples/ellipsis.qrab](examples/ellipsis.qrab) for omitted register rows, [examples/escapes.qrab](examples/escapes.qrab) for isolated backend hooks, and [examples/regions.qrab](examples/regions.qrab) for annotations and marked regions.

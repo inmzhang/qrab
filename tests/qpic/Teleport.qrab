@@ -1,0 +1,20 @@
+circuit styled_teleportation {
+  layout {
+    background: "#F8FAFC"
+  }
+
+  qubit message: "|psi>"
+  qubit pair[2]: "|beta_00>" -> "|psi>"
+
+  mark protocol
+  h pair[0] with fill: yellow
+  x pair[1] if pair[0] with stroke: blue
+  x pair[0] if message
+  h message
+  cut on message, pair[0] as "measure"
+  measure message as "Z"
+  measure pair[0] as "X" using tag
+  x pair[1] if pair[0]
+  z pair[1] if message
+  group "teleport" from protocol to here with stroke: purple, dash: dashed
+}

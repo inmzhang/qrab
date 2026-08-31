@@ -1,0 +1,19 @@
+circuit nested_levels {
+  qubit a
+  qubit b
+  qubit c
+
+  mark outer
+  x a if b with stroke: blue
+  x a if c with stroke: blue
+  mark inner
+  x c if a, b with stroke: red
+  x c with stroke: red
+  group "inner" from inner to here with fill: red, opacity: 0.15
+  x b if c with stroke: blue
+  group "outer" from outer to here with stroke: blue, dash: dashed
+  reverse {
+    x a if b
+    x a if c
+  }
+}

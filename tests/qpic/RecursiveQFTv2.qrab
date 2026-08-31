@@ -1,0 +1,24 @@
+style phase_style {
+  shape: circle
+  fill: "#FFF3BF"
+  stroke: orange
+}
+
+fn phase_pair(control, target) {
+  gate "R" on target if control with phase_style
+}
+
+circuit recursive_qft_v2 {
+  qubit q[4]
+
+  repeat 2 {
+    phase_pair(q[0], q[1])
+    phase_pair(q[1], q[2])
+    phase_pair(q[2], q[3])
+  }
+  parallel {
+    h q[0]
+    h q[2]
+  }
+  permute q[3], q[2], q[1], q[0]
+}

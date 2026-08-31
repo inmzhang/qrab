@@ -1,0 +1,11 @@
+circuit shape_examples {
+  qubit q[4]
+
+  gate "box" on q[0] with shape: box, fill: yellow
+  gate "circle" on q[1] with shape: circle, fill: "#DDEEFF"
+  gate "ellipse" on q[2] with shape: ellipse, width: 34, height: 18
+  gate "none" on q[3] with shape: none, stroke: red
+  gate "+" on q[1] if q[0] with shape: circle
+  phase "theta" on q[2] with size: 26
+  gate "wide" on q[0..4] with width: 44, dash: dashed, opacity: 0.6
+}

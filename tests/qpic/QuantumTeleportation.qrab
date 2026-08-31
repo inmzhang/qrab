@@ -1,0 +1,14 @@
+circuit quantum_teleportation {
+  qubit message: "|psi>" -> ""
+  qubit alice: "|0>" -> "m1"
+  qubit bob: "|0>" -> "|psi>"
+
+  h alice
+  x bob if alice
+  x alice if message
+  h message
+  measure message as "Z"
+  measure alice as "X" using tag
+  x bob if alice
+  z bob if message
+}

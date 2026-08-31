@@ -1,0 +1,14 @@
+circuit superdense_coding {
+  qubit alice: "|x y>" -> ""
+  qubit channel: "|0>" -> "x"
+  qubit bob: "|0>" -> "y"
+
+  h channel
+  x bob if channel
+  z channel if alice
+  x channel if alice
+  x bob if channel
+  h channel
+  measure channel as "x"
+  measure bob as "y" using tag
+}

@@ -1,0 +1,18 @@
+circuit qft4_vertical {
+  layout {
+    orientation: vertical
+    scale: 0.9
+  }
+
+  qubit q[4]
+  h q[0]
+  phase "pi/2" on q[1] if q[0]
+  phase "pi/4" on q[2] if q[0]
+  phase "pi/8" on q[3] if q[0]
+  h q[1]
+  phase "pi/2" on q[2] if q[1]
+  phase "pi/4" on q[3] if q[1]
+  h q[2]
+  phase "pi/2" on q[3] if q[2]
+  h q[3]
+}

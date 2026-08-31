@@ -1,0 +1,22 @@
+fn majority(a, b, carry) {
+  gate "MAJ" on a, b, carry
+}
+
+fn unmajority(a, b, carry) {
+  gate "UMA" on a, b, carry
+}
+
+circuit adder_cdkm {
+  qubit low[3]: "low" -> "sum"
+  ellipsis omitted
+  qubit high[3]: "high" -> "sum"
+  qubit carry: "0" -> "carry"
+
+  majority(low[0], low[1], low[2])
+  label "..." on omitted
+  majority(high[0], high[1], high[2])
+  x carry if high[2]
+  unmajority(high[0], high[1], high[2])
+  label "..." on omitted
+  unmajority(low[0], low[1], low[2])
+}

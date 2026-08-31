@@ -1,0 +1,18 @@
+circuit modular_adder {
+  layout {
+    orientation: vertical
+    comment_width: 170
+  }
+
+  qubit a: "|A>" -> "|A>"
+  qubit b: "|B>" -> "|S>"
+  qubit modulus: "|M>" -> "|M>"
+  qubit carry: "|0>" -> "|0>"
+
+  gate "add" on a, b
+  note "add A into B" on a, b
+  gate ">=" on b, modulus if carry
+  note "compare against M" on b, modulus
+  gate "subtract M" on b, modulus if carry
+  gate "compare" on a, b if carry
+}

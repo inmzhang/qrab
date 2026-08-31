@@ -1,0 +1,14 @@
+circuit box_test {
+  qubit q[5]
+
+  gate "A" on q[0]
+  gate "B" on q[1], q[3] with fill: yellow
+  gate "C" on q[0..5] with fill: "#E0F2FE", stroke: blue
+  gate "D" on q[2] if q[0], !q[4] with shape: circle
+  gate "wide operator" on q[1..4] with width: 52, height: 30, dash: dashed
+  gate "unboxed" on q[4] with shape: none, stroke: red
+  parallel {
+    gate "L" on q[0]
+    gate "R" on q[4]
+  }
+}

@@ -1,0 +1,17 @@
+fn qft_layer(first, second, third, fourth) {
+  h first
+  phase "pi/2" on second if first
+  phase "pi/4" on third if first
+  phase "pi/8" on fourth if first
+}
+
+circuit qft4 {
+  qubit q[4]: "|x>" -> "QFT(x)"
+
+  qft_layer(q[0], q[1], q[2], q[3])
+  qft_layer(q[1], q[2], q[3], q[0])
+  qft_layer(q[2], q[3], q[0], q[1])
+  h q[3]
+  swap q[0], q[3]
+  swap q[1], q[2]
+}

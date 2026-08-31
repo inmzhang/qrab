@@ -1,0 +1,13 @@
+circuit measurement_compare {
+  qubit a
+  qubit b
+  qubit c
+  qubit d
+  qubit custom
+
+  measure a with size: 24
+  measure b as "Z" with fill: yellow
+  measure c
+  measure d as "X" using tag with stroke: blue
+  measure custom as "P" with fill: "#DDEEFF", stroke: purple
+}

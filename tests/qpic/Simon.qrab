@@ -1,0 +1,18 @@
+circuit simon_algorithm {
+  qubit input[3]: "|0>" -> "y"
+  qubit output[3]: "|0>" -> "f(x)"
+
+  parallel {
+    h input[0]
+    h input[1]
+    h input[2]
+  }
+  gate "U_f" on input[0..3], output[0..3] with fill: "#E0F2FE", stroke: blue
+  parallel {
+    h input[0]
+    h input[1]
+    h input[2]
+  }
+  measure input[0..3]
+  note "samples satisfy y dot s = 0" on input[0..3]
+}
