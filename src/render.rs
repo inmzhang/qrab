@@ -1307,7 +1307,9 @@ fn render_typst(circuit: &Circuit) -> String {
     append_raw(&mut output, &circuit.escapes.typst.preamble);
     append_raw(&mut output, &circuit.escapes.typst.before);
     if circuit.layout.orientation == Orientation::Vertical {
-        output.push_str("#rotate(90deg, reflow: true)[\n");
+        output.push_str(
+            "#rotate(-90deg, reflow: true)[\n#show text: it => rotate(90deg, reflow: true, it)\n",
+        );
     }
     output.push_str("#quill.quantum-circuit(\n");
     writeln!(output, "  wires: {},", circuit.wires.len()).expect("writing to a String cannot fail");
@@ -1383,6 +1385,10 @@ fn render_typst(circuit: &Circuit) -> String {
     }
 
     for (operation_index, operation) in scheduled.iter().enumerate() {
+        let mut style = operation.style.clone();
+        if circuit.layout.orientation == Orientation::Vertical {
+            std::mem::swap(&mut style.width, &mut style.height);
+        }
         let x = operation.column + 1;
         match operation.kind {
             OperationKind::Gate {
@@ -1401,7 +1407,7 @@ fn render_typst(circuit: &Circuit) -> String {
                         positive: control.positive,
                     })
                     .collect::<Vec<_>>();
-                draw_typst_gate(&mut output, x, label, &targets, &controls, operation.style);
+                draw_typst_gate(&mut output, x, label, &targets, &controls, &style);
             }
             OperationKind::Measure {
                 targets,
@@ -1416,7 +1422,7 @@ fn render_typst(circuit: &Circuit) -> String {
                         row,
                         label.as_deref(),
                         *shape,
-                        operation.style,
+                        &style,
                         &circuit.layout,
                     );
                 }
@@ -1428,13 +1434,13 @@ fn render_typst(circuit: &Circuit) -> String {
                 writeln!(
                     output,
                     "  quill.swap({distance}, x: {x}, y: {left}{}),",
-                    typst_swap_style(operation.style)
+                    typst_swap_style(&style)
                 )
                 .expect("writing to a String cannot fail");
                 writeln!(
                     output,
                     "  quill.swap(x: {x}, y: {right}{}),",
-                    typst_swap_style(operation.style)
+                    typst_swap_style(&style)
                 )
                 .expect("writing to a String cannot fail");
             }
@@ -1444,7 +1450,7 @@ fn render_typst(circuit: &Circuit) -> String {
                     output,
                     "  quill.slice(n: {}, x: {x}, y: {first}, stroke: {}),",
                     last - first + 1,
-                    typst_barrier_stroke(operation.style)
+                    typst_barrier_stroke(&style)
                 )
                 .expect("writing to a String cannot fail");
             }
@@ -1457,7 +1463,7 @@ fn render_typst(circuit: &Circuit) -> String {
                             operation.positions[*wire],
                             label,
                             *kind,
-                            operation.style,
+                            &style,
                             &circuit.layout.background,
                         );
                     }
@@ -1471,7 +1477,7 @@ fn render_typst(circuit: &Circuit) -> String {
                             output,
                             "  quill.midstick(text(\"{}\"), x: {x}, y: {row}{}),",
                             typst_string(label),
-                            typst_label_style(operation.style)
+                            typst_label_style(&style)
                         )
                         .expect("writing to a String cannot fail");
                     }
@@ -1497,7 +1503,7 @@ fn render_typst(circuit: &Circuit) -> String {
                         last,
                         label,
                         *side,
-                        operation.style,
+                        &style,
                         &circuit.layout.background,
                     );
                 } else {
@@ -1506,7 +1512,7 @@ fn render_typst(circuit: &Circuit) -> String {
                         "  quill.midstick(text(\"{}\"), n: {}, x: {x}, y: {first}{}),",
                         typst_string(label),
                         last - first + 1,
-                        typst_label_style(operation.style)
+                        typst_label_style(&style)
                     )
                     .expect("writing to a String cannot fail");
                 }
@@ -1543,7 +1549,7 @@ fn render_typst(circuit: &Circuit) -> String {
                         .collect::<Vec<_>>()
                         .join(", "),
                     typst_permute_style(
-                        operation.style,
+                        &style,
                         &span_wires
                             .iter()
                             .map(|wire| {
@@ -1573,20 +1579,20 @@ fn render_typst(circuit: &Circuit) -> String {
                     writeln!(
                         output,
                         "  quill.phantom(x: {x}, y: {row}, width: {:.3}pt, height: {:.3}pt),",
-                        operation.style.width.unwrap_or(0.0),
-                        operation.style.height.unwrap_or(0.0)
+                        style.width.unwrap_or(0.0),
+                        style.height.unwrap_or(0.0)
                     )
                     .expect("writing to a String cannot fail");
                 }
             }
             OperationKind::Touch { .. } => {
-                if *operation.style != Style::default() {
+                if style != Style::default() {
                     let (first, last) = (operation.first, operation.last);
                     writeln!(
                         output,
                         "  quill.slice(n: {}, x: {x}, y: {first}, stroke: {}),",
                         last - first + 1,
-                        typst_stroke(operation.style).unwrap_or_else(|| "black".into())
+                        typst_stroke(&style).unwrap_or_else(|| "black".into())
                     )
                     .expect("writing to a String cannot fail");
                 }
@@ -1604,7 +1610,7 @@ fn render_typst(circuit: &Circuit) -> String {
                         "  quill.midstick(text(\"{}\"), x: {x}, y: {}{}),",
                         typst_string(label),
                         operation.positions[*wire],
-                        typst_label_style(operation.style)
+                        typst_label_style(&style)
                     )
                     .expect("writing to a String cannot fail");
                 }
@@ -1624,7 +1630,7 @@ fn render_typst(circuit: &Circuit) -> String {
                     last,
                     label,
                     *side,
-                    operation.style,
+                    &style,
                     &circuit.layout.background,
                 );
             }
@@ -1651,7 +1657,7 @@ fn render_typst(circuit: &Circuit) -> String {
                     "  quill.slice(n: {}, x: {x}, y: {}, stroke: {}{label}),",
                     operation.last - operation.first + 1,
                     operation.first,
-                    typst_barrier_stroke(operation.style)
+                    typst_barrier_stroke(&style)
                 )
                 .expect("writing to a String cannot fail");
             }
@@ -2257,6 +2263,29 @@ mod tests {
         assert!(latex.contains("circle[radius=4.0pt]"));
         assert!(typst.contains("@preview/quill:0.8.0"));
         assert!(typst.contains("quill.targ"));
+    }
+
+    #[test]
+    fn typst_vertical_layout_preserves_wire_order_and_page_dimensions() {
+        let circuit = parse(
+            r#"
+                circuit vertical {
+                  layout {
+                    orientation: vertical
+                  }
+                  qubit q[2]
+                  gate "wide" on q[0] with width: 48
+                  gate "tall" on q[1] with height: 36
+                }
+            "#,
+        )
+        .expect("valid vertical circuit");
+        let typst = render_typst(&circuit);
+
+        assert!(typst.contains("#rotate(-90deg, reflow: true)"));
+        assert!(typst.contains("#show text: it => rotate(90deg, reflow: true, it)"));
+        assert!(typst.contains("quill.gate(box(height: 48.000pt, text(\"wide\")), x: 1, y: 0)"));
+        assert!(typst.contains("quill.gate(text(\"tall\"), x: 1, y: 1, width: 36.000pt)"));
     }
 
     #[test]
