@@ -3,8 +3,8 @@ use std::error::Error;
 use std::fmt;
 
 use crate::ast::{
-    BraceSide, Circuit, Control, Group, Layout, MeasurementShape, Operation, OperationKind,
-    Orientation, Shape, Span, Style, Wire, WireKind,
+    BackendEscapes, BraceSide, Circuit, Control, EscapeBlock, Group, Layout, MeasurementShape,
+    Operation, OperationKind, Orientation, Shape, Span, Style, Wire, WireKind,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -246,6 +246,7 @@ fn is_reserved_statement(name: &str) -> bool {
         "circuit"
             | "fn"
             | "layout"
+            | "backend"
             | "qubit"
             | "bit"
             | "hidden"
@@ -288,6 +289,11 @@ fn is_reserved_statement(name: &str) -> bool {
             | "with"
             | "using"
             | "braced"
+            | "latex"
+            | "typst"
+            | "preamble"
+            | "before"
+            | "after"
     )
 }
 
@@ -303,6 +309,7 @@ struct Parser {
     operation_block_depth: usize,
     marks: HashMap<String, usize>,
     groups: Vec<Group>,
+    escapes: BackendEscapes,
 }
 
 #[derive(Clone)]
@@ -325,6 +332,7 @@ impl Parser {
             operation_block_depth: 0,
             marks: HashMap::new(),
             groups: Vec::new(),
+            escapes: BackendEscapes::default(),
         }
     }
 
@@ -363,6 +371,7 @@ impl Parser {
             wires: self.wires,
             operations: self.operations,
             groups: self.groups,
+            escapes: self.escapes,
         })
     }
 
@@ -447,7 +456,7 @@ impl Parser {
         if (self.in_function || self.operation_block_depth > 0)
             && matches!(
                 keyword.as_str(),
-                "layout" | "qubit" | "bit" | "hidden" | "mark" | "group"
+                "layout" | "backend" | "qubit" | "bit" | "hidden" | "mark" | "group"
             )
         {
             return Err(Diagnostic::new(
@@ -457,6 +466,7 @@ impl Parser {
         }
         match keyword.as_str() {
             "layout" => self.parse_layout(),
+            "backend" => self.parse_backend(),
             "qubit" => self.parse_wire_declaration(WireKind::Quantum, false),
             "bit" => self.parse_wire_declaration(WireKind::Classical, false),
             "hidden" => self.parse_wire_declaration(WireKind::Hidden, false),
@@ -660,6 +670,51 @@ impl Parser {
         }
         self.advance();
         self.expect_statement_end()
+    }
+
+    fn parse_backend(&mut self) -> Result<(), Diagnostic> {
+        let target_span = self.current().span;
+        let target = self.take_identifier("`latex` or `typst`")?;
+        if !matches!(target.as_str(), "latex" | "typst") {
+            return Err(Diagnostic::new(
+                "backend target must be `latex` or `typst`",
+                target_span,
+            ));
+        }
+        self.expect(TokenKind::LeftBrace, "`{`")?;
+        let mut block = EscapeBlock::default();
+        self.skip_newlines();
+        while !self.at(&TokenKind::RightBrace) {
+            let section_span = self.current().span;
+            let section = self.take_identifier("`preamble`, `before`, or `after`")?;
+            self.expect(TokenKind::Colon, "`:`")?;
+            let code = self.take_string("backend code string")?;
+            match section.as_str() {
+                "preamble" => block.preamble.push(code),
+                "before" => block.before.push(code),
+                "after" => block.after.push(code),
+                _ => {
+                    return Err(Diagnostic::new(
+                        "backend section must be `preamble`, `before`, or `after`",
+                        section_span,
+                    ));
+                }
+            }
+            self.expect_statement_end()?;
+            self.skip_newlines();
+        }
+        self.advance();
+        self.expect_statement_end()?;
+
+        let destination = if target == "latex" {
+            &mut self.escapes.latex
+        } else {
+            &mut self.escapes.typst
+        };
+        destination.preamble.extend(block.preamble);
+        destination.before.extend(block.before);
+        destination.after.extend(block.after);
+        Ok(())
     }
 
     fn parse_wire_declaration(&mut self, kind: WireKind, ellipsis: bool) -> Result<(), Diagnostic> {
@@ -1672,6 +1727,29 @@ mod tests {
                 .message
                 .contains("safe absolute")
         );
+    }
+
+    #[test]
+    fn isolates_explicit_backend_escape_blocks() {
+        let circuit = parse(
+            r##"
+                circuit hooks {
+                  backend latex {
+                    preamble: "\\newcommand{\\hook}{ok}"
+                    before: "\\node {ok};"
+                  }
+                  backend typst {
+                    after: "#v(1pt)"
+                  }
+                  qubit q
+                }
+            "##,
+        )
+        .expect("valid backend hooks");
+
+        assert_eq!(circuit.escapes.latex.preamble, ["\\newcommand{\\hook}{ok}"]);
+        assert_eq!(circuit.escapes.latex.before, ["\\node {ok};"]);
+        assert_eq!(circuit.escapes.typst.after, ["#v(1pt)"]);
     }
 
     #[test]

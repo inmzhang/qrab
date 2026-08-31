@@ -11,6 +11,20 @@ pub struct Circuit {
     pub wires: Vec<Wire>,
     pub operations: Vec<Operation>,
     pub groups: Vec<Group>,
+    pub escapes: BackendEscapes,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct BackendEscapes {
+    pub latex: EscapeBlock,
+    pub typst: EscapeBlock,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct EscapeBlock {
+    pub preamble: Vec<String>,
+    pub before: Vec<String>,
+    pub after: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]

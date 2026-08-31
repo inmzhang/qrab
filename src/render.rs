@@ -164,6 +164,7 @@ fn render_latex(circuit: &Circuit) -> String {
         )
         .expect("writing to a String cannot fail");
     }
+    append_raw(&mut output, &circuit.escapes.latex.preamble);
     output.push_str("\\begin{document}\n");
     let rotation = if circuit.layout.orientation == Orientation::Vertical {
         ",rotate=90"
@@ -178,6 +179,7 @@ fn render_latex(circuit: &Circuit) -> String {
     .expect("writing to a String cannot fail");
     writeln!(output, "% circuit: {}", latex_comment(&circuit.name))
         .expect("writing to a String cannot fail");
+    append_raw(&mut output, &circuit.escapes.latex.before);
     if circuit.layout.background != "white" {
         writeln!(
             output,
@@ -483,6 +485,7 @@ fn render_latex(circuit: &Circuit) -> String {
         }
     }
 
+    append_raw(&mut output, &circuit.escapes.latex.after);
     output.push_str("\\end{tikzpicture}\n");
     output.push_str("\\end{document}\n");
     output
@@ -1301,6 +1304,8 @@ fn render_typst(circuit: &Circuit) -> String {
         "#set page(width: auto, height: auto, margin: 6pt, fill: {})\n#import \"@preview/quill:0.8.0\" as quill\n\n",
         typst_color(&circuit.layout.background, None)
     );
+    append_raw(&mut output, &circuit.escapes.typst.preamble);
+    append_raw(&mut output, &circuit.escapes.typst.before);
     if circuit.layout.orientation == Orientation::Vertical {
         output.push_str("#rotate(90deg, reflow: true)[\n");
     }
@@ -1665,7 +1670,17 @@ fn render_typst(circuit: &Circuit) -> String {
     if circuit.layout.orientation == Orientation::Vertical {
         output.push_str("]\n");
     }
+    append_raw(&mut output, &circuit.escapes.typst.after);
     output
+}
+
+fn append_raw(output: &mut String, snippets: &[String]) {
+    for snippet in snippets {
+        output.push_str(snippet);
+        if !snippet.ends_with('\n') {
+            output.push('\n');
+        }
+    }
 }
 
 fn write_typst_wire_streams(

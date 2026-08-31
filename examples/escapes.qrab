@@ -1,0 +1,16 @@
+circuit backend_hooks {
+  backend latex {
+    preamble: "\\newcommand{\\backendtag}{backend hook}"
+    before: "\\node[anchor=south west] at (0,0.35) {\\backendtag};"
+    after: "% latex backend hook end"
+  }
+
+  backend typst {
+    preamble: "#let backend-tag = [backend hook]"
+    before: "#align(center)[#backend-tag]"
+    after: "#align(center)[end hook]"
+  }
+
+  qubit q: "|0>" -> "|1>"
+  h q
+}
