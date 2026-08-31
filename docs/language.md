@@ -30,6 +30,13 @@ circuit teleportation {
   swap work[0], work[1]
   measure message, work[0] as "Z"
   barrier
+  bundle "8" on work[1]
+  label "decode" on message, work[1] with fill: yellow
+  permute work[1], message, work[0]
+  set message to classical
+  space work[0] with width: 12
+  touch message, work[1]
+  end work[1] as "discard"
 }
 ```
 
@@ -38,6 +45,8 @@ Wire declarations are `qubit`, `bit`, or `hidden`, followed by a name or fixed-s
 Built-in gates are `h`, `x`, `y`, `z`, `s`, and `t`. A gate's controls follow `if`; `!wire` is an open/negative control. Arbitrary single- or multi-wire boxes use `gate "label" on ...`. `phase`, `measure`, `swap`, and `barrier` are first-class statements rather than magic gate names.
 
 The compiler packs operations into the earliest non-overlapping column while preserving source order. A barrier occupies its selected wire interval; an empty barrier wire list means every wire.
+
+`set wires to quantum|classical|hidden` changes wire rendering. `start` and `end` defer or stop selected wires and may carry an `as "label"`. `bundle` draws a bundle slash, while `label` centers text across a wire span. `permute` lists selected wires in their new visual order; later operations and output labels follow that order. `space` reserves invisible room and `touch` aligns later operations with the preceding slice. Omitting the wire list for `start`, `end`, `label`, `space`, or `touch` selects every wire.
 
 `layout` configures orientation, scale, abstract column/wire gaps, and background. A trailing `with` clause accepts portable `stroke`, `fill`, `width`, `height`, `size`, `shape`, `dash`, and `opacity` properties. Shapes are `box`, `circle`, `ellipse`, or `none`; numeric dimensions are points and opacity ranges from 0 to 1. Colors are checked named colors understood by both backends.
 

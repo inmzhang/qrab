@@ -20,6 +20,11 @@ fn generated_backends_compile_to_pdfs() {
         include_str!("../examples/styling.qrab"),
         &output_dir,
     );
+    compile_fixture(
+        "lifecycle",
+        include_str!("../examples/lifecycle.qrab"),
+        &output_dir,
+    );
 }
 
 fn compile_fixture(name: &str, source: &str, output_dir: &std::path::Path) {

@@ -1,0 +1,13 @@
+circuit lifecycle {
+  qubit q[3]: "|0>" -> "out"
+
+  start q[2] as "|aux>"
+  h q[0]
+  bundle "3" on q[0]
+  label "mix" on q[0], q[2] with fill: yellow
+  set q[0] to classical
+  permute q[2], q[0], q[1] with stroke: purple, width: 30
+  space q[1] with width: 18, height: 8
+  touch q[0], q[2] with stroke: red, dash: dashed
+  end q[2] as "done"
+}

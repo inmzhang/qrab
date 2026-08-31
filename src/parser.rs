@@ -290,6 +290,14 @@ impl Parser {
             "measure" => self.parse_measure(span),
             "swap" => self.parse_swap(span),
             "barrier" => self.parse_barrier(span),
+            "set" => self.parse_wire_change(span),
+            "start" => self.parse_endpoint(span, true),
+            "end" => self.parse_endpoint(span, false),
+            "label" => self.parse_label(span),
+            "bundle" => self.parse_bundle(span),
+            "permute" => self.parse_permute(span),
+            "space" => self.parse_phantom(span),
+            "touch" => self.parse_touch(span),
             _ => Err(Diagnostic::new(
                 format!("unknown statement `{keyword}`"),
                 span,
@@ -478,6 +486,143 @@ impl Parser {
             style,
         });
         Ok(())
+    }
+
+    fn parse_wire_change(&mut self, span: Span) -> Result<(), Diagnostic> {
+        let wires = self.parse_wire_list()?;
+        self.expect_keyword("to")?;
+        let kind = self.parse_wire_kind()?;
+        let style = self.parse_style()?;
+        self.expect_statement_end()?;
+        self.ensure_unique(&wires, span, "wire")?;
+        self.operations.push(Operation {
+            kind: OperationKind::WireChange { wires, kind },
+            span,
+            style,
+        });
+        Ok(())
+    }
+
+    fn parse_endpoint(&mut self, span: Span, start: bool) -> Result<(), Diagnostic> {
+        let wires = if self.at_statement_end() || self.at_keyword("as") || self.at_keyword("with") {
+            Vec::new()
+        } else {
+            self.parse_wire_list()?
+        };
+        let label = if self.consume_keyword("as") {
+            Some(self.take_label("endpoint label")?)
+        } else {
+            None
+        };
+        let style = self.parse_style()?;
+        self.expect_statement_end()?;
+        self.ensure_unique(&wires, span, "endpoint wire")?;
+        self.operations.push(Operation {
+            kind: OperationKind::Endpoint {
+                wires,
+                start,
+                label,
+            },
+            span,
+            style,
+        });
+        Ok(())
+    }
+
+    fn parse_label(&mut self, span: Span) -> Result<(), Diagnostic> {
+        let label = self.take_label("label text")?;
+        let wires = if self.consume_keyword("on") {
+            self.parse_wire_list()?
+        } else {
+            Vec::new()
+        };
+        let style = self.parse_style()?;
+        self.expect_statement_end()?;
+        self.ensure_unique(&wires, span, "label wire")?;
+        self.operations.push(Operation {
+            kind: OperationKind::Label { wires, label },
+            span,
+            style,
+        });
+        Ok(())
+    }
+
+    fn parse_bundle(&mut self, span: Span) -> Result<(), Diagnostic> {
+        let label = self.take_label("bundle label")?;
+        self.expect_keyword("on")?;
+        let wire = self.parse_wire_reference()?;
+        let style = self.parse_style()?;
+        self.expect_statement_end()?;
+        self.operations.push(Operation {
+            kind: OperationKind::Bundle { wire, label },
+            span,
+            style,
+        });
+        Ok(())
+    }
+
+    fn parse_permute(&mut self, span: Span) -> Result<(), Diagnostic> {
+        let wires = self.parse_wire_list()?;
+        let style = self.parse_style()?;
+        self.expect_statement_end()?;
+        if wires.len() < 2 {
+            return Err(Diagnostic::new("permute needs at least two wires", span));
+        }
+        self.ensure_unique(&wires, span, "permutation wire")?;
+        self.operations.push(Operation {
+            kind: OperationKind::Permute { wires },
+            span,
+            style,
+        });
+        Ok(())
+    }
+
+    fn parse_phantom(&mut self, span: Span) -> Result<(), Diagnostic> {
+        let wires = self.parse_optional_wires()?;
+        let style = self.parse_style()?;
+        self.expect_statement_end()?;
+        self.ensure_unique(&wires, span, "space wire")?;
+        self.operations.push(Operation {
+            kind: OperationKind::Phantom { wires },
+            span,
+            style,
+        });
+        Ok(())
+    }
+
+    fn parse_touch(&mut self, span: Span) -> Result<(), Diagnostic> {
+        let wires = self.parse_optional_wires()?;
+        let style = self.parse_style()?;
+        self.expect_statement_end()?;
+        self.ensure_unique(&wires, span, "touch wire")?;
+        self.operations.push(Operation {
+            kind: OperationKind::Touch { wires },
+            span,
+            style,
+        });
+        Ok(())
+    }
+
+    fn parse_optional_wires(&mut self) -> Result<Vec<usize>, Diagnostic> {
+        if self.at_statement_end() || self.at_keyword("with") {
+            Ok(Vec::new())
+        } else {
+            self.parse_wire_list()
+        }
+    }
+
+    fn parse_wire_kind(&mut self) -> Result<WireKind, Diagnostic> {
+        let span = self.current().span;
+        let kind = self.take_identifier("wire type")?;
+        match kind.as_str() {
+            "quantum" | "qubit" => Ok(WireKind::Quantum),
+            "classical" | "bit" => Ok(WireKind::Classical),
+            "hidden" | "off" => Ok(WireKind::Hidden),
+            _ => Err(Diagnostic::new(
+                "wire type must be `quantum`, `classical`, or `hidden`",
+                span,
+            )),
+        }
     }
 
     fn push_gate(
@@ -861,5 +1006,50 @@ mod tests {
         assert_eq!(circuit.wires[0].style.stroke.as_deref(), Some("blue"));
         assert_eq!(circuit.operations[0].style.shape, Some(Shape::Circle));
         assert_eq!(circuit.operations[0].style.width, Some(20.0));
+    }
+
+    #[test]
+    fn parses_wire_lifecycle_and_placement_statements() {
+        let circuit = parse(
+            r#"
+                circuit lifecycle {
+                  qubit q[3]
+                  start q[2] as "aux"
+                  bundle "3" on q[0]
+                  label "middle" on q[0], q[2]
+                  permute q[2], q[0], q[1]
+                  set q[0] to classical
+                  space q[1] with width: 12
+                  touch q[0], q[2]
+                  end q[2]
+                }
+            "#,
+        )
+        .expect("valid lifecycle circuit");
+
+        assert_eq!(circuit.operations.len(), 8);
+        assert!(matches!(
+            circuit.operations[0].kind,
+            OperationKind::Endpoint {
+                start: true,
+                ref label,
+                ..
+            } if label.as_deref() == Some("aux")
+        ));
+        assert!(matches!(
+            circuit.operations[3].kind,
+            OperationKind::Permute { ref wires } if wires == &[2, 0, 1]
+        ));
+        assert!(matches!(
+            circuit.operations[4].kind,
+            OperationKind::WireChange {
+                kind: WireKind::Classical,
+                ..
+            }
+        ));
+        assert!(matches!(
+            circuit.operations[6].kind,
+            OperationKind::Touch { ref wires } if wires == &[0, 2]
+        ));
     }
 }

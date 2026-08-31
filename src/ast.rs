@@ -99,6 +99,32 @@ pub enum OperationKind {
     Barrier {
         wires: Vec<usize>,
     },
+    WireChange {
+        wires: Vec<usize>,
+        kind: WireKind,
+    },
+    Endpoint {
+        wires: Vec<usize>,
+        start: bool,
+        label: Option<String>,
+    },
+    Label {
+        wires: Vec<usize>,
+        label: String,
+    },
+    Bundle {
+        wire: usize,
+        label: String,
+    },
+    Permute {
+        wires: Vec<usize>,
+    },
+    Phantom {
+        wires: Vec<usize>,
+    },
+    Touch {
+        wires: Vec<usize>,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -108,8 +134,8 @@ pub struct Control {
 }
 
 impl OperationKind {
-    pub(crate) fn occupied_interval(&self, wire_count: usize) -> (usize, usize) {
-        let mut occupied = match self {
+    pub(crate) fn occupied_wires(&self, wire_count: usize) -> Vec<usize> {
+        match self {
             Self::Gate {
                 targets, controls, ..
             } => targets
@@ -121,11 +147,23 @@ impl OperationKind {
             Self::Swap { left, right } => vec![*left, *right],
             Self::Barrier { wires } if wires.is_empty() => (0..wire_count).collect(),
             Self::Barrier { wires } => wires.clone(),
-        };
-        occupied.sort_unstable();
-        (
-            *occupied.first().unwrap_or(&0),
-            *occupied.last().unwrap_or(&0),
-        )
+            Self::WireChange { wires, .. }
+            | Self::Endpoint { wires, .. }
+            | Self::Label { wires, .. }
+            | Self::Permute { wires }
+            | Self::Phantom { wires }
+            | Self::Touch { wires }
+                if wires.is_empty() =>
+            {
+                (0..wire_count).collect()
+            }
+            Self::WireChange { wires, .. }
+            | Self::Endpoint { wires, .. }
+            | Self::Label { wires, .. }
+            | Self::Permute { wires }
+            | Self::Phantom { wires }
+            | Self::Touch { wires } => wires.clone(),
+            Self::Bundle { wire, .. } => vec![*wire],
+        }
     }
 }

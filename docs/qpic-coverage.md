@@ -2,7 +2,7 @@
 
 Reference: qpic commit `a1f052c4a8d995b80605a6aef06243a4242494f3` (44 golden test circuits and 64 manual examples). Typst output targets Quill `0.8.0`.
 
-Legend: **done** is implemented in both backends and exercised by a runnable test; **next** is designed but not yet complete.
+Legend: **done** is implemented in both backends and exercised by a runnable test; **partial** has a portable implementation but still lacks a qpic behavior; **next** is designed but not yet complete.
 
 | qpic capability | `.qrab` model | Status |
 | --- | --- | --- |
@@ -14,15 +14,19 @@ Legend: **done** is implemented in both backends and exercised by a runnable tes
 | Measurement and quantum-to-classical transition | `measure wires [as "label"]` | done |
 | SWAP | `swap a, b` | done |
 | Automatic placement and barriers | scheduler and `barrier [wires]` | done |
-| Wire bundles, ellipses, slashes, IN/OUT, START/END | structured wire/endpoint statements | next |
+| Wire bundles/slashes | `bundle "count" on wire` | done |
+| Quantum/classical/off changes and START/END | `set`, `start`, `end` | partial — active-wire defaults and qpic's late START placement remain |
+| Ellipsis wires and IN/OUT value bullets | structured wire/value statements | next |
 | Portable dimensions, colors, fill, dash, and opacity | trailing `with` properties | done |
 | Box, circle, ellipse, and unboxed shapes | `with shape: ...` | done |
 | Custom target operators and hyperlinks | typed operator/link values | next |
-| Mid-circuit labels, equals, and braces | label/brace statements | next |
+| Centered mid-circuit labels | `label "text" [on wires]` | done |
+| Per-wire labels, equals, and braces | label/brace statements | next |
 | Comments beside operations | annotation statements | next |
 | Marks and highlighted `@` regions | `mark` and `group ... from ... to ...` | next |
-| MIXGATES, TOUCH, LB/LE, PHANTOM, explicit time slices | `parallel`, `touch`, `space` | next |
-| PERMUTE | `permute` statement | next |
+| TOUCH and PHANTOM | `touch`, `space` | partial — PHANTOM subslices remain |
+| MIXGATES, LB/LE, explicit time slices | `parallel` blocks | next |
+| PERMUTE and persistent wire reordering | `permute` statement | done |
 | Repeat/reverse (`R`) | `repeat ... from ... to ...`, `reverse` | next |
 | CUT separators | `cut` statement | next |
 | Global spacing, scale, and background | `layout { ... }` | done |
@@ -34,4 +38,4 @@ Legend: **done** is implemented in both backends and exercised by a runnable tes
 | PREAMBLE/PRETIKZ/POSTTIKZ/HEADER/HYPERTARGET | explicit backend escape blocks | next |
 | AUTOWIRES | intentionally replaced by checked declarations | next |
 
-`tests/artifacts.rs` currently compiles representative teleportation and styled/vertical fixtures to both PDFs. Phase 4 expands this into one parity fixture per upstream golden test and manual example; generated TikZ text is not compared byte-for-byte because qrab has a different frontend and renderer, but every backend artifact must compile and match its circuit-level visual baseline.
+`tests/artifacts.rs` currently compiles representative teleportation, styled/vertical, and wire-lifecycle/permutation fixtures to both PDFs. Phase 4 expands this into one parity fixture per upstream golden test and manual example; generated TikZ text is not compared byte-for-byte because qrab has a different frontend and renderer, but every backend artifact must compile and match its circuit-level visual baseline.
