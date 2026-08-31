@@ -24,7 +24,7 @@ Legend: **done** is implemented in both backends and exercised by a runnable tes
 | Per-wire labels and left/right braces | `labels`, `brace` | done |
 | Equals shorthand and qpic brace defaults | label/brace sugar | next |
 | Comments beside operations | `note` | partial — portable notes occupy scheduled space |
-| Marks and highlighted `@` regions | `mark` and `group ... from ... to ...` | next |
+| Marks and highlighted `@` regions | `mark` and `group ... from ... to ...` | partial — named ranges are done; numeric relative ranges remain |
 | TOUCH and PHANTOM | `touch`, `space` | partial — PHANTOM subslices remain |
 | MIXGATES, LB/LE, explicit time slices | `parallel` blocks | partial — non-overlapping operations align; nested forced-overlap levels remain |
 | PERMUTE and persistent wire reordering | `permute` statement | done |
@@ -39,4 +39,4 @@ Legend: **done** is implemented in both backends and exercised by a runnable tes
 | PREAMBLE/PRETIKZ/POSTTIKZ/HEADER/HYPERTARGET | explicit backend escape blocks | next |
 | AUTOWIRES | intentionally replaced by checked declarations | next |
 
-`tests/artifacts.rs` currently compiles representative teleportation, styled/vertical, wire-lifecycle/permutation, nested-function, structured-programming, and annotation fixtures to both PDFs. Phase 4 expands this into one parity fixture per upstream golden test and manual example; generated TikZ text is not compared byte-for-byte because qrab has a different frontend and renderer, but every backend artifact must compile and match its circuit-level visual baseline.
+`tests/artifacts.rs` currently compiles representative teleportation, styled/vertical, wire-lifecycle/permutation, nested-function, structured-programming, annotation, and marked-region fixtures to both PDFs. Phase 4 expands this into one parity fixture per upstream golden test and manual example; generated TikZ text is not compared byte-for-byte because qrab has a different frontend and renderer, but every backend artifact must compile and match its circuit-level visual baseline.

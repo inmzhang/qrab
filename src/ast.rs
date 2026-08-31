@@ -10,6 +10,17 @@ pub struct Circuit {
     pub layout: Layout,
     pub wires: Vec<Wire>,
     pub operations: Vec<Operation>,
+    pub groups: Vec<Group>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Group {
+    pub label: String,
+    pub wires: Vec<usize>,
+    pub start: usize,
+    pub end: usize,
+    pub style: Style,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone, PartialEq)]

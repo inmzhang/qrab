@@ -40,6 +40,11 @@ fn generated_backends_compile_to_pdfs() {
         include_str!("../examples/annotations.qrab"),
         &output_dir,
     );
+    compile_fixture(
+        "regions",
+        include_str!("../examples/regions.qrab"),
+        &output_dir,
+    );
 }
 
 fn compile_fixture(name: &str, source: &str, output_dir: &std::path::Path) {

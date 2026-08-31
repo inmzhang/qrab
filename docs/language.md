@@ -85,18 +85,20 @@ brace both "repeat" on q[0..3]
 
 `labels` accepts either one repeated label or one label per selected wire. Braces may be `left`, `right`, or `both`. A source-local `cut` occupies its own separator column; qpic-style global numbered cut rules are not yet part of the language.
 
-`layout` configures orientation, scale, abstract column/wire gaps, and background. A trailing `with` clause accepts portable `stroke`, `fill`, `width`, `height`, `size`, `shape`, `dash`, and `opacity` properties. Shapes are `box`, `circle`, `ellipse`, or `none`; numeric dimensions are points and opacity ranges from 0 to 1. Colors are checked named colors understood by both backends.
-
-## Planned syntax
-
-The remaining qpic surface will extend the same grammar rather than add uppercase directives:
+Named marks delimit highlighted regions without becoming gates:
 
 ```qrab
-mark start
-group "encoding" from start to here on q[0], q[1] {
-  fill: green
-  radius: 3pt
-}
+mark encoding
+h q[0]
+x q[1] if q[0]
+mark encoded
+
+group "encode" from encoding to encoded on q[0..2] with fill: yellow, opacity: 0.2
+group "whole pass" from encoding to here with stroke: purple, dash: dashed
 ```
 
-Backend-only escape blocks will be explicit and isolated for the few qpic preamble/TikZ hooks that cannot be represented portably.
+The end mark is exclusive; `here` means all operations parsed so far. Groups may overlap or nest, and are drawn behind the circuit.
+
+`layout` configures orientation, scale, abstract column/wire gaps, and background. A trailing `with` clause accepts portable `stroke`, `fill`, `width`, `height`, `size`, `shape`, `dash`, and `opacity` properties. Shapes are `box`, `circle`, `ellipse`, or `none`; numeric dimensions are points and opacity ranges from 0 to 1. Colors are checked named colors understood by both backends.
+
+The remaining qpic surface will extend the same grammar rather than add uppercase directives. Backend-only escape blocks will be explicit and isolated for the few qpic preamble/TikZ hooks that cannot be represented portably.

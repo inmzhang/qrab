@@ -1,0 +1,18 @@
+circuit marked_regions {
+  qubit q[4]: "|0>" -> "out"
+
+  mark encode
+  parallel {
+    h q[0]
+    h q[1]
+    h q[2]
+  }
+  x q[3] if q[0]
+  mark encoded
+
+  group "encoding" from encode to encoded on q[0..4] with fill: yellow, stroke: orange, opacity: 0.2, shape: ellipse
+
+  x q[2] if q[1]
+  h q[3]
+  group "full pass" from encode to here on q[0..4] with stroke: purple, dash: dashed
+}

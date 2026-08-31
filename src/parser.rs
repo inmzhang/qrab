@@ -3,8 +3,8 @@ use std::error::Error;
 use std::fmt;
 
 use crate::ast::{
-    BraceSide, Circuit, Control, Layout, Operation, OperationKind, Orientation, Shape, Span, Style,
-    Wire, WireKind,
+    BraceSide, Circuit, Control, Group, Layout, Operation, OperationKind, Orientation, Shape, Span,
+    Style, Wire, WireKind,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -274,10 +274,14 @@ fn is_reserved_statement(name: &str) -> bool {
             | "brace"
             | "note"
             | "cut"
+            | "mark"
+            | "group"
             | "if"
             | "on"
             | "as"
             | "to"
+            | "from"
+            | "here"
             | "with"
     )
 }
@@ -292,6 +296,8 @@ struct Parser {
     functions: HashMap<String, Function>,
     in_function: bool,
     operation_block_depth: usize,
+    marks: HashMap<String, usize>,
+    groups: Vec<Group>,
 }
 
 #[derive(Clone)]
@@ -312,6 +318,8 @@ impl Parser {
             functions: HashMap::new(),
             in_function: false,
             operation_block_depth: 0,
+            marks: HashMap::new(),
+            groups: Vec::new(),
         }
     }
 
@@ -349,6 +357,7 @@ impl Parser {
             layout: self.layout,
             wires: self.wires,
             operations: self.operations,
+            groups: self.groups,
         })
     }
 
@@ -430,7 +439,10 @@ impl Parser {
         let span = self.current().span;
         let keyword = self.take_identifier("statement")?;
         if (self.in_function || self.operation_block_depth > 0)
-            && matches!(keyword.as_str(), "layout" | "qubit" | "bit" | "hidden")
+            && matches!(
+                keyword.as_str(),
+                "layout" | "qubit" | "bit" | "hidden" | "mark" | "group"
+            )
         {
             return Err(Diagnostic::new(
                 "operation blocks may contain operations and function calls, not declarations",
@@ -464,6 +476,8 @@ impl Parser {
             "brace" => self.parse_brace(span),
             "note" => self.parse_note(span),
             "cut" => self.parse_cut(span),
+            "mark" => self.parse_mark(span),
+            "group" => self.parse_group(span),
             name if self.functions.contains_key(name) => self.parse_function_call(name, span),
             _ => Err(Diagnostic::new(
                 format!("unknown statement `{keyword}`"),
@@ -904,6 +918,67 @@ impl Parser {
             kind: OperationKind::Cut { wires, label },
             span,
             style,
+        });
+        Ok(())
+    }
+
+    fn parse_mark(&mut self, span: Span) -> Result<(), Diagnostic> {
+        let name = self.take_identifier("mark name")?;
+        self.expect_statement_end()?;
+        if self
+            .marks
+            .insert(name.clone(), self.operations.len())
+            .is_some()
+        {
+            return Err(Diagnostic::new(
+                format!("mark `{name}` is already defined"),
+                span,
+            ));
+        }
+        Ok(())
+    }
+
+    fn parse_group(&mut self, span: Span) -> Result<(), Diagnostic> {
+        let label = self.take_label("group label")?;
+        self.expect_keyword("from")?;
+        let start_span = self.current().span;
+        let start_name = self.take_identifier("start mark")?;
+        let start =
+            self.marks.get(&start_name).copied().ok_or_else(|| {
+                Diagnostic::new(format!("unknown mark `{start_name}`"), start_span)
+            })?;
+        self.expect_keyword("to")?;
+        let end = if self.consume_keyword("here") {
+            self.operations.len()
+        } else {
+            let end_span = self.current().span;
+            let end_name = self.take_identifier("end mark or `here`")?;
+            self.marks
+                .get(&end_name)
+                .copied()
+                .ok_or_else(|| Diagnostic::new(format!("unknown mark `{end_name}`"), end_span))?
+        };
+        let wires = if self.consume_keyword("on") {
+            self.parse_wire_list()?
+        } else {
+            Vec::new()
+        };
+        let style = self.parse_style()?;
+        self.expect_statement_end()?;
+        self.ensure_unique(&wires, span, "group wire")?;
+        if start >= end {
+            return Err(Diagnostic::new(
+                "a group must contain at least one operation after its start mark",
+                span,
+            ));
+        }
+        self.groups.push(Group {
+            label,
+            wires,
+            start,
+            end,
+            style,
+            span,
         });
         Ok(())
     }
@@ -1584,5 +1659,29 @@ mod tests {
             OperationKind::Cut { ref wires, ref label }
                 if wires == &[0, 1] && label.as_deref() == Some("stage")
         ));
+    }
+
+    #[test]
+    fn resolves_marked_group_ranges() {
+        let circuit = parse(
+            r#"
+                circuit regions {
+                  qubit q[2]
+                  mark start
+                  h q[0]
+                  mark middle
+                  x q[1]
+                  group "first" from start to middle on q[0]
+                  group "all" from start to here with fill: yellow, opacity: 0.2
+                }
+            "#,
+        )
+        .expect("valid groups");
+
+        assert_eq!(circuit.groups.len(), 2);
+        assert_eq!((circuit.groups[0].start, circuit.groups[0].end), (0, 1));
+        assert_eq!((circuit.groups[1].start, circuit.groups[1].end), (0, 2));
+        assert_eq!(circuit.groups[0].wires, [0]);
+        assert_eq!(circuit.groups[1].style.opacity, Some(0.2));
     }
 }

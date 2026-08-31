@@ -1,7 +1,7 @@
 use std::fmt::Write as _;
 
 use crate::ast::{
-    BraceSide, Circuit, Control, OperationKind, Orientation, Shape, Style, Wire, WireKind,
+    BraceSide, Circuit, Control, Group, OperationKind, Orientation, Shape, Style, Wire, WireKind,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -92,6 +92,49 @@ fn schedule(circuit: &Circuit) -> (Vec<Scheduled<'_>>, Vec<usize>) {
     (scheduled, positions)
 }
 
+fn group_bounds(
+    group: &Group,
+    scheduled: &[Scheduled<'_>],
+    wire_count: usize,
+) -> (usize, usize, usize, usize) {
+    let operations = &scheduled[group.start..group.end];
+    let first_column = operations
+        .iter()
+        .map(|operation| operation.column + 1)
+        .min()
+        .expect("groups are not empty");
+    let last_column = operations
+        .iter()
+        .map(|operation| operation.column + 1)
+        .max()
+        .expect("groups are not empty");
+    let wires = selected_wires(&group.wires, wire_count);
+    let mut rows = operations.iter().flat_map(|operation| {
+        wires.iter().flat_map(move |wire| {
+            let current = operation.positions[*wire];
+            let moved = match operation.kind {
+                OperationKind::Permute { wires: permutation } if permutation.contains(wire) => {
+                    permuted_row(*wire, permutation, &operation.positions)
+                }
+                _ => current,
+            };
+            [current, moved]
+        })
+    });
+    let first_row = rows.next().expect("groups select at least one wire");
+    rows.fold(
+        (first_column, last_column, first_row, first_row),
+        |(first_column, last_column, first_row, last_row), row| {
+            (
+                first_column,
+                last_column,
+                first_row.min(row),
+                last_row.max(row),
+            )
+        },
+    )
+}
+
 fn render_latex(circuit: &Circuit) -> String {
     let (scheduled, _) = schedule(circuit);
     let last_column = scheduled
@@ -126,6 +169,28 @@ fn render_latex(circuit: &Circuit) -> String {
             -circuit.layout.column_gap,
             -(circuit.wires.len() as f32) * circuit.layout.wire_gap,
             end_x + circuit.layout.column_gap
+        )
+        .expect("writing to a String cannot fail");
+    }
+
+    for (group_index, group) in circuit.groups.iter().enumerate() {
+        let (first_column, last_column, first_row, last_row) =
+            group_bounds(group, &scheduled, circuit.wires.len());
+        let left = first_column as f32 * circuit.layout.column_gap - 0.52;
+        let right = last_column as f32 * circuit.layout.column_gap + 0.52;
+        let top = -(first_row as f32) * circuit.layout.wire_gap + 0.48;
+        let bottom = -(last_row as f32) * circuit.layout.wire_gap - 0.48;
+        writeln!(
+            output,
+            "  \\draw{} ({left:.3},{top:.3}) rectangle ({right:.3},{bottom:.3});",
+            latex_group_options(&group.style)
+        )
+        .expect("writing to a String cannot fail");
+        writeln!(
+            output,
+            "  \\node[anchor=south west] at ({left:.3},{:.3}) {{{}}};",
+            top + group_index as f32 * 0.24,
+            latex_text(&group.label)
         )
         .expect("writing to a String cannot fail");
     }
@@ -964,6 +1029,30 @@ fn latex_label_options(style: &Style) -> String {
     latex_options(options)
 }
 
+fn latex_group_options(style: &Style) -> String {
+    let mut options = vec![
+        format!(
+            "draw={}",
+            if style.shape == Some(Shape::None) {
+                "none"
+            } else {
+                style.stroke.as_deref().unwrap_or("black")
+            }
+        ),
+        format!("fill={}", style.fill.as_deref().unwrap_or("none")),
+    ];
+    if style.dashed {
+        options.push("dashed".into());
+    }
+    if let Some(opacity) = style.opacity {
+        options.push(format!("opacity={opacity:.3}"));
+    }
+    if matches!(style.shape, Some(Shape::Circle | Shape::Ellipse)) {
+        options.push("rounded corners=5pt".into());
+    }
+    latex_options(options)
+}
+
 fn latex_options(options: Vec<String>) -> String {
     if options.is_empty() {
         String::new()
@@ -1022,6 +1111,21 @@ fn render_typst(circuit: &Circuit) -> String {
     .expect("writing to a String cannot fail");
 
     write_typst_wire_streams(&mut output, circuit, &scheduled, end_column);
+
+    for (group_index, group) in circuit.groups.iter().enumerate() {
+        let (first_column, last_column, first_row, last_row) =
+            group_bounds(group, &scheduled, circuit.wires.len());
+        writeln!(
+            output,
+            "  quill.gategroup({}, {}, x: {first_column}, y: {first_row}, label: (content: text(\"{}\"), pos: top, dy: -{}pt){}),",
+            last_row - first_row + 1,
+            last_column - first_column + 1,
+            typst_string(&group.label),
+            (group_index + 1) * 12,
+            typst_group_style(&group.style)
+        )
+        .expect("writing to a String cannot fail");
+    }
 
     for (wire_index, wire) in circuit.wires.iter().enumerate() {
         let (initial_kind, transitions) = wire_transitions(circuit, &scheduled, wire_index);
@@ -1567,6 +1671,25 @@ fn typst_label_style(style: &Style) -> String {
     style.fill.as_ref().map_or_else(String::new, |fill| {
         format!(", fill: {}", typst_color(fill, style.opacity))
     })
+}
+
+fn typst_group_style(style: &Style) -> String {
+    let mut arguments = vec!["padding: 3pt".into()];
+    arguments.push(format!(
+        "stroke: {}",
+        if style.shape == Some(Shape::None) {
+            "none".into()
+        } else {
+            typst_stroke(style).unwrap_or_else(|| "black".into())
+        }
+    ));
+    if let Some(fill) = &style.fill {
+        arguments.push(format!("fill: {}", typst_color(fill, style.opacity)));
+    }
+    if matches!(style.shape, Some(Shape::Circle | Shape::Ellipse)) {
+        arguments.push("radius: 5pt".into());
+    }
+    typst_arguments(arguments)
 }
 
 fn typst_brace_body(label: &str, side: BraceSide, wires: usize, style: &Style) -> String {
