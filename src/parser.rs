@@ -385,6 +385,7 @@ impl Parser {
                 Span { line: 1, column: 1 },
             ));
         }
+        self.resolve_active_defaults()?;
 
         Ok(Circuit {
             name,
@@ -394,6 +395,81 @@ impl Parser {
             groups: self.groups,
             escapes: self.escapes,
         })
+    }
+
+    fn resolve_active_defaults(&mut self) -> Result<(), Diagnostic> {
+        let wire_count = self.wires.len();
+        let mut active = (0..wire_count)
+            .map(|wire| {
+                !self
+                    .operations
+                    .iter()
+                    .find_map(|operation| {
+                        if let OperationKind::Endpoint { wires, start, .. } = &operation.kind
+                            && (wires.is_empty() || wires.contains(&wire))
+                        {
+                            Some(*start)
+                        } else {
+                            None
+                        }
+                    })
+                    .unwrap_or(false)
+            })
+            .collect::<Vec<_>>();
+
+        for operation in &mut self.operations {
+            let active_wires = || {
+                active
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(wire, is_active)| is_active.then_some(wire))
+                    .collect::<Vec<_>>()
+            };
+            let inactive_wires = || {
+                active
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(wire, is_active)| (!is_active).then_some(wire))
+                    .collect::<Vec<_>>()
+            };
+
+            let defaulted = match &mut operation.kind {
+                OperationKind::Endpoint { wires, start, .. } if wires.is_empty() => {
+                    *wires = if *start {
+                        inactive_wires()
+                    } else {
+                        active_wires()
+                    };
+                    true
+                }
+                OperationKind::Barrier { wires }
+                | OperationKind::Label { wires, .. }
+                | OperationKind::Phantom { wires }
+                | OperationKind::Touch { wires }
+                | OperationKind::WireLabels { wires, .. }
+                | OperationKind::Brace { wires, .. }
+                | OperationKind::Note { wires, .. }
+                | OperationKind::Cut { wires, .. }
+                    if wires.is_empty() =>
+                {
+                    *wires = active_wires();
+                    true
+                }
+                _ => false,
+            };
+            if defaulted && operation.kind.occupied_wires(wire_count).is_empty() {
+                return Err(Diagnostic::new(
+                    "the targetless statement has no applicable active wires",
+                    operation.span,
+                ));
+            }
+            if let OperationKind::Endpoint { wires, start, .. } = &operation.kind {
+                for wire in wires {
+                    active[*wire] = *start;
+                }
+            }
+        }
+        Ok(())
     }
 
     fn parse_value_definition(&mut self) -> Result<(), Diagnostic> {
@@ -1885,6 +1961,37 @@ mod tests {
         assert!(matches!(
             circuit.operations[6].kind,
             OperationKind::Touch { ref wires } if wires == &[0, 2]
+        ));
+    }
+
+    #[test]
+    fn targetless_statements_use_only_active_wires() {
+        let circuit = parse(
+            r#"
+                circuit active_defaults {
+                  qubit q[3]
+                  touch
+                  start q[2]
+                  end q[0]
+                  label "active"
+                  end q[2]
+                  barrier
+                }
+            "#,
+        )
+        .expect("valid lifecycle defaults");
+
+        assert!(matches!(
+            circuit.operations[0].kind,
+            OperationKind::Touch { ref wires } if wires == &[0, 1]
+        ));
+        assert!(matches!(
+            circuit.operations[3].kind,
+            OperationKind::Label { ref wires, .. } if wires == &[1, 2]
+        ));
+        assert!(matches!(
+            circuit.operations[5].kind,
+            OperationKind::Barrier { ref wires } if wires == &[1]
         ));
     }
 

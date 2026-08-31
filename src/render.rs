@@ -90,7 +90,56 @@ fn schedule(circuit: &Circuit) -> (Vec<Scheduled<'_>>, Vec<usize>) {
             }
         }
     }
+    delay_starts(circuit, &mut scheduled);
     (scheduled, positions)
+}
+
+fn delay_starts(circuit: &Circuit, scheduled: &mut [Scheduled<'_>]) {
+    let final_column = scheduled
+        .iter()
+        .map(|operation| operation.column)
+        .max()
+        .unwrap_or(0);
+    for index in (0..scheduled.len()).rev() {
+        let OperationKind::Endpoint {
+            wires, start: true, ..
+        } = scheduled[index].kind
+        else {
+            continue;
+        };
+        let wires = wires.clone();
+        let next_column = scheduled[index + 1..]
+            .iter()
+            .filter(|operation| {
+                operation
+                    .kind
+                    .occupied_wires(circuit.wires.len())
+                    .iter()
+                    .any(|wire| wires.contains(wire))
+            })
+            .map(|operation| operation.column)
+            .min()
+            .unwrap_or_else(|| final_column.saturating_add(1));
+        let latest = next_column.saturating_sub(1);
+        let (first, last, original) = (
+            scheduled[index].first,
+            scheduled[index].last,
+            scheduled[index].column,
+        );
+        if let Some(column) = (original..=latest).rev().find(|column| {
+            !scheduled
+                .iter()
+                .enumerate()
+                .any(|(other_index, operation)| {
+                    other_index != index
+                        && operation.column == *column
+                        && operation.first <= last
+                        && first <= operation.last
+                })
+        }) {
+            scheduled[index].column = column;
+        }
+    }
 }
 
 fn group_bounds(
@@ -2331,6 +2380,27 @@ mod tests {
                 .collect::<Vec<_>>(),
             [0, 1, 0, 0, 1]
         );
+    }
+
+    #[test]
+    fn start_is_placed_immediately_before_its_first_use() {
+        let circuit = parse(
+            r#"
+                circuit late_start {
+                  qubit q[2]
+                  start q[1]
+                  h q[0]
+                  h q[0]
+                  h q[0]
+                  x q[1] if q[0]
+                }
+            "#,
+        )
+        .expect("valid deferred wire");
+        let (scheduled, _) = schedule(&circuit);
+
+        assert_eq!(scheduled[0].column, 2);
+        assert_eq!(scheduled[4].column, 3);
     }
 
     #[test]
