@@ -38,6 +38,9 @@ circuit teleportation {
     scale: 1.2
     column_gap: 1.5
     wire_gap: 1
+    gate_size: 20
+    corner_radius: 4
+    comment_width: 144
     background: white
   }
 
@@ -102,6 +105,6 @@ group "whole pass" from encoding to here with stroke: purple, dash: dashed
 
 The end mark is exclusive; `here` means all operations parsed so far. Groups may overlap or nest, and are drawn behind the circuit.
 
-`layout` configures orientation, scale, abstract column/wire gaps, and background. A trailing `with` clause accepts portable `stroke`, `fill`, `width`, `height`, `size`, `shape`, `dash`, and `opacity` properties. Shapes are `box`, `circle`, `ellipse`, or `none`; numeric dimensions are points and opacity ranges from 0 to 1. Colors are checked names understood by both backends or quoted six-digit values such as `"#336699"`.
+`layout` configures orientation, scale, abstract column/wire gaps, default `gate_size`, permutation `corner_radius`, note `comment_width`, and background. The three size properties use points. A trailing `with` clause accepts portable `stroke`, `fill`, `width`, `height`, `size`, `shape`, `dash`, and `opacity` properties. Shapes are `box`, `circle`, `ellipse`, or `none`; numeric dimensions are points and opacity ranges from 0 to 1. Colors are checked names understood by both backends or quoted six-digit values such as `"#336699"`.
 
 The remaining qpic surface will extend the same grammar rather than add uppercase directives. Backend-only escape blocks will be explicit and isolated for the few qpic preamble/TikZ hooks that cannot be represented portably.

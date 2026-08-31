@@ -612,6 +612,18 @@ impl Parser {
                 "wire_gap" => {
                     self.layout.wire_gap = self.take_positive_scalar("wire gap")?;
                 }
+                "gate_size" => {
+                    self.layout.gate_size = self.take_positive_scalar("gate size")?;
+                }
+                "corner_radius" => {
+                    self.layout.corner_radius = self.take_scalar("corner radius")?;
+                    if self.layout.corner_radius < 0.0 {
+                        return Err(Diagnostic::new("corner radius cannot be negative", span));
+                    }
+                }
+                "comment_width" => {
+                    self.layout.comment_width = self.take_positive_scalar("comment width")?;
+                }
                 "background" => self.layout.background = self.take_color("background color")?,
                 _ => {
                     return Err(Diagnostic::new(
@@ -1582,6 +1594,9 @@ mod tests {
                   layout {
                     orientation: vertical
                     scale: 1.25
+                    gate_size: 24
+                    corner_radius: 2
+                    comment_width: 96
                     background: "#f7f8fc"
                   }
                   qubit q[2] with stroke: "#336699"
@@ -1593,6 +1608,9 @@ mod tests {
 
         assert_eq!(circuit.layout.orientation, Orientation::Vertical);
         assert_eq!(circuit.layout.scale, 1.25);
+        assert_eq!(circuit.layout.gate_size, 24.0);
+        assert_eq!(circuit.layout.corner_radius, 2.0);
+        assert_eq!(circuit.layout.comment_width, 96.0);
         assert_eq!(circuit.layout.background, "#F7F8FC");
         assert_eq!(circuit.wires[0].style.stroke.as_deref(), Some("#336699"));
         assert_eq!(circuit.operations[0].style.shape, Some(Shape::Circle));

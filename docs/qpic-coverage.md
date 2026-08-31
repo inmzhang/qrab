@@ -32,7 +32,7 @@ Legend: **done** is implemented in both backends and exercised by a runnable tes
 | CUT separators | source-local `cut` statement | partial — global numbered cut rules remain |
 | Global spacing, scale, and background | `layout { ... }` | done |
 | Horizontal/vertical orientation | `layout.orientation` | done |
-| Global gate size, corners, and comment size | remaining `layout` properties | next |
+| Global gate size, corners, and comment size | `layout.gate_size`, `corner_radius`, `comment_width` | done |
 | Measurement shapes | named measurements default to D; `using tag` selects a tag | done |
 | Custom colors | named colors or quoted `#RRGGBB` values | done |
 | DEFINE composition | parsed `fn` declarations, never text macros | partial — nested wire-operation functions are done; value/style declarations remain |

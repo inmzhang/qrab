@@ -1,4 +1,10 @@
 circuit annotations {
+  layout {
+    gate_size: 22
+    corner_radius: 3
+    comment_width: 72
+  }
+
   qubit q[3]: "|0>" -> "out"
 
   labels "data", "work", "flag" on q[0..3] with fill: yellow

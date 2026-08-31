@@ -1,4 +1,10 @@
 circuit lifecycle {
+  layout {
+    gate_size: 18
+    corner_radius: 2
+    comment_width: 96
+  }
+
   qubit q[3]: "|0>" -> "out"
 
   start q[2] as "|aux>"

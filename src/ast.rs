@@ -29,6 +29,9 @@ pub struct Layout {
     pub scale: f32,
     pub column_gap: f32,
     pub wire_gap: f32,
+    pub gate_size: f32,
+    pub corner_radius: f32,
+    pub comment_width: f32,
     pub background: String,
 }
 
@@ -39,6 +42,9 @@ impl Default for Layout {
             scale: 1.0,
             column_gap: 1.5,
             wire_gap: 1.0,
+            gate_size: 20.0,
+            corner_radius: 4.0,
+            comment_width: 144.0,
             background: "white".into(),
         }
     }

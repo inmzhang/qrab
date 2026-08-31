@@ -1,8 +1,8 @@
 use std::{collections::BTreeSet, fmt::Write as _};
 
 use crate::ast::{
-    BraceSide, Circuit, Control, Group, MeasurementShape, OperationKind, Orientation, Shape, Style,
-    Wire, WireKind,
+    BraceSide, Circuit, Control, Group, Layout, MeasurementShape, OperationKind, Orientation,
+    Shape, Style, Wire, WireKind,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -231,7 +231,7 @@ fn render_latex(circuit: &Circuit) -> String {
                 draw_latex_gate(
                     &mut output,
                     x,
-                    circuit.layout.wire_gap,
+                    &circuit.layout,
                     label,
                     &targets,
                     &controls,
@@ -247,7 +247,7 @@ fn render_latex(circuit: &Circuit) -> String {
                     draw_latex_measurement(
                         &mut output,
                         x,
-                        circuit.layout.wire_gap,
+                        &circuit.layout,
                         operation.positions[*target],
                         label.as_deref(),
                         *shape,
@@ -446,7 +446,8 @@ fn render_latex(circuit: &Circuit) -> String {
                     / -2.0;
                 writeln!(
                     output,
-                    "  \\node[anchor=south] at ({x:.3},{:.3}) {{{}}};",
+                    "  \\node[anchor=south,text width={:.3}pt,align=center] at ({x:.3},{:.3}) {{{}}};",
+                    circuit.layout.comment_width,
                     midpoint + 0.24,
                     latex_text(text)
                 )
@@ -596,6 +597,7 @@ fn draw_latex_wire(
                 source_y,
                 destination_y,
                 &merged_line_style(&wire.style, operation.style),
+                circuit.layout.corner_radius,
             );
             row = next_row;
             start_x = x + half_width;
@@ -676,6 +678,7 @@ fn draw_wire_curve(
     source_y: f32,
     destination_y: f32,
     style: &Style,
+    corner_radius: f32,
 ) {
     let offsets: &[f32] = match kind {
         WireKind::Quantum => &[0.0],
@@ -683,16 +686,30 @@ fn draw_wire_curve(
         WireKind::Hidden => return,
     };
     for offset in offsets {
-        writeln!(
-            output,
-            "  \\draw{} ({start_x:.3},{:.3}) .. controls ({control_x:.3},{:.3}) and ({control_x:.3},{:.3}) .. ({end_x:.3},{:.3});",
-            latex_line_options(style),
-            source_y + offset,
-            source_y + offset,
-            destination_y + offset,
-            destination_y + offset
-        )
-        .expect("writing to a String cannot fail");
+        if corner_radius == 0.0 {
+            writeln!(
+                output,
+                "  \\draw{} ({start_x:.3},{:.3}) -- ({end_x:.3},{:.3});",
+                latex_line_options(style),
+                source_y + offset,
+                destination_y + offset
+            )
+            .expect("writing to a String cannot fail");
+        } else {
+            let bend = (corner_radius / 4.0).min(1.0);
+            let first_control = start_x + (control_x - start_x) * bend;
+            let second_control = end_x - (end_x - control_x) * bend;
+            writeln!(
+                output,
+                "  \\draw{} ({start_x:.3},{:.3}) .. controls ({first_control:.3},{:.3}) and ({second_control:.3},{:.3}) .. ({end_x:.3},{:.3});",
+                latex_line_options(style),
+                source_y + offset,
+                source_y + offset,
+                destination_y + offset,
+                destination_y + offset
+            )
+            .expect("writing to a String cannot fail");
+        }
     }
 }
 
@@ -817,12 +834,14 @@ fn draw_classical_wire(output: &mut String, start_x: f32, end_x: f32, y: f32, st
 fn draw_latex_gate(
     output: &mut String,
     x: f32,
-    wire_gap: f32,
+    layout: &Layout,
     label: &str,
     targets: &[usize],
     controls: &[Control],
     style: &Style,
 ) {
+    let wire_gap = layout.wire_gap;
+    let gate_size = layout.gate_size;
     if !controls.is_empty() {
         let (first, last) = occupied_bounds(targets, controls);
         writeln!(
@@ -849,13 +868,19 @@ fn draw_latex_gate(
         let last = *targets.iter().max().expect("gate has a target");
         let midpoint = -((first + last) as f32) * wire_gap / 2.0;
         let height = style.height.map_or_else(
-            || format!("{:.3}cm", (last - first) as f32 * wire_gap + 0.72),
+            || {
+                format!(
+                    "{:.3}cm",
+                    (last - first) as f32 * wire_gap + gate_size / 28.45
+                )
+            },
             |height| format!("{height:.3}pt"),
         );
+        let width = format!("{gate_size:.3}pt");
         writeln!(
             output,
             "  \\node{} at ({x:.3},{midpoint:.3}) {{{}}};",
-            latex_node_options(style, "10mm", &height),
+            latex_node_options(style, &width, &height),
             latex_text(label)
         )
         .expect("writing to a String cannot fail");
@@ -888,10 +913,11 @@ fn draw_latex_gate(
         )
         .expect("writing to a String cannot fail");
     } else {
+        let size = format!("{gate_size:.3}pt");
         writeln!(
             output,
             "  \\node{} at ({x:.3},{y:.3}) {{{}}};",
-            latex_node_options(style, "8mm", "7mm"),
+            latex_node_options(style, &size, &size),
             latex_text(label)
         )
         .expect("writing to a String cannot fail");
@@ -901,25 +927,27 @@ fn draw_latex_gate(
 fn draw_latex_measurement(
     output: &mut String,
     x: f32,
-    wire_gap: f32,
+    layout: &Layout,
     target: usize,
     label: Option<&str>,
     shape: MeasurementShape,
     style: &Style,
 ) {
-    let y = -(target as f32) * wire_gap;
+    let y = -(target as f32) * layout.wire_gap;
     if let Some(label) = label {
-        draw_latex_named_measurement(output, x, y, label, shape, style);
+        draw_latex_named_measurement(output, x, y, label, shape, style, layout.gate_size);
         return;
     }
+    let width = style.width.unwrap_or(layout.gate_size) / 28.45;
+    let height = style.height.unwrap_or(layout.gate_size) / 28.45;
     writeln!(
         output,
         "  \\draw{} ({:.3},{:.3}) rectangle ({:.3},{:.3});",
         latex_circle_options(style, false),
-        x - 0.34,
-        y - 0.28,
-        x + 0.34,
-        y + 0.28
+        x - width / 2.0,
+        y - height / 2.0,
+        x + width / 2.0,
+        y + height / 2.0
     )
     .expect("writing to a String cannot fail");
     writeln!(
@@ -948,9 +976,10 @@ fn draw_latex_named_measurement(
     label: &str,
     shape: MeasurementShape,
     style: &Style,
+    gate_size: f32,
 ) {
-    let width = style.width.map_or(0.68, |width| width / 28.45);
-    let height = style.height.map_or(0.56, |height| height / 28.45);
+    let width = style.width.unwrap_or(gate_size) / 28.45;
+    let height = style.height.unwrap_or(gate_size) / 28.45;
     let left = x - width / 2.0;
     let right = x + width / 2.0;
     let top = y + height / 2.0;
@@ -1286,6 +1315,12 @@ fn render_typst(circuit: &Circuit) -> String {
         .expect("writing to a String cannot fail");
     writeln!(
         output,
+        "  gate-padding: {:.3}pt,",
+        ((circuit.layout.gate_size - 10.0) / 2.0).max(0.0)
+    )
+    .expect("writing to a String cannot fail");
+    writeln!(
+        output,
         "  fill: {},",
         typst_color(&circuit.layout.background, None)
     )
@@ -1370,7 +1405,7 @@ fn render_typst(circuit: &Circuit) -> String {
                         label.as_deref(),
                         *shape,
                         operation.style,
-                        &circuit.layout.background,
+                        &circuit.layout,
                     );
                 }
             }
@@ -1508,6 +1543,7 @@ fn render_typst(circuit: &Circuit) -> String {
                                 ))
                             })
                             .collect::<Vec<_>>(),
+                        circuit.layout.corner_radius,
                         &span_wires
                             .iter()
                             .map(|wire| {
@@ -1588,8 +1624,9 @@ fn render_typst(circuit: &Circuit) -> String {
                     .expect("circuit has a wire");
                 writeln!(
                     output,
-                    "  quill.gate(none, box: false, x: {x}, y: {first}, label: (content: text(\"{}\"), pos: top)),",
-                    typst_string(text)
+                    "  quill.gate(none, box: false, x: {x}, y: {first}, label: (content: block(width: {:.3}pt, align(center, text(\"{}\"))), pos: top)),",
+                    circuit.layout.comment_width,
+                    typst_string(text),
                 )
                 .expect("writing to a String cannot fail");
             }
@@ -1802,7 +1839,7 @@ fn draw_typst_measurement(
     label: Option<&str>,
     shape: MeasurementShape,
     style: &Style,
-    background: &str,
+    layout: &Layout,
 ) {
     let Some(label) = label else {
         writeln!(
@@ -1817,7 +1854,7 @@ fn draw_typst_measurement(
     match shape {
         MeasurementShape::D => {
             let mut gate_style = style.clone();
-            gate_style.width.get_or_insert(18.0);
+            gate_style.width.get_or_insert(layout.gate_size);
             writeln!(
                 output,
                 "  quill.gate({}, x: {x}, y: {row}{}, radius: (top-right: 999pt, bottom-right: 999pt)),",
@@ -1827,20 +1864,20 @@ fn draw_typst_measurement(
             .expect("writing to a String cannot fail");
         }
         MeasurementShape::Tag => {
-            let width = style.width.unwrap_or(20.0);
+            let width = style.width.unwrap_or(layout.gate_size);
             writeln!(
                 output,
                 "  quill.gate({}, x: {x}, y: {row}, box: false, width: {width:.3}pt),",
-                typst_measure_tag_body(label, style, background)
+                typst_measure_tag_body(label, style, &layout.background, layout.gate_size)
             )
             .expect("writing to a String cannot fail");
         }
     }
 }
 
-fn typst_measure_tag_body(label: &str, style: &Style, background: &str) -> String {
-    let width = style.width.unwrap_or(20.0);
-    let height = style.height.unwrap_or(14.0);
+fn typst_measure_tag_body(label: &str, style: &Style, background: &str, gate_size: f32) -> String {
+    let width = style.width.unwrap_or(gate_size);
+    let height = style.height.unwrap_or(gate_size * 0.7);
     let point = (height / 2.0).min(width / 3.0);
     let fill = typst_color(style.fill.as_deref().unwrap_or(background), style.opacity);
     let stroke = typst_stroke(style).unwrap_or_else(|| "black".into());
@@ -2030,7 +2067,12 @@ fn typst_brace_body(label: &str, side: BraceSide, wires: usize, style: &Style) -
     format!("box([{body}])")
 }
 
-fn typst_permute_style(style: &Style, wire_counts: &[usize], wire_strokes: &[String]) -> String {
+fn typst_permute_style(
+    style: &Style,
+    wire_counts: &[usize],
+    corner_radius: f32,
+    wire_strokes: &[String],
+) -> String {
     let mut arguments = Vec::new();
     if let Some(width) = style.width {
         arguments.push(format!("width: {width:.3}pt"));
@@ -2040,6 +2082,10 @@ fn typst_permute_style(style: &Style, wire_counts: &[usize], wire_strokes: &[Str
     } else {
         arguments.push(format!("stroke: ({})", wire_strokes.join(", ")));
     }
+    arguments.push(format!(
+        "bend: {:.3}%",
+        (corner_radius / 4.0).min(1.0) * 100.0
+    ));
     arguments.push(format!(
         "wire-count: ({})",
         wire_counts
