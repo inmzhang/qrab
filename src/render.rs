@@ -1,8 +1,11 @@
-use std::{collections::BTreeSet, fmt::Write as _};
+use std::{
+    collections::{BTreeSet, HashMap},
+    fmt::Write as _,
+};
 
 use crate::ast::{
-    BraceSide, Circuit, Control, Group, Layout, MeasurementShape, OperationKind, Orientation,
-    Shape, Style, Wire, WireKind,
+    BraceSide, Circuit, Control, Group, Layout, MeasurementShape, NoteSide, OperationKind,
+    Orientation, Shape, Style, Wire, WireKind,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -33,6 +36,7 @@ fn schedule(circuit: &Circuit) -> (Vec<Scheduled<'_>>, Vec<usize>) {
     let mut order = (0..circuit.wires.len()).collect::<Vec<_>>();
     let mut positions = order.clone();
     let mut scheduled = Vec::with_capacity(circuit.operations.len());
+    let mut overlay_columns = HashMap::new();
     for operation in &circuit.operations {
         let occupied = operation.kind.occupied_wires(circuit.wires.len());
         let first = occupied
@@ -46,7 +50,19 @@ fn schedule(circuit: &Circuit) -> (Vec<Scheduled<'_>>, Vec<usize>) {
             .max()
             .unwrap_or(0);
         let interval = &order[first..=last];
-        let column = if matches!(operation.kind, OperationKind::Touch { .. }) {
+        let column = if let Some(overlay) = operation.overlay {
+            let column = *overlay_columns
+                .entry(overlay)
+                .or_insert_with(|| overlay_column(circuit, overlay, &tracks, &order, &positions));
+            for wire in interval {
+                tracks[*wire] = tracks[*wire].max(column + 1);
+            }
+            column
+        } else if matches!(operation.kind, OperationKind::Note { .. }) {
+            scheduled
+                .last()
+                .map_or(0, |operation: &Scheduled<'_>| operation.column)
+        } else if matches!(operation.kind, OperationKind::Touch { .. }) {
             let previous_column = scheduled
                 .last()
                 .map_or(0, |operation: &Scheduled<'_>| operation.column);
@@ -92,6 +108,28 @@ fn schedule(circuit: &Circuit) -> (Vec<Scheduled<'_>>, Vec<usize>) {
     }
     delay_starts(circuit, &mut scheduled);
     (scheduled, positions)
+}
+
+fn overlay_column(
+    circuit: &Circuit,
+    overlay: usize,
+    tracks: &[usize],
+    order: &[usize],
+    positions: &[usize],
+) -> usize {
+    circuit
+        .operations
+        .iter()
+        .filter(|operation| operation.overlay == Some(overlay))
+        .flat_map(|operation| {
+            let occupied = operation.kind.occupied_wires(circuit.wires.len());
+            let first = occupied.iter().map(|wire| positions[*wire]).min()?;
+            let last = occupied.iter().map(|wire| positions[*wire]).max()?;
+            Some(order[first..=last].iter().map(|wire| tracks[*wire]).max())
+        })
+        .flatten()
+        .max()
+        .unwrap_or(0)
 }
 
 fn delay_starts(circuit: &Circuit, scheduled: &mut [Scheduled<'_>]) {
@@ -491,22 +529,33 @@ fn render_latex(circuit: &Circuit) -> String {
                     &circuit.layout.background,
                 );
             }
-            OperationKind::Note { wires, text } => {
+            OperationKind::Note { wires, text, side } => {
                 let mut rows = selected_wires(wires, circuit.wires.len())
                     .iter()
                     .map(|wire| operation.positions[*wire])
                     .collect::<Vec<_>>();
                 rows.sort_unstable();
-                let midpoint = (*rows.first().expect("circuit has a wire")
-                    + *rows.last().expect("circuit has a wire"))
-                    as f32
-                    * circuit.layout.wire_gap
-                    / -2.0;
+                let row = if *side == NoteSide::Above {
+                    *rows.first().expect("circuit has a wire") as f32
+                } else {
+                    *rows.last().expect("circuit has a wire") as f32
+                };
+                let y = -row * circuit.layout.wire_gap
+                    + if *side == NoteSide::Above {
+                        0.42
+                    } else {
+                        -0.42
+                    };
                 writeln!(
                     output,
-                    "  \\node[anchor=south,text width={:.3}pt,align=center] at ({x:.3},{:.3}) {{{}}};",
+                    "  \\node[anchor={},text width={:.3}pt,align=center] at ({x:.3},{:.3}) {{{}}};",
+                    if *side == NoteSide::Above {
+                        "south"
+                    } else {
+                        "north"
+                    },
                     circuit.layout.comment_width,
-                    midpoint + 0.24,
+                    y,
                     latex_text(text)
                 )
                 .expect("writing to a String cannot fail");
@@ -1683,17 +1732,23 @@ fn render_typst(circuit: &Circuit) -> String {
                     &circuit.layout.background,
                 );
             }
-            OperationKind::Note { wires, text } => {
-                let first = selected_wires(wires, circuit.wires.len())
+            OperationKind::Note { wires, text, side } => {
+                let rows = selected_wires(wires, circuit.wires.len())
                     .iter()
                     .map(|wire| operation.positions[*wire])
-                    .min()
-                    .expect("circuit has a wire");
+                    .collect::<Vec<_>>();
+                let row = if *side == NoteSide::Above {
+                    rows.iter().min()
+                } else {
+                    rows.iter().max()
+                }
+                .expect("circuit has a wire");
                 writeln!(
                     output,
-                    "  quill.gate(none, box: false, x: {x}, y: {first}, label: (content: block(width: {:.3}pt, align(center, text(\"{}\"))), pos: top)),",
+                    "  quill.gategroup(1, 1, x: {x}, y: {row}, padding: 0pt, stroke: none, label: (content: block(width: {:.3}pt, align(center, text(\"{}\"))), pos: {})),",
                     circuit.layout.comment_width,
                     typst_string(text),
+                    if *side == NoteSide::Above { "top" } else { "bottom" },
                 )
                 .expect("writing to a String cannot fail");
             }
@@ -2383,6 +2438,31 @@ mod tests {
     }
 
     #[test]
+    fn notes_annotate_without_advancing_the_schedule() {
+        let circuit = parse(
+            r#"
+                circuit comments {
+                  qubit q
+                  h q
+                  note below "prepared" on q
+                  x q
+                }
+            "#,
+        )
+        .expect("valid note");
+        let (scheduled, _) = schedule(&circuit);
+
+        assert_eq!(
+            scheduled
+                .iter()
+                .map(|operation| operation.column)
+                .collect::<Vec<_>>(),
+            [0, 0, 1]
+        );
+        assert!(render_typst(&circuit).contains("pos: bottom"));
+    }
+
+    #[test]
     fn start_is_placed_immediately_before_its_first_use() {
         let circuit = parse(
             r#"
@@ -2446,6 +2526,42 @@ mod tests {
                 .map(|operation| operation.column)
                 .collect::<Vec<_>>(),
             [0, 1, 1, 2, 2, 2]
+        );
+    }
+
+    #[test]
+    fn overlay_forces_colliding_operations_into_one_column() {
+        let circuit = parse(
+            r#"
+                circuit forced_overlap {
+                  qubit q[3]
+                  h q[0]
+                  h q[0]
+                  repeat 2 {
+                    overlay {
+                      x q[0] if q[2]
+                      h q[1]
+                    }
+                  }
+                  x q[0]
+                }
+            "#,
+        )
+        .expect("valid overlays");
+        let (scheduled, _) = schedule(&circuit);
+
+        assert_eq!(
+            scheduled
+                .iter()
+                .map(|operation| operation.column)
+                .collect::<Vec<_>>(),
+            [0, 1, 2, 2, 3, 3, 4]
+        );
+        assert!(
+            parse("circuit bad { qubit q; overlay { h q; x q } }")
+                .expect_err("one Quill cell cannot hold two gates")
+                .message
+                .contains("cannot share wire")
         );
     }
 }

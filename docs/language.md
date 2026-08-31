@@ -45,7 +45,7 @@ Function bodies contain operations or calls to earlier functions. Calls have exa
 
 Array slices are end-exclusive: `q[1..4]` selects `q[1]`, `q[2]`, and `q[3]` anywhere a wire list is accepted. A single-wire statement such as `h` rejects a range.
 
-`repeat count { ... }` repeats a parsed operation block, including function calls. `reverse { ... }` emits drawing-safe operations in reverse source order; measurement, lifecycle changes, and permutations are rejected because silently guessing their inverse would change the circuit. `parallel { ... }` aligns independent operations after any prior work and aligns following work after the block. Operations whose visual wire spans overlap are safely serialized rather than drawn on top of one another.
+`repeat count { ... }` repeats a parsed operation block, including function calls. `reverse { ... }` emits its operations in reverse source order. Marks can replay an earlier range with `reverse from start_mark to end_mark` (or `to here`); this reverses statement order, not the mathematical action of each gate. `parallel { ... }` aligns independent operations after any prior work and aligns following work after the block. Operations whose visual wire spans overlap are safely serialized. Use an explicit `overlay { ... }` when disjoint operations must occupy one column even though their visual spans collide. Two gates cannot share the same wire/cell, and lifecycle changes and permutations are rejected inside an overlay.
 
 ## Current grammar
 
@@ -90,6 +90,8 @@ circuit teleportation {
 
 Wire declarations are `qubit`, `bit`, or `hidden`, followed by a name or fixed-size array. `: "..."` supplies an input label and `-> "..."` an output label. `ellipsis name` declares one wireless row labeled `...` at both ends, making an omitted register range explicit without a magic wire name.
 
+Strict declarations are the default. An `autowires` statement opts the rest of the circuit into creating unknown quantum wires on first use, labeled with their source names. This provides qpic-style compact sketches while keeping accidental misspellings diagnosable everywhere else.
+
 Built-in gates are `h`, `x`, `y`, `z`, `s`, and `t`. A gate's controls follow `if`; `!wire` is an open/negative control. Arbitrary single- or multi-wire boxes use `gate "label" on ...`. `phase`, `measure`, `swap`, and `barrier` are first-class statements rather than magic gate names.
 
 An unlabeled `measure q` draws a meter. `measure q as "Z"` draws a D-shaped result marker; append `using tag` for a pointed tag marker. Measurement changes each target to a classical wire in either form.
@@ -103,13 +105,14 @@ Circuit annotations are portable too:
 ```qrab
 labels "data", "work", "flag" on q[0..3] with fill: yellow
 brace left "input" on q[0..3] with stroke: blue
-note "decode" on q[1]
+note above "prepare" on q[1]
+note below "result" on q[1]
 equals "encode" on q[0..3] braced both
 cut on q[0..3] as "stage" with stroke: red
 brace both "repeat" on q[0..3]
 ```
 
-`labels` accepts either one repeated label or one label per selected wire. Braces may be `left`, `right`, or `both`. `equals` centers `=` across all wires by default; it accepts another label, an `on` selection, and `braced left|right|both`. A source-local `cut` occupies its own separator column; qpic-style global numbered cut rules are not yet part of the language.
+`labels` accepts either one repeated label or one label per selected wire. Braces may be `left`, `right`, or `both`. `note above|below` annotates the preceding slice without consuming another one. `equals` centers `=` across all wires by default; it accepts another label, an `on` selection, and `braced left|right|both`. A source-local `cut` occupies its own separator column.
 
 Named marks delimit highlighted regions without becoming gates:
 

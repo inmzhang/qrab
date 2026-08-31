@@ -92,6 +92,7 @@ pub struct Operation {
     pub kind: OperationKind,
     pub span: Span,
     pub style: Style,
+    pub overlay: Option<usize>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -125,6 +126,12 @@ pub enum BraceSide {
     Left,
     Right,
     Both,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NoteSide {
+    Above,
+    Below,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -186,6 +193,7 @@ pub enum OperationKind {
     Note {
         wires: Vec<usize>,
         text: String,
+        side: NoteSide,
     },
     Cut {
         wires: Vec<usize>,
@@ -341,9 +349,11 @@ impl OperationKind {
             Self::Note {
                 wires: targets,
                 text,
+                side,
             } => Self::Note {
                 wires: selected(targets),
                 text: text.clone(),
+                side: *side,
             },
             Self::Cut {
                 wires: targets,

@@ -1,6 +1,6 @@
 circuit manual_hadamard_x {
-  qubit q[2]
-  h q[0]
-  x q[1]
-  x q[1] if q[0]
+  autowires
+  h a
+  x b
+  x b if a
 }

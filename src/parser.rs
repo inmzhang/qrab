@@ -4,7 +4,7 @@ use std::fmt;
 
 use crate::ast::{
     BackendEscapes, BraceSide, Circuit, Control, EscapeBlock, Group, Layout, MeasurementShape,
-    Operation, OperationKind, Orientation, Shape, Span, Style, Wire, WireKind,
+    NoteSide, Operation, OperationKind, Orientation, Shape, Span, Style, Wire, WireKind,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -255,6 +255,7 @@ fn is_reserved_statement(name: &str) -> bool {
             | "bit"
             | "hidden"
             | "ellipsis"
+            | "autowires"
             | "h"
             | "x"
             | "y"
@@ -278,9 +279,12 @@ fn is_reserved_statement(name: &str) -> bool {
             | "repeat"
             | "reverse"
             | "parallel"
+            | "overlay"
             | "labels"
             | "brace"
             | "note"
+            | "above"
+            | "below"
             | "cut"
             | "mark"
             | "group"
@@ -323,6 +327,8 @@ struct Parser {
     marks: HashMap<String, usize>,
     groups: Vec<Group>,
     escapes: BackendEscapes,
+    auto_wires: bool,
+    next_overlay: usize,
 }
 
 #[derive(Clone)]
@@ -348,6 +354,8 @@ impl Parser {
             marks: HashMap::new(),
             groups: Vec::new(),
             escapes: BackendEscapes::default(),
+            auto_wires: false,
+            next_overlay: 0,
         }
     }
 
@@ -606,7 +614,7 @@ impl Parser {
         if (self.in_function || self.operation_block_depth > 0)
             && matches!(
                 keyword.as_str(),
-                "layout" | "backend" | "qubit" | "bit" | "hidden" | "mark" | "group"
+                "layout" | "backend" | "qubit" | "bit" | "hidden" | "autowires" | "mark" | "group"
             )
         {
             return Err(Diagnostic::new(
@@ -621,6 +629,7 @@ impl Parser {
             "bit" => self.parse_wire_declaration(WireKind::Classical, false),
             "hidden" => self.parse_wire_declaration(WireKind::Hidden, false),
             "ellipsis" => self.parse_wire_declaration(WireKind::Hidden, true),
+            "autowires" => self.parse_autowires(),
             "h" | "x" | "y" | "z" | "s" | "t" => {
                 self.parse_builtin_gate(keyword.to_ascii_uppercase(), span)
             }
@@ -641,6 +650,7 @@ impl Parser {
             "repeat" => self.parse_repeat(span),
             "reverse" => self.parse_reverse(span),
             "parallel" => self.parse_parallel(span),
+            "overlay" => self.parse_overlay(span),
             "labels" => self.parse_wire_labels(span),
             "brace" => self.parse_brace(span),
             "note" => self.parse_note(span),
@@ -684,12 +694,15 @@ impl Parser {
             ));
         }
         self.ensure_unique(&arguments, span, "function argument")?;
+        let start = self.operations.len();
         self.operations
             .extend(function.body.into_iter().map(|operation| Operation {
                 kind: operation.kind.remap_wires(&arguments),
                 span,
                 style: operation.style,
+                overlay: operation.overlay,
             }));
+        self.freshen_overlays(start);
         Ok(())
     }
 
@@ -704,29 +717,45 @@ impl Parser {
             .try_reserve(added)
             .map_err(|_| Diagnostic::new("repeat block is too large", span))?;
         for _ in 0..count {
+            let start = self.operations.len();
             self.operations.extend(body.iter().cloned());
+            self.freshen_overlays(start);
         }
         Ok(())
     }
 
-    fn parse_reverse(&mut self, _span: Span) -> Result<(), Diagnostic> {
-        let mut body = self.parse_operation_block("reverse")?;
-        if let Some(operation) = body.iter().find(|operation| {
-            matches!(
-                operation.kind,
-                OperationKind::Measure { .. }
-                    | OperationKind::WireChange { .. }
-                    | OperationKind::Endpoint { .. }
-                    | OperationKind::Permute { .. }
-            )
-        }) {
-            return Err(Diagnostic::new(
-                "reverse blocks cannot contain measurement, wire lifecycle changes, or permutations",
-                operation.span,
-            ));
-        }
+    fn parse_reverse(&mut self, span: Span) -> Result<(), Diagnostic> {
+        let mut body = if self.consume_keyword("from") {
+            let start_span = self.current().span;
+            let start_name = self.take_identifier("start mark")?;
+            let start = self.marks.get(&start_name).copied().ok_or_else(|| {
+                Diagnostic::new(format!("unknown mark `{start_name}`"), start_span)
+            })?;
+            self.expect_keyword("to")?;
+            let end = if self.consume_keyword("here") {
+                self.operations.len()
+            } else {
+                let end_span = self.current().span;
+                let end_name = self.take_identifier("end mark or `here`")?;
+                self.marks.get(&end_name).copied().ok_or_else(|| {
+                    Diagnostic::new(format!("unknown mark `{end_name}`"), end_span)
+                })?
+            };
+            self.expect_statement_end()?;
+            if start >= end {
+                return Err(Diagnostic::new(
+                    "a reversed range must contain at least one operation",
+                    span,
+                ));
+            }
+            self.operations[start..end].to_vec()
+        } else {
+            self.parse_operation_block("reverse")?
+        };
         body.reverse();
+        let start = self.operations.len();
         self.operations.extend(body);
+        self.freshen_overlays(start);
         Ok(())
     }
 
@@ -739,11 +768,69 @@ impl Parser {
             kind: OperationKind::Touch { wires: Vec::new() },
             span,
             style: Style::default(),
+            overlay: None,
         };
         self.operations.push(touch());
         self.operations.extend(body);
         self.operations.push(touch());
         Ok(())
+    }
+
+    fn parse_overlay(&mut self, span: Span) -> Result<(), Diagnostic> {
+        let mut body = self.parse_operation_block("overlay")?;
+        if let Some(operation) = body.iter().find(|operation| {
+            matches!(
+                operation.kind,
+                OperationKind::Endpoint { .. } | OperationKind::Permute { .. }
+            )
+        }) {
+            return Err(Diagnostic::new(
+                "overlay blocks cannot contain lifecycle changes or permutations",
+                operation.span,
+            ));
+        }
+        let mut occupied = vec![false; self.wires.len()];
+        for operation in &body {
+            if matches!(operation.kind, OperationKind::Note { .. }) {
+                continue;
+            }
+            for wire in operation.kind.occupied_wires(self.wires.len()) {
+                if std::mem::replace(&mut occupied[wire], true) {
+                    return Err(Diagnostic::new(
+                        format!(
+                            "overlay operations cannot share wire `{}`; use `parallel` to serialize them",
+                            self.wires[wire].name
+                        ),
+                        span,
+                    ));
+                }
+            }
+        }
+        if body.is_empty() {
+            return Ok(());
+        }
+        let overlay = self.next_overlay;
+        self.next_overlay += 1;
+        for operation in &mut body {
+            operation.overlay = Some(overlay);
+        }
+        self.operations.extend(body);
+        Ok(())
+    }
+
+    fn freshen_overlays(&mut self, start: usize) {
+        let mut overlays = HashMap::new();
+        for operation in &mut self.operations[start..] {
+            let Some(old) = operation.overlay else {
+                continue;
+            };
+            let next_overlay = &mut self.next_overlay;
+            operation.overlay = Some(*overlays.entry(old).or_insert_with(|| {
+                let overlay = *next_overlay;
+                *next_overlay += 1;
+                overlay
+            }));
+        }
     }
 
     fn parse_operation_block(&mut self, name: &str) -> Result<Vec<Operation>, Diagnostic> {
@@ -929,6 +1016,12 @@ impl Parser {
         Ok(())
     }
 
+    fn parse_autowires(&mut self) -> Result<(), Diagnostic> {
+        self.expect_statement_end()?;
+        self.auto_wires = true;
+        Ok(())
+    }
+
     fn parse_builtin_gate(&mut self, label: String, span: Span) -> Result<(), Diagnostic> {
         let target = self.parse_wire_reference()?;
         let controls = self.parse_controls()?;
@@ -1004,6 +1097,7 @@ impl Parser {
             },
             span,
             style,
+            overlay: None,
         });
         Ok(())
     }
@@ -1024,6 +1118,7 @@ impl Parser {
             kind: OperationKind::Swap { left, right },
             span,
             style,
+            overlay: None,
         });
         Ok(())
     }
@@ -1041,6 +1136,7 @@ impl Parser {
             kind: OperationKind::Barrier { wires },
             span,
             style,
+            overlay: None,
         });
         Ok(())
     }
@@ -1067,6 +1163,7 @@ impl Parser {
             kind: OperationKind::WireChange { wires, kind, label },
             span,
             style,
+            overlay: None,
         });
         Ok(())
     }
@@ -1093,6 +1190,7 @@ impl Parser {
             },
             span,
             style,
+            overlay: None,
         });
         Ok(())
     }
@@ -1115,6 +1213,7 @@ impl Parser {
             },
             span,
             style,
+            overlay: None,
         });
         Ok(())
     }
@@ -1163,6 +1262,7 @@ impl Parser {
             },
             span,
             style,
+            overlay: None,
         });
         Ok(())
     }
@@ -1198,6 +1298,7 @@ impl Parser {
             kind: OperationKind::WireLabels { wires, labels },
             span,
             style,
+            overlay: None,
         });
         Ok(())
     }
@@ -1228,11 +1329,18 @@ impl Parser {
             kind: OperationKind::Brace { wires, label, side },
             span,
             style,
+            overlay: None,
         });
         Ok(())
     }
 
     fn parse_note(&mut self, span: Span) -> Result<(), Diagnostic> {
+        let side = if self.consume_keyword("below") {
+            NoteSide::Below
+        } else {
+            self.consume_keyword("above");
+            NoteSide::Above
+        };
         let text = self.take_label("note text")?;
         let wires = if self.consume_keyword("on") {
             self.parse_wire_list()?
@@ -1243,9 +1351,10 @@ impl Parser {
         self.expect_statement_end()?;
         self.ensure_unique(&wires, span, "note wire")?;
         self.operations.push(Operation {
-            kind: OperationKind::Note { wires, text },
+            kind: OperationKind::Note { wires, text, side },
             span,
             style,
+            overlay: None,
         });
         Ok(())
     }
@@ -1268,6 +1377,7 @@ impl Parser {
             kind: OperationKind::Cut { wires, label },
             span,
             style,
+            overlay: None,
         });
         Ok(())
     }
@@ -1343,6 +1453,7 @@ impl Parser {
             kind: OperationKind::Bundle { wire, label },
             span,
             style,
+            overlay: None,
         });
         Ok(())
     }
@@ -1359,6 +1470,7 @@ impl Parser {
             kind: OperationKind::Permute { wires },
             span,
             style,
+            overlay: None,
         });
         Ok(())
     }
@@ -1372,6 +1484,7 @@ impl Parser {
             kind: OperationKind::Phantom { wires },
             span,
             style,
+            overlay: None,
         });
         Ok(())
     }
@@ -1385,6 +1498,7 @@ impl Parser {
             kind: OperationKind::Touch { wires },
             span,
             style,
+            overlay: None,
         });
         Ok(())
     }
@@ -1442,6 +1556,7 @@ impl Parser {
             },
             span,
             style,
+            overlay: None,
         });
         Ok(())
     }
@@ -1593,13 +1708,27 @@ impl Parser {
         self.resolve_wire(&base, span).map(|wire| vec![wire])
     }
 
-    fn resolve_wire(&self, name: &str, span: Span) -> Result<usize, Diagnostic> {
-        self.wire_indices.get(name).copied().ok_or_else(|| {
-            Diagnostic::new(
-                format!("unknown wire `{name}`; declare it before use"),
+    fn resolve_wire(&mut self, name: &str, span: Span) -> Result<usize, Diagnostic> {
+        if let Some(wire) = self.wire_indices.get(name) {
+            return Ok(*wire);
+        }
+        if !self.auto_wires {
+            return Err(Diagnostic::new(
+                format!("unknown wire `{name}`; declare it before use or enable `autowires`"),
                 span,
-            )
-        })
+            ));
+        }
+        let wire = self.wires.len();
+        self.wire_indices.insert(name.into(), wire);
+        self.wires.push(Wire {
+            name: name.into(),
+            kind: WireKind::Quantum,
+            ellipsis: false,
+            input: Some(name.into()),
+            output: None,
+            style: Style::default(),
+        });
+        Ok(wire)
     }
 
     fn ensure_unique(
@@ -1849,6 +1978,36 @@ mod tests {
 
         assert_eq!(error.span, Span { line: 3, column: 5 });
         assert!(error.message.contains("unknown wire `missing`"));
+    }
+
+    #[test]
+    fn autowires_declares_quantum_wires_on_first_use() {
+        let circuit = parse(
+            r#"
+                circuit sketch {
+                  autowires
+                  h control
+                  x target if control
+                  gate "U" on work[0..2]
+                }
+            "#,
+        )
+        .expect("valid automatic wires");
+
+        assert_eq!(
+            circuit
+                .wires
+                .iter()
+                .map(|wire| wire.name.as_str())
+                .collect::<Vec<_>>(),
+            ["control", "target", "work[0]", "work[1]"]
+        );
+        assert!(
+            circuit
+                .wires
+                .iter()
+                .all(|wire| wire.kind == WireKind::Quantum && wire.input.is_some())
+        );
     }
 
     #[test]
@@ -2213,36 +2372,34 @@ mod tests {
     }
 
     #[test]
-    fn reverses_drawing_safe_operation_blocks() {
+    fn reverses_blocks_and_marked_ranges() {
         let circuit = parse(
             r#"
                 circuit reverse_order {
                   qubit q[3]
+                  mark forward
                   reverse {
                     h q[0]
-                    x q[1]
+                    measure q[1]
                     z q[2]
                   }
+                  mark reversed
+                  reverse from forward to reversed
                 }
             "#,
         )
         .expect("valid reverse block");
 
-        let labels = circuit
+        let kinds = circuit
             .operations
             .iter()
             .map(|operation| match &operation.kind {
                 OperationKind::Gate { label, .. } => label.as_str(),
-                _ => panic!("reverse fixture only contains gates"),
+                OperationKind::Measure { .. } => "M",
+                _ => panic!("unexpected reverse fixture operation"),
             })
             .collect::<Vec<_>>();
-        assert_eq!(labels, ["Z", "X", "H"]);
-        assert!(
-            parse("circuit bad { qubit q; reverse { measure q } }")
-                .expect_err("measurement is not reversibly drawable")
-                .message
-                .contains("cannot contain measurement")
-        );
+        assert_eq!(kinds, ["Z", "M", "H", "H", "M", "Z"]);
     }
 
     #[test]
@@ -2261,7 +2418,7 @@ mod tests {
                   qubit q[3]
                   labels "a", "b", "c" on q[0..3]
                   brace both "register" on q[0..3]
-                  note "decode" on q[1]
+                  note below "decode" on q[1]
                   cut on q[0..2] as "stage" with stroke: blue
                 }
             "#,
@@ -2277,6 +2434,13 @@ mod tests {
             circuit.operations[1].kind,
             OperationKind::Brace {
                 side: BraceSide::Both,
+                ..
+            }
+        ));
+        assert!(matches!(
+            circuit.operations[2].kind,
+            OperationKind::Note {
+                side: NoteSide::Below,
                 ..
             }
         ));
