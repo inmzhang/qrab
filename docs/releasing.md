@@ -3,8 +3,11 @@
 ## Automated flow
 
 1. Use conventional commit subjects and merge changes into `main`. Release-plz maintains a release PR containing the next version and changelog.
-2. Run `just release-check`, review the release PR, and merge it with a clean CI run.
-3. With publishing enabled, release-plz publishes the crate and creates the matching `vX.Y.Z` tag. Cargo-dist reacts to that tag, verifies it matches the crate version, builds all configured targets and installers, and creates the GitHub release.
+2. On the release PR's branch, run `just gen-assets` and commit the result. The man pages carry the crate version, so a bump leaves them stale, and both the asset drift check and `shipped_man_pages_carry_this_crate_version` fail until they are regenerated. Release-plz edits manifests rather than building the crate, so nothing does this for you.
+3. Run `just release-check`, review the release PR, and merge it with a clean CI run.
+4. Release-plz publishes the crate and pushes the matching `vX.Y.Z` tag. Cargo-dist reacts to that tag, verifies it matches the crate version, builds all configured targets and installers, and creates the GitHub release.
+
+`release_always` is true, so the release job publishes on any push to `main` whose manifest version is not yet on crates.io. Merging a release PR is the ordinary way that happens; a hand-edited bump publishes just the same. It has to be true because the first release could not come from a PR at all: release-plz opens one only when it has something to change, and the unpublished crate already sat at the version it would have released.
 
 Cargo-dist produces archives for Linux GNU on x86-64 and Arm64, Linux musl on x86-64, macOS on Intel and Apple Silicon, and Windows MSVC on x86-64. Every archive includes the generated completions and man pages in `assets/`.
 
@@ -14,17 +17,9 @@ The playground is a separate deployment with its own switch. `.github/workflows/
 
 ## Publish gate
 
-The repository variable `ENABLE_PUBLISHING` is currently `false`. The release-plz release job—including `cargo publish` and tag creation—does not run until it is set to `true`; release PR generation remains active.
+`ENABLE_PUBLISHING` is `true` and `0.1.0` is on crates.io. Setting the variable back to `false` disables the release job—`cargo publish` and tag creation—while leaving release PR generation active.
 
-Before opening the gate:
-
-1. Make the repository public. Cargo-dist's shell, PowerShell, and Homebrew installers fetch release assets over unauthenticated HTTPS, so they only work against a public repository.
-2. Add a crates.io API token as the GitHub Actions secret `CARGO_REGISTRY_TOKEN`. Trusted publishing cannot be set up yet: crates.io accepts a trusted publisher only for a crate that already exists, so the first version has to go out under a token.
-3. Set the gate with `gh variable set ENABLE_PUBLISHING --body true`.
-
-For the first release, no release PR exists, and none can: release-plz opens one only to change something, and the unpublished crate is already at `0.1.0` with an up-to-date changelog. `release_always = true` is what lets the release job publish anyway, on any push to `main` whose version is not yet on crates.io. Opening the gate and pushing is therefore the whole first release; release-plz publishes the crate and pushes the `v0.1.0` tag, and cargo-dist takes over from the tag.
-
-Once `0.1.0` is on crates.io, configure trusted publishing for `inmzhang/qrab` and `.github/workflows/release-plz.yml`, then delete the `CARGO_REGISTRY_TOKEN` secret; the release job already requests the `id-token: write` permission it needs. Later releases use the normal release-PR merge flow above.
+Publishing authenticates with the `CARGO_REGISTRY_TOKEN` secret, which the first release had to use: crates.io accepts a trusted publisher only for a crate that already exists. Now that `qrab` does, configure trusted publishing for `inmzhang/qrab` and `.github/workflows/release-plz.yml`, then delete both the secret and the `CARGO_REGISTRY_TOKEN` line from `.github/workflows/release-plz.yml`. The release job already requests the `id-token: write` permission that replaces it.
 
 No Homebrew tap is required: the generated formula is attached to each GitHub release and can be installed directly by URL. Add a tap and cargo-dist Homebrew publisher only if a shorter `brew install owner/tap/qrab` command becomes worthwhile.
 

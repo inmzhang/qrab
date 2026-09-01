@@ -32,7 +32,7 @@ gen-assets:
 
 # Regenerate the manual's diagrams and typeset it.
 manual: gen-assets
-    typst compile docs/manual.typ docs/manual.pdf
+    typst compile --root . docs/manual.typ docs/manual.pdf
 
 # Build the WebAssembly module the playground loads.
 playground:

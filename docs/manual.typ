@@ -5,9 +5,11 @@
 // itself through `cargo run -p xtask`. Neither can drift from the other, and
 // neither can drift from the compiler.
 //
-// Build with: typst compile docs/manual.typ docs/manual.pdf
+// Build with: typst compile --root . docs/manual.typ docs/manual.pdf
 
-#let version = "0.1.0"
+// Read from the manifest so a release bump cannot leave the title page
+// claiming a version the compiler no longer is.
+#let version = toml("/Cargo.toml").package.version
 
 #set document(title: "The qrab Manual", author: "qrab contributors")
 #set page(
