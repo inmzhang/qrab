@@ -27,6 +27,9 @@ release-check: ci
     cargo build --release --locked
     cargo package --locked
 
+gen-assets:
+    cargo run --locked --quiet -p xtask
+
 install-local:
     cargo install --path . --locked
 

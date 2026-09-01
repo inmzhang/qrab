@@ -1,0 +1,28 @@
+.ie \n(.g .ds Aq \(aq
+.el .ds Aq '
+.TH qrab 1  "qrab 0.0.0" 
+.SH NAME
+qrab \- Readable quantum circuits for TikZ and Typst/Quill
+.SH SYNOPSIS
+\fBqrab\fR [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] <\fIsubcommands\fR>
+.SH DESCRIPTION
+Readable quantum circuits for TikZ and Typst/Quill
+.SH OPTIONS
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Print help
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+Print version
+.SH SUBCOMMANDS
+.TP
+qrab\-check(1)
+Check a circuit without rendering it
+.TP
+qrab\-compile(1)
+Compile a circuit to LaTeX, Typst, or both
+.TP
+qrab\-help(1)
+Print this message or the help of the given subcommand(s)
+.SH VERSION
+v0.0.0

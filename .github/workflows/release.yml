@@ -22,21 +22,15 @@ jobs:
         run: |
           version="$(cargo metadata --no-deps --format-version=1 | jq -r '.packages[0].version')"
           test "v${version}" = "${GITHUB_REF_NAME}"
-      - name: Build release
-        run: cargo build --release --locked --message-format=json-render-diagnostics > target/release-build.json
+      - run: cargo build --release --locked
       - name: Package binary
         run: |
           archive="qrab-${GITHUB_REF_NAME}-x86_64-unknown-linux-gnu.tar.gz"
           stage="${archive%.tar.gz}"
-          package_id="$(cargo metadata --no-deps --format-version=1 | jq -r '.packages[0].id')"
-          out_dir="$(jq -r --arg id "${package_id}" 'select(.reason == "build-script-executed" and .package_id == $id) | .out_dir' target/release-build.json)"
-          test -n "${out_dir}"
-          assets="${out_dir}/assets"
-          test -d "${assets}"
           mkdir -p "${stage}/completions" "${stage}/man"
           install -m 0755 target/release/qrab "${stage}/qrab"
-          install -m 0644 "${assets}"/{qrab.bash,qrab.elv,qrab.fish,_qrab,_qrab.ps1} "${stage}/completions/"
-          install -m 0644 "${assets}"/*.1 "${stage}/man/"
+          install -m 0644 assets/{qrab.bash,qrab.elv,qrab.fish,_qrab,_qrab.ps1} "${stage}/completions/"
+          install -m 0644 assets/*.1 "${stage}/man/"
           tar -czf "${archive}" "${stage}"
           sha256sum "${archive}" > "${archive}.sha256"
       - uses: softprops/action-gh-release@v3

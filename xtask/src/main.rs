@@ -5,13 +5,11 @@ use std::path::PathBuf;
 use clap::CommandFactory;
 use clap_complete::{Shell, generate_to};
 
-#[path = "src/cli.rs"]
+#[path = "../../src/cli.rs"]
 mod cli;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    println!("cargo:rerun-if-changed=src/cli.rs");
-    let assets =
-        PathBuf::from(std::env::var_os("OUT_DIR").expect("Cargo sets OUT_DIR")).join("assets");
+    let assets = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../assets");
     if assets.exists() {
         fs::remove_dir_all(&assets)?;
     }

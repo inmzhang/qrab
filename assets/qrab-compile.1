@@ -1,0 +1,39 @@
+.ie \n(.g .ds Aq \(aq
+.el .ds Aq '
+.TH qrab-compile 1  "compile 0.0.0" 
+.SH NAME
+qrab\-compile \- Compile a circuit to LaTeX, Typst, or both
+.SH SYNOPSIS
+\fBqrab compile\fR [\fB\-t\fR|\fB\-\-target\fR] [\fB\-o\fR|\fB\-\-output\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] <\fIINPUT\fR> 
+.SH DESCRIPTION
+Compile a circuit to LaTeX, Typst, or both
+.SH OPTIONS
+.TP
+\fB\-t\fR, \fB\-\-target\fR \fI<TARGET>\fR [default: all]
+Output backend
+.br
+
+.br
+\fIPossible values:\fR
+.RS 14
+.IP \(bu 2
+latex
+.IP \(bu 2
+typst
+.IP \(bu 2
+all
+.RE
+.TP
+\fB\-o\fR, \fB\-\-output\fR \fI<OUTPUT>\fR
+Output file; requires a single backend
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Print help
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+Print version
+.TP
+<\fIINPUT\fR>
+Input `.qrab` file
+.SH VERSION
+v0.0.0
