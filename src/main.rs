@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 
 use clap::{CommandFactory, Parser, error::ErrorKind};
 use miette::{IntoDiagnostic, Report, Result, WrapErr};
-use qrab::{LoadedSource, Target, compile, load_source, parse};
+use qrab::{Circuit, Target, load_source, parse, render};
 
 mod cli;
 
@@ -46,25 +46,27 @@ fn compile_command(arguments: CompileArgs) -> Result<()> {
         output,
     } = arguments;
     let source = load_source(&input)?;
+    let circuit = parse(source.as_str())
+        .map_err(|error| Report::new(error).with_source_code(source.clone()))?;
 
     match target {
         OutputTarget::Latex => {
             write_compiled(
-                &source,
+                &circuit,
                 Target::Latex,
                 output.unwrap_or_else(|| input.with_extension("tex")),
             )?;
         }
         OutputTarget::Typst => {
             write_compiled(
-                &source,
+                &circuit,
                 Target::Typst,
                 output.unwrap_or_else(|| input.with_extension("typ")),
             )?;
         }
         OutputTarget::All => {
-            write_compiled(&source, Target::Latex, input.with_extension("tex"))?;
-            write_compiled(&source, Target::Typst, input.with_extension("typ"))?;
+            write_compiled(&circuit, Target::Latex, input.with_extension("tex"))?;
+            write_compiled(&circuit, Target::Typst, input.with_extension("typ"))?;
         }
     }
     Ok(())
@@ -84,10 +86,8 @@ fn validate_compile_args(arguments: &CompileArgs) -> std::result::Result<(), cla
     ))
 }
 
-fn write_compiled(source: &LoadedSource, target: Target, path: PathBuf) -> Result<()> {
-    let rendered = compile(source.as_str(), target)
-        .map_err(|error| Report::new(error).with_source_code(source.clone()))?;
-    fs::write(&path, rendered)
+fn write_compiled(circuit: &Circuit, target: Target, path: PathBuf) -> Result<()> {
+    fs::write(&path, render(circuit, target))
         .into_diagnostic()
         .wrap_err_with(|| format!("cannot write {}", path.display()))?;
     println!("wrote {}", path.display());
