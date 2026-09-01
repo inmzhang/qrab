@@ -216,7 +216,7 @@ public release.
   table.header[Channel][Command],
   [Cargo], [`cargo install qrab`],
   [cargo-binstall], [`cargo binstall qrab`],
-  [npm / Bun], [`npm i -g qrab` · `npx qrab` · `bunx qrab`],
+  [npm / Bun], [`npm i -g @inmzhang/qrab` · `npx @inmzhang/qrab`],
   [Homebrew], [`brew install --formula .../qrab.rb`],
   [Shell], [`curl -LsSf .../qrab-installer.sh | sh`],
   [PowerShell], [`irm .../qrab-installer.ps1 | iex`],

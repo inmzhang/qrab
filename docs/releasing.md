@@ -10,6 +10,8 @@
 
 `release_always` is true, so the release job publishes on any push to `main` whose manifest version is not yet on crates.io. Merging a release PR is the ordinary way that happens; a hand-edited bump publishes just the same. It has to be true because the first release could not come from a PR at all: release-plz opens one only when it has something to change, and the unpublished crate already sat at the version it would have released.
 
+The npm package is published as `@inmzhang/qrab`. npm refuses the bare name `qrab` outright, as too close to the existing `lab`, `abab`, `ora`, `raf`, and `rax`; the installed command is still `qrab`, because the scope names the package rather than its binary.
+
 The npm package carries no binary. Its `postinstall` downloads the archive for
 the running platform from the GitHub release, and `run-qrab.js` repeats that
 download on first use if the binary is missing. Bun blocks lifecycle scripts for
