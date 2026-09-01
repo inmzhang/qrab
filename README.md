@@ -60,7 +60,7 @@ just ci
 
 The artifact suite requires all 44 translated qpic golden tests and all 64 documented examples, then compiles those plus 11 focused qrab fixtures through both Tectonic and Typst/Quill (238 PDFs total). Fourteen tolerant page-geometry baselines guard representative dense, vertical, annotated, overlaid, imported, lifecycle, and colored-background layouts without brittle pixel snapshots.
 
-The frontend reference is in [docs/language.md](docs/language.md). The phased parity plan and its evidence are tracked in [docs/qpic-coverage.md](docs/qpic-coverage.md) and [docs/roadmap.md](docs/roadmap.md); maintainers can follow [docs/releasing.md](docs/releasing.md) for a verified tag release.
+The frontend reference is in [docs/language.md](docs/language.md). The phased parity plan and its evidence are tracked in [docs/qpic-coverage.md](docs/qpic-coverage.md); maintainers can follow [docs/releasing.md](docs/releasing.md) for a verified tag release.
 
 See [examples/styling.qrab](examples/styling.qrab) for portable styling, [examples/lifecycle.qrab](examples/lifecycle.qrab) for persistent permutations, [examples/programming.qrab](examples/programming.qrab) for structured code, [examples/measurements.qrab](examples/measurements.qrab) for measurement shapes, [examples/ellipsis.qrab](examples/ellipsis.qrab) for omitted register rows, [examples/escapes.qrab](examples/escapes.qrab) for isolated backend hooks, and [examples/regions.qrab](examples/regions.qrab) for annotations and marked regions.
 
