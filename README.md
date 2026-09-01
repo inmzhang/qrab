@@ -14,7 +14,7 @@ circuit bell {
 
 ## Install and use
 
-Build and install the dependency-free Rust binary:
+Build and install the Rust binary:
 
 ```sh
 cargo install --path . --locked

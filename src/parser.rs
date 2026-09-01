@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
+use std::ops::Range;
+
+use logos::Logos;
 
 use crate::ast::{
     BackendEscapes, BraceSide, Circuit, Control, EscapeBlock, Group, Layout, MeasurementShape,
@@ -68,6 +71,45 @@ struct Token {
     span: Span,
 }
 
+#[derive(Logos, Debug, Clone, Copy, PartialEq, Eq)]
+#[logos(skip r"[ \t\r\f]+")]
+#[logos(skip(r"//[^\n]*", allow_greedy = true))]
+enum Lexeme {
+    #[regex(r"[A-Za-z_][A-Za-z0-9_]*")]
+    Identifier,
+    #[regex(r#""([^"\\\n]|\\.)*""#)]
+    String,
+    #[regex(r"[0-9]+(\.[0-9]+)?")]
+    Number,
+    #[token("{")]
+    LeftBrace,
+    #[token("}")]
+    RightBrace,
+    #[token("(")]
+    LeftParen,
+    #[token(")")]
+    RightParen,
+    #[token("[")]
+    LeftBracket,
+    #[token("]")]
+    RightBracket,
+    #[token(":")]
+    Colon,
+    #[token("=")]
+    Equal,
+    #[token(",")]
+    Comma,
+    #[token("!")]
+    Bang,
+    #[token("->")]
+    Arrow,
+    #[token("..")]
+    DotDot,
+    #[token("\n")]
+    #[token(";")]
+    Newline,
+}
+
 /// Parses one expanded `.qrab` source string into a checked circuit.
 ///
 /// Use [`crate::load_source`] first when the source contains imports.
@@ -76,180 +118,126 @@ pub fn parse(source: &str) -> Result<Circuit, Diagnostic> {
 }
 
 fn lex(source: &str) -> Result<Vec<Token>, Diagnostic> {
+    let line_starts = std::iter::once(0)
+        .chain(source.match_indices('\n').map(|(offset, _)| offset + 1))
+        .collect::<Vec<_>>();
+    let mut lexer = Lexeme::lexer(source);
     let mut tokens = Vec::new();
-    let mut chars = source.chars().peekable();
-    let (mut line, mut column) = (1, 1);
-
-    while let Some(character) = chars.next() {
-        let span = Span { line, column };
-        match character {
-            ' ' | '\t' | '\r' => column += 1,
-            '\n' | ';' => {
-                tokens.push(Token {
-                    kind: TokenKind::Newline,
-                    span,
-                });
-                if character == '\n' {
-                    line += 1;
-                    column = 1;
-                } else {
-                    column += 1;
-                }
+    while let Some(lexeme) = lexer.next() {
+        let range = lexer.span();
+        let span = source_span(source, &line_starts, range.clone());
+        let lexeme = lexeme.map_err(|()| lex_error(source, &line_starts, range.clone()))?;
+        let kind = match lexeme {
+            Lexeme::Identifier => TokenKind::Identifier(lexer.slice().into()),
+            Lexeme::String => {
+                TokenKind::String(decode_string(source, &line_starts, range.clone())?)
             }
-            '/' if chars.peek() == Some(&'/') => {
-                chars.next();
-                column += 2;
-                while chars.peek().is_some_and(|next| *next != '\n') {
-                    chars.next();
-                    column += 1;
-                }
-            }
-            '{' => push_token(&mut tokens, TokenKind::LeftBrace, span, &mut column),
-            '}' => push_token(&mut tokens, TokenKind::RightBrace, span, &mut column),
-            '(' => push_token(&mut tokens, TokenKind::LeftParen, span, &mut column),
-            ')' => push_token(&mut tokens, TokenKind::RightParen, span, &mut column),
-            '[' => push_token(&mut tokens, TokenKind::LeftBracket, span, &mut column),
-            ']' => push_token(&mut tokens, TokenKind::RightBracket, span, &mut column),
-            ':' => push_token(&mut tokens, TokenKind::Colon, span, &mut column),
-            '=' => push_token(&mut tokens, TokenKind::Equal, span, &mut column),
-            ',' => push_token(&mut tokens, TokenKind::Comma, span, &mut column),
-            '!' => push_token(&mut tokens, TokenKind::Bang, span, &mut column),
-            '-' if chars.peek() == Some(&'>') => {
-                chars.next();
-                tokens.push(Token {
-                    kind: TokenKind::Arrow,
-                    span,
-                });
-                column += 2;
-            }
-            '.' if chars.peek() == Some(&'.') => {
-                chars.next();
-                tokens.push(Token {
-                    kind: TokenKind::DotDot,
-                    span,
-                });
-                column += 2;
-            }
-            '"' => {
-                column += 1;
-                let mut value = String::new();
-                let mut terminated = false;
-                while let Some(next) = chars.next() {
-                    column += 1;
-                    match next {
-                        '"' => {
-                            terminated = true;
-                            break;
-                        }
-                        '\\' => {
-                            let escaped = chars.next().ok_or_else(|| {
-                                Diagnostic::new("unterminated string escape", span)
-                            })?;
-                            column += 1;
-                            value.push(match escaped {
-                                'n' => '\n',
-                                'r' => '\r',
-                                't' => '\t',
-                                '"' => '"',
-                                '\\' => '\\',
-                                _ => {
-                                    return Err(Diagnostic::new(
-                                        format!("unknown string escape `\\{escaped}`"),
-                                        Span {
-                                            line,
-                                            column: column - 1,
-                                        },
-                                    ));
-                                }
-                            });
-                        }
-                        '\n' => {
-                            return Err(Diagnostic::new(
-                                "strings cannot cross lines",
-                                Span {
-                                    line,
-                                    column: column - 1,
-                                },
-                            ));
-                        }
-                        _ => value.push(next),
-                    }
-                }
-                if !terminated {
-                    return Err(Diagnostic::new("unterminated string", span));
-                }
-                tokens.push(Token {
-                    kind: TokenKind::String(value),
-                    span,
-                });
-            }
-            first if first.is_ascii_alphabetic() || first == '_' => {
-                let mut value = String::from(first);
-                column += 1;
-                while chars
-                    .peek()
-                    .is_some_and(|next| next.is_ascii_alphanumeric() || *next == '_')
-                {
-                    value.push(chars.next().expect("peeked character exists"));
-                    column += 1;
-                }
-                tokens.push(Token {
-                    kind: TokenKind::Identifier(value),
-                    span,
-                });
-            }
-            first if first.is_ascii_digit() => {
-                let mut value = String::from(first);
-                column += 1;
-                while chars.peek().is_some_and(char::is_ascii_digit) {
-                    value.push(chars.next().expect("peeked character exists"));
-                    column += 1;
-                }
-                let decimal = if chars.peek() == Some(&'.') {
-                    let mut lookahead = chars.clone();
-                    lookahead.next();
-                    lookahead.peek().is_some_and(char::is_ascii_digit)
-                } else {
-                    false
-                };
-                if decimal {
-                    chars.next();
-                    value.push('.');
-                    column += 1;
-                    if !chars.peek().is_some_and(char::is_ascii_digit) {
-                        return Err(Diagnostic::new(
-                            "a decimal point must be followed by a digit",
-                            span,
-                        ));
-                    }
-                    while chars.peek().is_some_and(char::is_ascii_digit) {
-                        value.push(chars.next().expect("peeked character exists"));
-                        column += 1;
-                    }
-                }
-                tokens.push(Token {
-                    kind: TokenKind::Number(value),
-                    span,
-                });
-            }
-            unexpected => {
-                return Err(Diagnostic::new(
-                    format!("unexpected character `{unexpected}`"),
-                    span,
-                ));
-            }
-        }
+            Lexeme::Number => TokenKind::Number(lexer.slice().into()),
+            Lexeme::LeftBrace => TokenKind::LeftBrace,
+            Lexeme::RightBrace => TokenKind::RightBrace,
+            Lexeme::LeftParen => TokenKind::LeftParen,
+            Lexeme::RightParen => TokenKind::RightParen,
+            Lexeme::LeftBracket => TokenKind::LeftBracket,
+            Lexeme::RightBracket => TokenKind::RightBracket,
+            Lexeme::Colon => TokenKind::Colon,
+            Lexeme::Equal => TokenKind::Equal,
+            Lexeme::Comma => TokenKind::Comma,
+            Lexeme::Bang => TokenKind::Bang,
+            Lexeme::Arrow => TokenKind::Arrow,
+            Lexeme::DotDot => TokenKind::DotDot,
+            Lexeme::Newline => TokenKind::Newline,
+        };
+        tokens.push(Token { kind, span });
     }
     tokens.push(Token {
         kind: TokenKind::End,
-        span: Span { line, column },
+        span: source_span(source, &line_starts, source.len()..source.len()),
     });
     Ok(tokens)
 }
 
-fn push_token(tokens: &mut Vec<Token>, kind: TokenKind, span: Span, column: &mut usize) {
-    tokens.push(Token { kind, span });
-    *column += 1;
+fn source_span(source: &str, line_starts: &[usize], range: Range<usize>) -> Span {
+    let line_index = line_starts
+        .partition_point(|start| *start <= range.start)
+        .saturating_sub(1);
+    Span {
+        offset: range.start,
+        length: range.len(),
+        line: line_index + 1,
+        column: source[line_starts[line_index]..range.start].chars().count() + 1,
+    }
+}
+
+fn decode_string(
+    source: &str,
+    line_starts: &[usize],
+    range: Range<usize>,
+) -> Result<String, Diagnostic> {
+    let mut value = String::new();
+    let mut characters = source[range.start + 1..range.end - 1].char_indices();
+    while let Some((_, character)) = characters.next() {
+        if character != '\\' {
+            value.push(character);
+            continue;
+        }
+        let (offset, escaped) = characters
+            .next()
+            .expect("the string token ends after a complete escape");
+        value.push(match escaped {
+            'n' => '\n',
+            'r' => '\r',
+            't' => '\t',
+            '"' => '"',
+            '\\' => '\\',
+            _ => {
+                let start = range.start + 1 + offset;
+                return Err(Diagnostic::new(
+                    format!("unknown string escape `\\{escaped}`"),
+                    source_span(source, line_starts, start..start + escaped.len_utf8()),
+                ));
+            }
+        });
+    }
+    Ok(value)
+}
+
+fn lex_error(source: &str, line_starts: &[usize], range: Range<usize>) -> Diagnostic {
+    let character = source[range.clone()]
+        .chars()
+        .next()
+        .expect("logos errors cover at least one character");
+    if character != '"' {
+        return Diagnostic::new(
+            format!("unexpected character `{character}`"),
+            source_span(source, line_starts, range),
+        );
+    }
+
+    let opening = source_span(source, line_starts, range.clone());
+    let mut characters = source[range.end..].char_indices();
+    while let Some((offset, character)) = characters.next() {
+        if character == '\n' {
+            let start = range.end + offset;
+            return Diagnostic::new(
+                "strings cannot cross lines",
+                source_span(source, line_starts, start..start + 1),
+            );
+        }
+        if character == '\\' {
+            match characters.next() {
+                Some((offset, '\n')) => {
+                    let start = range.end + offset;
+                    return Diagnostic::new(
+                        "strings cannot cross lines",
+                        source_span(source, line_starts, start..start + 1),
+                    );
+                }
+                Some(_) => {}
+                None => return Diagnostic::new("unterminated string escape", opening),
+            }
+        }
+    }
+    Diagnostic::new("unterminated string", opening)
 }
 
 fn is_reserved_statement(name: &str) -> bool {
@@ -401,7 +389,12 @@ impl Parser {
         if self.wires.is_empty() {
             return Err(Diagnostic::new(
                 "a circuit needs at least one wire",
-                Span { line: 1, column: 1 },
+                Span {
+                    offset: 0,
+                    length: 0,
+                    line: 1,
+                    column: 1,
+                },
             ));
         }
         self.resolve_active_defaults()?;
@@ -1965,6 +1958,27 @@ mod tests {
     use super::*;
 
     #[test]
+    fn lexer_tracks_byte_ranges_and_derived_locations() {
+        let tokens = lex("\tqubit q\n").expect("valid tokens");
+        let span = tokens[0].span;
+        assert_eq!(
+            (span.offset, span.length, span.line, span.column),
+            (1, 5, 1, 2)
+        );
+
+        let error = lex("circuit 💥").expect_err("non-ASCII punctuation must fail");
+        assert_eq!(
+            (
+                error.span.offset,
+                error.span.length,
+                error.span.line,
+                error.span.column
+            ),
+            (8, 4, 1, 9)
+        );
+    }
+
+    #[test]
     fn parses_a_readable_bell_circuit() {
         let circuit = parse(
             r#"
@@ -1997,7 +2011,15 @@ mod tests {
         let error = parse("circuit bad {\n  qubit q\n  h missing\n}\n")
             .expect_err("unknown wire should fail");
 
-        assert_eq!(error.span, Span { line: 3, column: 5 });
+        assert_eq!(
+            (
+                error.span.offset,
+                error.span.length,
+                error.span.line,
+                error.span.column
+            ),
+            (28, 7, 3, 5)
+        );
         assert!(error.message.contains("unknown wire `missing`"));
     }
 
@@ -2373,7 +2395,7 @@ mod tests {
             parse("fn one(a) { h a }\n\ncircuit bad {\n  qubit q[2]\n  one(q[0], q[1])\n}\n")
                 .expect_err("wrong arity should fail");
 
-        assert_eq!(error.span, Span { line: 5, column: 3 });
+        assert_eq!((error.span.line, error.span.column), (5, 3));
         assert!(
             error
                 .message

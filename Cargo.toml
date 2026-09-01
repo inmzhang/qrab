@@ -13,6 +13,7 @@ categories = ["command-line-utilities", "science", "visualization"]
 exclude = ["tests/qpic/**", "tests/qpic-manual/**"]
 
 [dependencies]
+logos = "0.16.1"
 
 [lints.rust]
 unsafe_code = "forbid"

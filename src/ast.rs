@@ -1,11 +1,15 @@
 use std::borrow::Cow;
 
-/// A one-based location in expanded `.qrab` source.
+/// A byte range and derived one-based location in expanded `.qrab` source.
 ///
 /// Spans are produced by the parser and are not constructed by downstream code.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct Span {
+    /// Zero-based byte offset in the expanded source.
+    pub offset: usize,
+    /// Length of the source range in bytes.
+    pub length: usize,
     /// One-based line number.
     pub line: usize,
     /// One-based column number.
