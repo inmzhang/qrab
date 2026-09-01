@@ -105,7 +105,7 @@ Wire declarations are `qubit`, `bit`, or `hidden`, followed by a name or fixed-s
 
 Strict declarations are the default. An `autowires` statement opts the rest of the circuit into creating unknown quantum wires on first use, labeled with their source names. This provides qpic-style compact sketches while keeping accidental misspellings diagnosable everywhere else.
 
-Built-in gates are `h`, `x`, `y`, `z`, `s`, and `t`. A gate's controls follow `if`; `!wire` is an open/negative control. Arbitrary single- or multi-wire boxes use `gate "label" on ...`. `phase`, `measure`, `swap`, and `barrier` are first-class statements rather than magic gate names.
+Built-in gates are `h`, `x`, `y`, `z`, `s`, and `t`. A gate's controls follow `if`; `!wire` is an open/negative control. Arbitrary single- or multi-wire boxes use `gate "label" on ...`. `phase`, `measure`, `swap`, and `barrier` are first-class statements rather than magic gate names. `phase "2" on target if control` draws its label verbatim in a circle, as qpic does; unlike qpic the circle grows to fit rather than clipping, so a long label widens the gate instead of being cut off.
 
 An unlabeled `measure q` draws a meter. `measure q as "Z"` draws a D-shaped result marker; append `using tag` for a pointed tag marker. Measurement changes each target to a classical wire in either form.
 

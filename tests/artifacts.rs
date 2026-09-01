@@ -121,8 +121,8 @@ const QPIC_MANUAL_EXAMPLES: &[&str] = &[
 const PAGE_SIZE_BASELINES: &[(&str, f32, f32)] = &[
     ("teleportation", 460.62, 92.86),
     ("teleportation-typst", 276.945, 106.24),
-    ("qpic-QFT4vert", 139.42, 440.98),
-    ("qpic-QFT4vert-typst", 176.025, 311.142),
+    ("qpic-QFT4vert", 126.41, 440.98),
+    ("qpic-QFT4vert-typst", 148.08, 311.142),
     ("qpic-manual-ex.comment", 172.91, 128.62),
     ("qpic-manual-ex.comment-typst", 137.4, 111.4),
     ("qpic-manual-ex.MIXGATES", 209.99, 117.32),
@@ -204,12 +204,29 @@ fn generated_backends_compile_to_pdfs() {
             .unwrap_or_else(|error| panic!("missing qpic manual fixture `{name}`: {error}"));
         compile_fixture(&format!("qpic-manual-{name}"), &source, &output_dir);
     }
-    for (name, width, height) in PAGE_SIZE_BASELINES {
-        assert_page_size(&output_dir.join(format!("{name}.pdf")), *width, *height);
-    }
+    // Every drifted baseline is collected before failing. Asserting inside the
+    // loop hid the rest behind whichever one moved first, so a change that
+    // shifted several took one 55-second run per baseline to find.
+    let drift = PAGE_SIZE_BASELINES
+        .iter()
+        .filter_map(|(name, width, height)| {
+            page_size_drift(&output_dir.join(format!("{name}.pdf")), *width, *height)
+        })
+        .collect::<Vec<_>>();
+    assert!(
+        drift.is_empty(),
+        "page geometry moved:\n{}",
+        drift.join("\n")
+    );
 }
 
-fn assert_page_size(path: &std::path::Path, expected_width: f32, expected_height: f32) {
+/// Returns a description of how `path` differs from its baseline, or `None`
+/// when it is still within tolerance.
+fn page_size_drift(
+    path: &std::path::Path,
+    expected_width: f32,
+    expected_height: f32,
+) -> Option<String> {
     let output = Command::new("pdfinfo")
         .arg(path)
         .output()
@@ -228,11 +245,12 @@ fn assert_page_size(path: &std::path::Path, expected_width: f32, expected_height
         .collect::<Vec<_>>();
     let width = fields[2].parse::<f32>().expect("numeric PDF width");
     let height = fields[4].parse::<f32>().expect("numeric PDF height");
-    assert!(
-        (width - expected_width).abs() <= 3.0 && (height - expected_height).abs() <= 3.0,
-        "{} changed from {expected_width:.3} x {expected_height:.3} pt to {width:.3} x {height:.3} pt",
-        path.display()
-    );
+    ((width - expected_width).abs() > 3.0 || (height - expected_height).abs() > 3.0).then(|| {
+        format!(
+            "  {} changed from {expected_width:.3} x {expected_height:.3} pt to {width:.3} x {height:.3} pt",
+            path.display()
+        )
+    })
 }
 
 fn compile_fixture(name: &str, source: &str, output_dir: &std::path::Path) {

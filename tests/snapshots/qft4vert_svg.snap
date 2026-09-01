@@ -1,9 +1,9 @@
 ---
 source: tests/snapshots.rs
 ---
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="119.745" height="459.202" viewBox="-16.000 -475.425 133.050 510.225" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="106.965" height="459.202" viewBox="-16.000 -475.425 118.850 510.225" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10">
   <title>qft4_vertical</title>
-  <rect x="-16.000" y="-475.425" width="133.050" height="510.225" fill="#FFFFFF"/>
+  <rect x="-16.000" y="-475.425" width="118.850" height="510.225" fill="#FFFFFF"/>
   <g transform="rotate(-90)">
     <line x1="0.000" y1="0.000" x2="469.425" y2="0.000" fill="none" stroke="#000000" stroke-width="1"/>
     <text x="-16.400" y="3.500" text-anchor="middle" fill="#000000">q[0]</text>
@@ -16,33 +16,33 @@ source: tests/snapshots.rs
     <rect x="32.675" y="-10.000" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
     <text x="42.675" y="3.500" text-anchor="middle" fill="#000000">H</text>
     <line x1="85.350" y1="0.000" x2="85.350" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
-    <circle cx="85.350" cy="0.000" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
-    <circle cx="85.350" cy="28.450" r="25.700" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
-    <text x="85.350" y="31.950" text-anchor="middle" fill="#000000">P(pi/2)</text>
+    <circle cx="85.350" cy="28.450" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <circle cx="85.350" cy="0.000" r="10.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="85.350" y="3.500" text-anchor="middle" fill="#000000">2</text>
     <line x1="128.025" y1="0.000" x2="128.025" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
-    <circle cx="128.025" cy="0.000" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
-    <circle cx="128.025" cy="56.900" r="25.700" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
-    <text x="128.025" y="60.400" text-anchor="middle" fill="#000000">P(pi/4)</text>
+    <circle cx="128.025" cy="56.900" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <circle cx="128.025" cy="0.000" r="10.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="128.025" y="3.500" text-anchor="middle" fill="#000000">3</text>
     <line x1="170.700" y1="0.000" x2="170.700" y2="85.350" fill="none" stroke="#000000" stroke-width="1"/>
-    <circle cx="170.700" cy="0.000" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
-    <circle cx="170.700" cy="85.350" r="25.700" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
-    <text x="170.700" y="88.850" text-anchor="middle" fill="#000000">P(pi/8)</text>
+    <circle cx="170.700" cy="85.350" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <circle cx="170.700" cy="0.000" r="10.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="170.700" y="3.500" text-anchor="middle" fill="#000000">4</text>
     <rect x="203.375" y="18.450" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
     <text x="213.375" y="31.950" text-anchor="middle" fill="#000000">H</text>
     <line x1="256.050" y1="28.450" x2="256.050" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
-    <circle cx="256.050" cy="28.450" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
-    <circle cx="256.050" cy="56.900" r="25.700" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
-    <text x="256.050" y="60.400" text-anchor="middle" fill="#000000">P(pi/2)</text>
+    <circle cx="256.050" cy="56.900" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <circle cx="256.050" cy="28.450" r="10.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="256.050" y="31.950" text-anchor="middle" fill="#000000">2</text>
     <line x1="298.725" y1="28.450" x2="298.725" y2="85.350" fill="none" stroke="#000000" stroke-width="1"/>
-    <circle cx="298.725" cy="28.450" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
-    <circle cx="298.725" cy="85.350" r="25.700" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
-    <text x="298.725" y="88.850" text-anchor="middle" fill="#000000">P(pi/4)</text>
+    <circle cx="298.725" cy="85.350" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <circle cx="298.725" cy="28.450" r="10.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="298.725" y="31.950" text-anchor="middle" fill="#000000">3</text>
     <rect x="331.400" y="46.900" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
     <text x="341.400" y="60.400" text-anchor="middle" fill="#000000">H</text>
     <line x1="384.075" y1="56.900" x2="384.075" y2="85.350" fill="none" stroke="#000000" stroke-width="1"/>
-    <circle cx="384.075" cy="56.900" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
-    <circle cx="384.075" cy="85.350" r="25.700" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
-    <text x="384.075" y="88.850" text-anchor="middle" fill="#000000">P(pi/2)</text>
+    <circle cx="384.075" cy="85.350" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <circle cx="384.075" cy="56.900" r="10.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="384.075" y="60.400" text-anchor="middle" fill="#000000">2</text>
     <rect x="416.750" y="75.350" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
     <text x="426.750" y="88.850" text-anchor="middle" fill="#000000">H</text>
   </g>

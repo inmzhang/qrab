@@ -1,9 +1,9 @@
 ---
 source: tests/snapshots.rs
 ---
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="140.008" height="357.269" viewBox="-18.000 -296.190 127.280 324.790" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="129.778" height="357.269" viewBox="-18.000 -296.190 117.980 324.790" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10">
   <title>styled_controls</title>
-  <rect x="-18.000" y="-296.190" width="127.280" height="324.790" fill="#F7F8FC"/>
+  <rect x="-18.000" y="-296.190" width="117.980" height="324.790" fill="#F7F8FC"/>
   <g transform="rotate(-90)">
     <line x1="0.000" y1="0.000" x2="251.498" y2="0.000" fill="none" stroke="#1F4E79" stroke-width="1"/>
     <line x1="251.498" y1="0.996" x2="290.190" y2="0.996" fill="none" stroke="#1F4E79" stroke-width="1"/>
@@ -23,8 +23,8 @@ source: tests/snapshots.rs
     <circle cx="145.095" cy="0.000" r="2.200" fill="#FFFFFF" stroke="#008080" stroke-width="1"/>
     <circle cx="145.095" cy="34.140" r="10.000" fill="#FFFFFF" stroke="#008080" stroke-width="1"/>
     <text x="145.095" y="37.640" text-anchor="middle" fill="#008080">+</text>
-    <circle cx="145.095" cy="68.280" r="35.000" fill="#FFFF00" stroke="#FF0000" stroke-width="1"/>
-    <text x="145.095" y="71.780" text-anchor="middle" fill="#FF0000">P(theta/2)</text>
+    <circle cx="145.095" cy="68.280" r="25.700" fill="#FFFF00" stroke="#FF0000" stroke-width="1"/>
+    <text x="145.095" y="71.780" text-anchor="middle" fill="#FF0000">theta/2</text>
     <line x1="193.460" y1="0.000" x2="193.460" y2="68.280" fill="none" stroke="#FF0000" stroke-width="1"/>
     <line x1="190.331" y1="3.130" x2="196.590" y2="-3.130" fill="none" stroke="#FF0000" stroke-width="1"/>
     <line x1="190.331" y1="-3.130" x2="196.590" y2="3.130" fill="none" stroke="#FF0000" stroke-width="1"/>

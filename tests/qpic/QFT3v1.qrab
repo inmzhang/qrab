@@ -2,10 +2,10 @@ circuit qft3_v1 {
   qubit q[3]: "|x>" -> "QFT(x)"
 
   h q[0]
-  phase "pi/2" on q[1] if q[0]
+  phase "2" on q[0] if q[1]
+  phase "3" on q[0] if q[2]
   h q[1]
-  phase "pi/4" on q[2] if q[0]
-  phase "pi/2" on q[2] if q[1]
+  phase "2" on q[1] if q[2]
   h q[2]
   swap q[0], q[2]
 }

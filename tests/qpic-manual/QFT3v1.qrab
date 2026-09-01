@@ -4,9 +4,9 @@ circuit manual_qft3 {
   }
   qubit q[3]
   h q[0]
-  phase "pi/2" on q[1] if q[0]
-  phase "pi/4" on q[2] if q[0]
+  phase "2" on q[1] if q[0]
+  phase "3" on q[2] if q[0]
   h q[1]
-  phase "pi/2" on q[2] if q[1]
+  phase "2" on q[2] if q[1]
   h q[2]
 }

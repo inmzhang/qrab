@@ -4,6 +4,7 @@ All notable changes are documented here. This project follows Semantic Versionin
 
 ## [Unreleased]
 
+- Fixed the `phase` gate label, which was rendered as `P(<label>)`. qpic draws a phase label verbatim inside its circle, and the three extra characters inflated a shape whose diameter has to span its own label. The ported QFT circuits now carry qpic's own R_k indices, and `QFT3v1`/`QFT4vert` no longer invert the gate's target and control.
 - Fixed `space` width, which widened its column in the Typst output but was a no-op in the LaTeX one and, by inheritance, the SVG one. All three backends now reserve the requested room.
 - Fixed the unlabelled measurement meter in the LaTeX backend, which drew its dial arc above centre with the needle pointing down. It now matches Quill and standard notation, and the SVG backend gained the arrowhead the LaTeX one already had.
 - Added a browser playground built on the SVG backend and WebAssembly, offering the guided examples and all 44 ported qpic circuits, deployed to GitHub Pages behind the `ENABLE_PLAYGROUND` repository variable.

@@ -31,7 +31,7 @@ source: tests/snapshots.rs
   quill.mqgate(box(height: 30.000pt, link("https://example.com/qrab?gate=U", text("U"))), n: 3, x: 2, y: 0, pass-through: (1,), fill: green.transparentize(35.000%), stroke: (paint: blue.transparentize(35.000%), dash: "dashed")),
   quill.ctrl(1, open: false, x: 3, y: 0, fill: white, stroke: teal, wire-stroke: teal),
   quill.gate(text("+"), x: 3, y: 1, fill: white, stroke: teal, radius: 999pt),
-  quill.gate(box(height: 22.000pt, text("P(theta/2)")), x: 3, y: 2, fill: yellow, stroke: red, radius: 999pt, width: 22.000pt),
+  quill.gate(box(height: 22.000pt, text("theta/2")), x: 3, y: 2, fill: yellow, stroke: red, radius: 999pt, width: 22.000pt),
   quill.swap(2, x: 4, y: 0, stroke: red, wire-stroke: red),
   quill.swap(x: 4, y: 2, stroke: red, wire-stroke: red),
   quill.gate(text("Z"), x: 5, y: 0, fill: yellow, stroke: blue, width: 20.000pt, radius: (top-right: 999pt, bottom-right: 999pt)),

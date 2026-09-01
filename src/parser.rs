@@ -1170,9 +1170,12 @@ impl Parser {
         let target = self.parse_wire_reference()?;
         let controls = self.parse_controls()?;
         let mut style = self.parse_style()?;
+        // The circle is what marks a phase gate, exactly as in qpic, so the
+        // label is drawn as written. Wrapping it in `P(...)` put three extra
+        // characters inside a shape whose diameter has to span its own label.
         style.shape.get_or_insert(Shape::Circle);
         self.expect_statement_end()?;
-        self.push_gate(format!("P({phase})"), vec![target], controls, style, span)
+        self.push_gate(phase, vec![target], controls, style, span)
     }
 
     fn parse_measure(&mut self, span: Span) -> Result<(), Diagnostic> {

@@ -1,8 +1,8 @@
 fn qft_layer(first, second, third, fourth) {
   h first
-  phase "pi/2" on second if first
-  phase "pi/4" on third if first
-  phase "pi/8" on fourth if first
+  phase "2" on second if first
+  phase "3" on third if first
+  phase "4" on fourth if first
 }
 
 circuit qft4 {
