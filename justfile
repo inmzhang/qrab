@@ -30,9 +30,11 @@ release-check: ci
 gen-assets:
     cargo run --locked --quiet -p xtask
 
-# Regenerate the manual's diagrams and typeset it.
+# Regenerate the manual's diagrams and typeset it. Typst stamps a timestamp and
+# a random instance id into the PDF, so without a fixed SOURCE_DATE_EPOCH no two
+# builds of unchanged sources are byte-identical and the committed file churns.
 manual: gen-assets
-    typst compile --root . docs/manual.typ docs/manual.pdf
+    SOURCE_DATE_EPOCH=0 typst compile --root . docs/manual.typ docs/manual.pdf
 
 # Build the WebAssembly module the playground loads.
 playground:

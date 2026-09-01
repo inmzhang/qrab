@@ -6,7 +6,11 @@
 # The push uses RELEASE_PLZ_TOKEN rather than GITHUB_TOKEN: a push made with the
 # built-in token does not start another workflow run, which would leave the PR
 # showing the failed checks from before the fix. Pushing as a real identity
-# re-runs CI against the corrected commit.
+# re-runs CI against the corrected commit — and therefore re-runs this job, so
+# it must reach a fixed point rather than a loop. Two things ensure that: the
+# manual is built with a fixed SOURCE_DATE_EPOCH, without which Typst's
+# timestamp and random instance id make every rebuild a fresh diff, and the
+# guard below refuses to act on a commit this job already made.
 name: Release assets
 
 on:
@@ -16,6 +20,9 @@ on:
 
 permissions:
   contents: read
+
+env:
+  MESSAGE: "chore: regenerate the versioned artefacts"
 
 jobs:
   regenerate:
@@ -30,14 +37,22 @@ jobs:
       - uses: typst-community/setup-typst@v5
         with:
           typst-version: 0.15.1
-      - run: cargo run --locked --quiet -p xtask
-      - run: typst compile --root . docs/manual.typ docs/manual.pdf
-      # A second run finds nothing to commit and stops there, so the push
-      # cannot chase its own tail.
-      - run: |
+      - id: guard
+        run: |
+          if [ "$(git log -1 --format=%s)" = "$MESSAGE" ]; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.guard.outputs.run == 'true'
+        env:
+          SOURCE_DATE_EPOCH: "0"
+        run: |
+          cargo run --locked --quiet -p xtask
+          typst compile --root . docs/manual.typ docs/manual.pdf
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "chore: regenerate the versioned artefacts"
+          git commit -m "$MESSAGE"
           git push
