@@ -32,16 +32,6 @@ impl SourceFile {
             line_starts,
         }
     }
-
-    fn line_range(&self, line: usize) -> Option<std::ops::Range<usize>> {
-        let start = *self.line_starts.get(line.checked_sub(1)?)?;
-        let end = self
-            .line_starts
-            .get(line)
-            .copied()
-            .unwrap_or(self.text.len());
-        Some(start..end)
-    }
 }
 
 impl LoadedSource {
@@ -62,8 +52,8 @@ impl SourceCode for LoadedSource {
     fn read_span<'a>(
         &'a self,
         span: &SourceSpan,
-        _context_lines_before: usize,
-        _context_lines_after: usize,
+        context_lines_before: usize,
+        context_lines_after: usize,
     ) -> Result<Box<dyn SpanContents<'a> + 'a>, MietteError> {
         let line = self
             .line_starts
@@ -73,26 +63,40 @@ impl SourceCode for LoadedSource {
         let expanded_start = self.line_starts[line];
         let (source, source_line) = *self.origins.get(line).ok_or(MietteError::OutOfBounds)?;
         let source = self.sources.get(source).ok_or(MietteError::OutOfBounds)?;
-        let range = source
-            .line_range(source_line)
+        let source_line_start = *source
+            .line_starts
+            .get(source_line - 1)
             .ok_or(MietteError::OutOfBounds)?;
-        let data = source
-            .text
-            .as_bytes()
-            .get(range)
+        let local_offset = source_line_start
+            .checked_add(span.offset() - expanded_start)
             .ok_or(MietteError::OutOfBounds)?;
-        if span.offset() - expanded_start + span.len() > data.len() {
-            return Err(MietteError::OutOfBounds);
-        }
-        // ponytail: imported spans are line-local; add virtual file offsets if
-        // diagnostics ever need labels or context crossing source lines.
+        let local_span = (local_offset, span.len()).into();
+        let mut lines_before = context_lines_before;
+        let contents = loop {
+            let contents = source
+                .text
+                .read_span(&local_span, lines_before, context_lines_after)?;
+            let prefix = local_offset - contents.span().offset();
+            if prefix <= span.offset() {
+                break contents;
+            }
+            lines_before = lines_before
+                .checked_sub(1)
+                .ok_or(MietteError::OutOfBounds)?;
+        };
+        let context_offset = span.offset() - (local_offset - contents.span().offset());
+        let column = if contents.span().offset() == local_offset {
+            source.text[source_line_start..local_offset].chars().count()
+        } else {
+            contents.column()
+        };
         let contents = MietteSpanContents::new_named(
             source.path.display().to_string(),
-            data,
-            (expanded_start, data.len()).into(),
-            source_line - 1,
-            0,
-            1,
+            contents.data(),
+            (context_offset, contents.span().len()).into(),
+            contents.line(),
+            column,
+            contents.line_count(),
         )
         .with_language("qrab");
         Ok(Box::new(contents))

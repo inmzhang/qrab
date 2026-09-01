@@ -83,7 +83,7 @@ fn miette_reports_imported_source_help_and_multiple_errors() {
     fs::create_dir(&directory).expect("create diagnostic test directory");
     fs::write(
         directory.join("gates.qrab"),
-        "fn broken(a) {\n\th missing\n}\n",
+        "fn broken(a) { // context before\n\th missing\n} // context after\n",
     )
     .expect("write imported source");
     let imported = directory.join("imported.qrab");
@@ -98,7 +98,9 @@ fn miette_reports_imported_source_help_and_multiple_errors() {
         .arg(&imported)
         .assert()
         .code(1)
-        .stderr(predicate::str::contains("gates.qrab"))
+        .stderr(predicate::str::contains("gates.qrab:2:4"))
+        .stderr(predicate::str::contains("context before"))
+        .stderr(predicate::str::contains("context after"))
         .stderr(predicate::str::contains("h missing"))
         .stderr(predicate::str::contains(
             "declare it before use or enable `autowires`",
