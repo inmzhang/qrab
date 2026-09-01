@@ -6,20 +6,30 @@
 2. On the release PR's branch, run `just manual` and commit the result. The man pages and the manual's title page both carry the crate version, so a bump leaves them stale; the asset drift check and `shipped_man_pages_carry_this_crate_version` fail until the pages are regenerated, and nothing at all catches a stale `manual.pdf`. Release-plz edits manifests rather than building the crate, so nothing does this for you.
 3. Run `just release-check`, review the release PR, and merge it with a clean CI run.
 4. Release-plz publishes the crate and pushes the matching `vX.Y.Z` tag. Cargo-dist reacts to that tag, verifies it matches the crate version, builds all configured targets and installers, and creates the GitHub release.
+5. After the GitHub release succeeds, cargo-dist publishes the generated npm package.
 
 `release_always` is true, so the release job publishes on any push to `main` whose manifest version is not yet on crates.io. Merging a release PR is the ordinary way that happens; a hand-edited bump publishes just the same. It has to be true because the first release could not come from a PR at all: release-plz opens one only when it has something to change, and the unpublished crate already sat at the version it would have released.
+
+The npm package carries no binary. Its `postinstall` downloads the archive for
+the running platform from the GitHub release, and `run-qrab.js` repeats that
+download on first use if the binary is missing. Bun blocks lifecycle scripts for
+untrusted dependencies, so under Bun only the second path runs and the download
+happens on first invocation rather than at install time; nothing on this side
+can opt in, because `trustedDependencies` is declared by the consuming project.
 
 Cargo-dist produces archives for Linux GNU on x86-64 and Arm64, Linux musl on x86-64, macOS on Intel and Apple Silicon, and Windows MSVC on x86-64. Every archive includes the generated completions and man pages in `assets/`.
 
 ## Playground gate
 
-The playground is a separate deployment with its own switch. `.github/workflows/playground.yml` builds the WebAssembly module on every push to `main`, but publishes to GitHub Pages only when the repository variable `ENABLE_PLAYGROUND` is `true`. Pages is enabled with the GitHub Actions source and the gate is set, so a push to `main` publishes to <https://inmzhang.com/qrab/>. That page is public even while this repository is private. Building it unconditionally means a change that breaks the WebAssembly build fails CI whether or not the page is live.
+The playground is a separate deployment with its own switch. `.github/workflows/playground.yml` builds the WebAssembly module on every push to `main`, but publishes to GitHub Pages only when the repository variable `ENABLE_PLAYGROUND` is `true`. Pages is enabled with the GitHub Actions source and the gate is set, so a push to `main` publishes to <https://inmzhang.com/qrab/>. Building it unconditionally means a change that breaks the WebAssembly build fails CI whether or not the page is live.
 
 ## Publish gate
 
 `ENABLE_PUBLISHING` is `true` and `0.1.0` is on crates.io. Setting the variable back to `false` disables the release job—`cargo publish` and tag creation—while leaving release PR generation active.
 
-Publishing authenticates with the `CARGO_REGISTRY_TOKEN` secret, which the first release had to use: crates.io accepts a trusted publisher only for a crate that already exists. Now that `qrab` does, configure trusted publishing for `inmzhang/qrab` and `.github/workflows/release-plz.yml`, then delete both the secret and the `CARGO_REGISTRY_TOKEN` line from `.github/workflows/release-plz.yml`. The release job already requests the `id-token: write` permission that replaces it.
+Publishing to npm authenticates with the `NPM_TOKEN` secret. Its absence fails the npm job only after the GitHub release already exists, which leaves a release that looks complete and ships no npm package.
+
+Publishing to crates.io authenticates with the `CARGO_REGISTRY_TOKEN` secret, which the first release had to use: crates.io accepts a trusted publisher only for a crate that already exists. Now that `qrab` does, configure trusted publishing for `inmzhang/qrab` and `.github/workflows/release-plz.yml`, then delete both the secret and the `CARGO_REGISTRY_TOKEN` line from `.github/workflows/release-plz.yml`. The release job already requests the `id-token: write` permission that replaces it.
 
 No Homebrew tap is required: the generated formula is attached to each GitHub release and can be installed directly by URL. Add a tap and cargo-dist Homebrew publisher only if a shorter `brew install owner/tap/qrab` command becomes worthwhile.
 

@@ -71,6 +71,7 @@ public release.
 | --- | --- |
 | Cargo | `cargo install qrab` |
 | cargo-binstall | `cargo binstall qrab` |
+| npm / Bun | `npm i -g qrab` · `npx qrab` · `bunx qrab` |
 | Homebrew | `brew install --formula https://github.com/inmzhang/qrab/releases/latest/download/qrab.rb` |
 | Shell | `curl --proto '=https' --tlsv1.2 -LsSf https://github.com/inmzhang/qrab/releases/latest/download/qrab-installer.sh \| sh` |
 | PowerShell | `powershell -ExecutionPolicy Bypass -c "irm https://github.com/inmzhang/qrab/releases/latest/download/qrab-installer.ps1 \| iex"` |
