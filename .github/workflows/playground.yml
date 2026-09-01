@@ -30,7 +30,8 @@ jobs:
         with:
           tool: wasm-pack
       - run: wasm-pack build playground --target web --out-dir www/pkg --no-typescript
-      - uses: actions/configure-pages@v5
+      # No `configure-pages` step: the page uses only relative paths, and that
+      # action fails outright while Pages is still disabled on the repository.
       - uses: actions/upload-pages-artifact@v4
         with:
           path: playground/www
