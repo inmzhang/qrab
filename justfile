@@ -11,6 +11,7 @@ lint:
 
 test:
     cargo nextest run --all-targets
+    cargo test --doc
 
 test-artifacts:
     cargo nextest run --test artifacts --run-ignored ignored-only

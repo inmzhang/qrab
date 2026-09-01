@@ -4,6 +4,8 @@ All notable changes are documented here. This project follows Semantic Versionin
 
 ## [Unreleased]
 
+- Adopted Logos, Clap, Miette, and supporting test/build tooling; the measured stripped release binary grew from 756,952 B to 1,570,280 B (+107%).
+
 ## [0.1.0] - 2026-09-01
 
 - Introduced the typed `.qrab` language and standalone TikZ and Typst/Quill backends.

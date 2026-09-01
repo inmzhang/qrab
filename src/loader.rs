@@ -8,6 +8,8 @@ use thiserror::Error;
 /// Expanded source text plus original file/line mappings.
 #[derive(Debug, Clone)]
 pub struct LoadedSource {
+    // ponytail: original text duplicates expanded text for source-aware diagnostics;
+    // use a source map if large imported modules make the memory cost measurable.
     text: String,
     line_starts: Vec<usize>,
     origins: Vec<(usize, usize)>,

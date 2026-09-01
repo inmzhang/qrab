@@ -100,7 +100,7 @@ struct Token {
 }
 
 #[derive(Logos, Debug, Clone, Copy, PartialEq, Eq)]
-#[logos(skip r"[ \t\r\f]+")]
+#[logos(skip r"[ \t\r]+")]
 #[logos(skip(r"//[^\n]*", allow_greedy = true))]
 enum Lexeme {
     #[regex(r"[A-Za-z_][A-Za-z0-9_]*")]
@@ -2076,6 +2076,9 @@ mod tests {
             ),
             (8, 4, 1, 9)
         );
+
+        let error = lex("circuit\u{c}bad").expect_err("form feed must fail");
+        assert_eq!(error.message, "unexpected character `\u{c}`");
     }
 
     #[test]
