@@ -41,10 +41,15 @@ playground-serve: playground
 install-local:
     cargo install --path . --locked
 
+# Compile one example through every backend, writing to target/ so nothing
+# generated lands next to the sources.
 example:
-    cargo run -- compile examples/teleportation.qrab
-    tectonic examples/teleportation.tex --outdir target
-    typst compile examples/teleportation.typ target/teleportation-typst.pdf
+    mkdir -p target/example
+    cargo run -- compile examples/teleportation.qrab -t latex -o target/example/teleportation.tex
+    cargo run -- compile examples/teleportation.qrab -t typst -o target/example/teleportation.typ
+    cargo run -- compile examples/teleportation.qrab -t svg -o target/example/teleportation.svg
+    tectonic target/example/teleportation.tex --outdir target/example
+    typst compile target/example/teleportation.typ target/example/teleportation-typst.pdf
 
 install-hooks:
     pre-commit install --install-hooks

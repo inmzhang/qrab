@@ -8,38 +8,9 @@
 use qrab::{Target, parse, render};
 use wasm_bindgen::prelude::*;
 
-/// Circuits shipped with the playground, kept in sync with the repository by
-/// being included from it rather than copied into the web assets.
-///
-/// `examples/imports.qrab` is deliberately absent: it resolves a relative path
-/// at load time, which the browser cannot do.
-const EXAMPLES: &[(&str, &str)] = &[
-    (
-        "Teleportation",
-        include_str!("../../examples/teleportation.qrab"),
-    ),
-    (
-        "Measurements",
-        include_str!("../../examples/measurements.qrab"),
-    ),
-    ("Ellipsis", include_str!("../../examples/ellipsis.qrab")),
-    ("Styling", include_str!("../../examples/styling.qrab")),
-    (
-        "Annotations",
-        include_str!("../../examples/annotations.qrab"),
-    ),
-    ("Regions", include_str!("../../examples/regions.qrab")),
-    ("Lifecycle", include_str!("../../examples/lifecycle.qrab")),
-    ("Functions", include_str!("../../examples/functions.qrab")),
-    (
-        "Programming",
-        include_str!("../../examples/programming.qrab"),
-    ),
-    (
-        "Backend escapes",
-        include_str!("../../examples/escapes.qrab"),
-    ),
-];
+// The menu is generated at build time from `examples/` and the ported qpic
+// corpus; see `build.rs`.
+include!(concat!(env!("OUT_DIR"), "/examples.rs"));
 
 /// One compilation attempt.
 ///
@@ -112,19 +83,28 @@ pub fn compile(source: &str, target: &str) -> Compiled {
     }
 }
 
-/// Names of the bundled examples, in menu order.
+/// Bundled examples in menu order, each as `"group/name"`.
+///
+/// The two halves are joined rather than returned separately so the caller
+/// needs one call to build a grouped menu; no group or circuit name contains a
+/// slash.
 #[wasm_bindgen]
 pub fn example_names() -> Vec<String> {
-    EXAMPLES.iter().map(|(name, _)| (*name).into()).collect()
-}
-
-/// Source of the named example, or the first example when the name is unknown.
-#[wasm_bindgen]
-pub fn example_source(name: &str) -> String {
     EXAMPLES
         .iter()
-        .find(|(example, _)| *example == name)
-        .map_or(EXAMPLES[0].1, |(_, source)| source)
+        .map(|(group, name, _)| format!("{group}/{name}"))
+        .collect()
+}
+
+/// Source of the example named `"group/name"`, or the first one when the name
+/// is unknown, so a stale link still opens a working circuit.
+#[wasm_bindgen]
+pub fn example_source(name: &str) -> String {
+    let (group, name) = name.split_once('/').unwrap_or(("Guide", name));
+    EXAMPLES
+        .iter()
+        .find(|(example_group, example, _)| *example_group == group && *example == name)
+        .map_or(EXAMPLES[0].2, |(_, _, source)| source)
         .into()
 }
 

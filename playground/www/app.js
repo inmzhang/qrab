@@ -25,10 +25,26 @@ await init();
 // A shared link carries the whole circuit in the URL fragment, so nothing is
 // stored server-side and a link keeps working offline.
 
-for (const name of example_names()) {
+// Names arrive as "group/name"; each group becomes an <optgroup> so the ported
+// qpic corpus does not bury the introductory circuits.
+const groups = new Map();
+for (const entry of example_names()) {
+  const [group, name] = splitEntry(entry);
+  if (!groups.has(group)) {
+    const optgroup = document.createElement("optgroup");
+    optgroup.label = group;
+    examples.append(optgroup);
+    groups.set(group, optgroup);
+  }
   const option = document.createElement("option");
+  option.value = entry;
   option.textContent = name;
-  examples.append(option);
+  groups.get(group).append(option);
+}
+
+function splitEntry(entry) {
+  const slash = entry.indexOf("/");
+  return [entry.slice(0, slash), entry.slice(slash + 1)];
 }
 
 source.value = decodeFragment() ?? example_source(examples.value);
