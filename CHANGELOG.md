@@ -2,6 +2,16 @@
 
 All notable changes are documented here. This project follows Semantic Versioning.
 
+## [0.1.1] - 2026-09-01
+
+### Documentation
+
+- Read the manual's version from the manifest
+
+- Rebuild the manual, not just the assets, on a release
+
+
+
 ## [0.1.0] - 2026-09-01
 
 - Introduced the typed `.qrab` language: wires and wire arrays, gates with controls, measurement, packing and parallel/overlay layout, wire lifecycle changes, annotations, styles, functions, imports, structured repetition and replay, and isolated per-backend escape hooks.
