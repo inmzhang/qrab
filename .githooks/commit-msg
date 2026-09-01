@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+
+subject="$(sed -n '1p' "$1")"
+case "$subject" in
+  Merge\ *|Revert\ *|fixup\!\ *|squash\!\ *) exit 0 ;;
+esac
+
+if ! printf '%s\n' "$subject" | grep -Eq '^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([a-z0-9._/-]+\))?!?: .+'; then
+  echo "commit subject must use Conventional Commits (for example: feat: add feature)" >&2
+  exit 1
+fi

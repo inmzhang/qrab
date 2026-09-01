@@ -1,0 +1,10 @@
+[workspace]
+changelog_config = "cliff.toml"
+repo_url = "https://github.com/inmzhang/qrab"
+release_always = false
+git_release_enable = false
+git_tag_name = "v{{ version }}"
+
+[[package]]
+name = "xtask"
+release = false
