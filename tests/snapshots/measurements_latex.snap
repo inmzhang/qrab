@@ -22,8 +22,8 @@ source: tests/snapshots.rs
   \node[anchor=east] at (0,-2.000) {\texttt{|0>}};
   \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (1.500,-0.000) {\texttt{H}};
   \draw[draw=black,fill=white] (2.649,-0.351) rectangle (3.351,0.351);
-  \draw (2.780,0.100) arc[start angle=180,end angle=0,radius=0.22];
-  \draw[->] (3.000,0.100) -- (3.170,-0.120);
+  \draw (2.780,-0.100) arc[start angle=180,end angle=0,radius=0.22];
+  \draw[->] (3.000,-0.100) -- (3.170,0.120);
   \draw[draw=blue,fill=qrabDDEEFF] (1.149,-1.351) -- (1.500,-1.351) arc[start angle=-90,end angle=90,radius=0.351] -- (1.149,-0.649) -- cycle;
   \node at (1.500,-1.000) {\texttt{Z}};
   \draw[draw=red,fill=yellow] (1.149,-2.000) -- (1.383,-1.649) -- (1.851,-1.649) -- (1.851,-2.351) -- (1.383,-2.351) -- cycle;

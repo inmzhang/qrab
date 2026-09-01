@@ -33,11 +33,15 @@ source: tests/snapshots.rs
     <rect x="203.375" y="-10.000" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
     <text x="213.375" y="3.500" text-anchor="middle" fill="#000000">H</text>
     <rect x="246.050" y="-10.000" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
-    <path d="M 249.791 -2.845 A 6.259 6.259 0 0 1 262.309 -2.845" fill="none" stroke="#000000" stroke-width="1"/>
-    <line x1="256.050" y1="-2.845" x2="260.887" y2="3.414" fill="none" stroke="#000000" stroke-width="1"/>
+    <path d="M 249.791 2.845 A 6.259 6.259 0 0 1 262.309 2.845" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="256.050" y1="2.845" x2="260.887" y2="-3.414" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="260.887" y1="-3.414" x2="260.387" y2="-1.194" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="260.887" y1="-3.414" x2="258.864" y2="-2.371" fill="none" stroke="#000000" stroke-width="1"/>
     <rect x="246.050" y="18.450" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
-    <path d="M 249.791 25.605 A 6.259 6.259 0 0 1 262.309 25.605" fill="none" stroke="#000000" stroke-width="1"/>
-    <line x1="256.050" y1="25.605" x2="260.887" y2="31.864" fill="none" stroke="#000000" stroke-width="1"/>
+    <path d="M 249.791 31.295 A 6.259 6.259 0 0 1 262.309 31.295" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="256.050" y1="31.295" x2="260.887" y2="25.036" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="260.887" y1="25.036" x2="260.387" y2="27.256" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="260.887" y1="25.036" x2="258.864" y2="26.079" fill="none" stroke="#000000" stroke-width="1"/>
     <line x1="298.725" y1="28.450" x2="298.725" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
     <circle cx="298.725" cy="28.450" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
     <circle cx="298.725" cy="56.900" r="4.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>

@@ -860,7 +860,9 @@ fn draw_measurement(
         return;
     }
 
-    // The unlabelled meter is a box with a gauge arc and a needle.
+    // The unlabelled meter is a box with a dial arc and a needle. The arc sits
+    // below the centre and the needle sweeps up and to the right from the
+    // middle of its base, which is how Quill and the LaTeX backend draw it.
     canvas.rectangle(
         left,
         bottom,
@@ -869,8 +871,9 @@ fn draw_measurement(
         0.0,
         &marker_attributes(style, false),
     );
-    let arc_start = canvas.point(x - 0.22, y + 0.10);
-    let arc_end = canvas.point(x + 0.22, y + 0.10);
+    let base = y - 0.10;
+    let arc_start = canvas.point(x - 0.22, base);
+    let arc_end = canvas.point(x + 0.22, base);
     let arc_radius = 0.22 * PIXELS_PER_CENTIMETER;
     let arc_attributes = line_attributes(style);
     canvas.path(
@@ -880,7 +883,41 @@ fn draw_measurement(
         ),
         &arc_attributes,
     );
-    canvas.line(x, y + 0.10, x + 0.17, y - 0.12, &line_attributes(style));
+    draw_needle(canvas, x, base, x + 0.17, y + 0.12, style);
+}
+
+/// Draws the meter needle as a line with an arrowhead.
+///
+/// The head is two short barbs rather than an SVG `<marker>`: a marker would
+/// need a `<defs>` block and a document-wide identifier for the one arrow this
+/// backend ever draws.
+fn draw_needle(canvas: &mut Canvas, x1: f32, y1: f32, x2: f32, y2: f32, style: &Style) {
+    const BARB: f32 = 0.08;
+    // 25 degrees off the shaft: wide enough to read at preview sizes without
+    // looking like a second line.
+    const COS: f32 = 0.906;
+    const SIN: f32 = 0.423;
+
+    let attributes = line_attributes(style);
+    canvas.line(x1, y1, x2, y2, &attributes);
+
+    // Barbs point back along the shaft, rotated either way around the tip.
+    let (dx, dy) = (x1 - x2, y1 - y2);
+    let length = dx.hypot(dy);
+    if length == 0.0 {
+        return;
+    }
+    let (dx, dy) = (dx / length * BARB, dy / length * BARB);
+    for sign in [1.0, -1.0_f32] {
+        let sin = SIN * sign;
+        canvas.line(
+            x2,
+            y2,
+            x2 + dx * COS - dy * sin,
+            y2 + dx * sin + dy * COS,
+            &attributes,
+        );
+    }
 }
 
 fn draw_value_transition(

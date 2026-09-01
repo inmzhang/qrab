@@ -598,20 +598,23 @@ fn draw_latex_measurement(
         x + width / 2.0,
         y + height / 2.0
     );
+    // A meter reads bottom-up: the dial arc sits below the centre and the
+    // needle sweeps up and to the right from the middle of its base. Quill
+    // draws it this way, and this backend used to draw it inverted.
     emit!(
         output,
         "  \\draw{} ({:.3},{:.3}) arc[start angle=180,end angle=0,radius=0.22];",
         latex_line_options(style),
         x - 0.22,
-        y + 0.10
+        y - 0.10
     );
     emit!(
         output,
         "  \\draw{} ({x:.3},{:.3}) -- ({:.3},{:.3});",
         latex_arrow_options(style),
-        y + 0.10,
+        y - 0.10,
         x + 0.17,
-        y - 0.12
+        y + 0.12
     );
 }
 

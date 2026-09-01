@@ -20,8 +20,10 @@ source: tests/snapshots.rs
     <rect x="32.675" y="-10.000" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
     <text x="42.675" y="3.500" text-anchor="middle" fill="#000000">H</text>
     <rect x="75.350" y="-10.000" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
-    <path d="M 79.091 -2.845 A 6.259 6.259 0 0 1 91.609 -2.845" fill="none" stroke="#000000" stroke-width="1"/>
-    <line x1="85.350" y1="-2.845" x2="90.187" y2="3.414" fill="none" stroke="#000000" stroke-width="1"/>
+    <path d="M 79.091 2.845 A 6.259 6.259 0 0 1 91.609 2.845" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="85.350" y1="2.845" x2="90.187" y2="-3.414" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="90.187" y1="-3.414" x2="89.687" y2="-1.194" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="90.187" y1="-3.414" x2="88.164" y2="-2.371" fill="none" stroke="#000000" stroke-width="1"/>
     <path d="M 32.675 38.450 L 42.675 38.450 A 10.000 10.000 0 0 0 42.675 18.450 L 32.675 18.450 Z" fill="#DDEEFF" stroke="#0000FF" stroke-width="1"/>
     <text x="42.675" y="31.950" text-anchor="middle" fill="#0000FF">Z</text>
     <path d="M 32.675 56.900 L 39.342 46.900 L 52.675 46.900 L 52.675 66.900 L 39.342 66.900 Z" fill="#FFFF00" stroke="#FF0000" stroke-width="1"/>
