@@ -74,6 +74,24 @@ fn clap_handles_help_errors_delimiters_and_conflicts() {
         .stderr(predicate::str::contains("Usage:").not());
 }
 
+/// The man pages ship in every release archive, and their version comes from
+/// whichever crate compiled `cli.rs`. That is `xtask`, not this one, so the
+/// override in `xtask` is the only thing keeping them from advertising a
+/// version that was never released.
+#[test]
+fn shipped_man_pages_carry_this_crate_version() {
+    let version = env!("CARGO_PKG_VERSION");
+    for page in ["qrab.1", "qrab-check.1", "qrab-compile.1"] {
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/");
+        let text = fs::read_to_string(format!("{path}{page}"))
+            .unwrap_or_else(|error| panic!("reading assets/{page}: {error}"));
+        assert!(
+            text.contains(version),
+            "assets/{page} does not mention version {version}; run `just gen-assets`"
+        );
+    }
+}
+
 #[test]
 fn miette_reports_imported_source_help_and_multiple_errors() {
     let directory = std::env::temp_dir().join(format!(
