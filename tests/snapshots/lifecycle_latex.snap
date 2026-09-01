@@ -1,0 +1,47 @@
+---
+source: tests/snapshots.rs
+---
+\documentclass[tikz,border=6pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathreplacing,shapes.geometric}
+\definecolor{qrabF3F3F3}{HTML}{F3F3F3}
+\begin{document}
+\begin{tikzpicture}[line cap=round,line join=round,font=\sffamily,scale=1.000]
+% circuit: lifecycle
+  \draw (0.000,-0.000) -- (7.500,-0.000);
+  \draw (7.500,-0.035) -- (8.473,-0.035);
+  \draw (7.500,0.035) -- (8.473,0.035);
+  \draw[color=purple] (8.473,-0.035) .. controls (8.736,-0.035) and (9.264,-1.035) .. (9.527,-1.035);
+  \draw[color=purple] (8.473,0.035) .. controls (8.736,0.035) and (9.264,-0.965) .. (9.527,-0.965);
+  \draw (9.527,-1.035) -- (13.500,-1.035);
+  \draw (9.527,-0.965) -- (13.500,-0.965);
+  \node[anchor=east] at (0,-0.000) {\texttt{|0>}};
+  \node[anchor=west] at (13.500,-1.000) {\texttt{out}};
+  \draw (0.000,-1.000) -- (1.500,-1.000);
+  \draw (4.500,-1.000) -- (8.473,-1.000);
+  \draw[color=purple] (8.473,-1.000) .. controls (8.736,-1.000) and (9.264,-2.000) .. (9.527,-2.000);
+  \draw (9.527,-2.000) -- (13.500,-2.000);
+  \node[anchor=east] at (0,-1.000) {\texttt{|0>}};
+  \node[anchor=west] at (13.500,-2.000) {\texttt{out}};
+  \draw (4.500,-2.000) -- (8.473,-2.000);
+  \draw[color=purple] (8.473,-2.000) .. controls (8.736,-2.000) and (9.264,0.000) .. (9.527,0.000);
+  \draw (9.527,-0.000) -- (12.000,-0.000);
+  \draw (4.500,-2.130) -- (4.500,-1.870);
+  \node[inner sep=2pt,anchor=east] at (4.500,-2.000) {\texttt{|aux>}};
+  \node[draw=black,fill=white,minimum width=18.000pt,minimum height=18.000pt] at (1.500,-0.000) {\texttt{H}};
+  \fill[fill=qrabF3F3F3] (1.260,-1.170) rectangle (1.740,-0.830);
+  \draw (1.260,-1.170) -- (1.260,-0.830);
+  \node[inner sep=2pt] at (1.500,-1.000) {\texttt{0}};
+  \node[inner sep=0pt,minimum width=24.000pt,minimum height=0.000pt] at (3.000,-1.000) {};
+  \fill[fill=white] (4.260,-1.170) rectangle (4.740,-0.830);
+  \draw (4.740,-1.170) -- (4.740,-0.830);
+  \node[inner sep=2pt] at (4.500,-1.000) {\texttt{1}};
+  \draw (2.900,-0.150) -- (3.100,0.150);
+  \node[anchor=south west,font=\scriptsize] at (3.080,0.080) {\texttt{3}};
+  \node[inner sep=2pt,fill=yellow] at (6.000,-1.000) {\texttt{mix}};
+  \node[inner sep=0pt,minimum width=18.000pt,minimum height=8.000pt] at (10.500,-2.000) {};
+  \draw[color=red,dashed] (10.500,0.350) -- (10.500,-1.350);
+  \draw (12.000,-0.130) -- (12.000,0.130);
+  \node[inner sep=2pt,anchor=west] at (12.000,-0.000) {\texttt{done}};
+\end{tikzpicture}
+\end{document}

@@ -1,0 +1,55 @@
+---
+source: tests/snapshots.rs
+---
+\documentclass[tikz,border=6pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathreplacing,shapes.geometric}
+\begin{document}
+\begin{tikzpicture}[line cap=round,line join=round,font=\sffamily,scale=1.000]
+% circuit: permutation_test
+  \draw (0.000,-0.000) -- (2.367,-0.000);
+  \draw[color=purple] (2.367,0.000) .. controls (3.000,0.000) and (3.000,-1.000) .. (3.633,-1.000);
+  \draw (3.633,-1.000) -- (5.508,-1.000);
+  \draw[color=teal] (5.508,-1.000) .. controls (6.000,-1.000) and (6.000,0.000) .. (6.492,0.000);
+  \draw (6.492,-0.000) -- (7.500,-0.000);
+  \node[anchor=east] at (0,-0.000) {\texttt{in}};
+  \node[anchor=west] at (7.500,-0.000) {\texttt{out}};
+  \draw (0.000,-1.000) -- (2.367,-1.000);
+  \draw[color=purple] (2.367,-1.000) .. controls (3.000,-1.000) and (3.000,-4.000) .. (3.633,-4.000);
+  \draw (3.633,-4.000) -- (5.508,-4.000);
+  \draw[color=teal] (5.508,-4.000) .. controls (6.000,-4.000) and (6.000,-1.000) .. (6.492,-1.000);
+  \draw (6.492,-1.000) -- (7.500,-1.000);
+  \node[anchor=east] at (0,-1.000) {\texttt{in}};
+  \node[anchor=west] at (7.500,-1.000) {\texttt{out}};
+  \draw (0.000,-2.000) -- (2.367,-2.000);
+  \draw[color=purple] (2.367,-2.000) .. controls (3.000,-2.000) and (3.000,-3.000) .. (3.633,-3.000);
+  \draw (3.633,-3.000) -- (5.508,-3.000);
+  \draw[color=teal] (5.508,-3.000) .. controls (6.000,-3.000) and (6.000,-2.000) .. (6.492,-2.000);
+  \draw (6.492,-2.000) -- (7.500,-2.000);
+  \node[anchor=east] at (0,-2.000) {\texttt{in}};
+  \node[anchor=west] at (7.500,-2.000) {\texttt{out}};
+  \draw (0.000,-3.000) -- (2.367,-3.000);
+  \draw[color=purple] (2.367,-3.000) .. controls (3.000,-3.000) and (3.000,0.000) .. (3.633,0.000);
+  \draw (3.633,-0.000) -- (5.508,-0.000);
+  \draw[color=teal] (5.508,0.000) .. controls (6.000,0.000) and (6.000,-3.000) .. (6.492,-3.000);
+  \draw (6.492,-3.000) -- (7.500,-3.000);
+  \node[anchor=east] at (0,-3.000) {\texttt{in}};
+  \node[anchor=west] at (7.500,-3.000) {\texttt{out}};
+  \draw (0.000,-4.035) -- (2.367,-4.035);
+  \draw (0.000,-3.965) -- (2.367,-3.965);
+  \draw[color=purple] (2.367,-4.035) .. controls (3.000,-4.035) and (3.000,-2.035) .. (3.633,-2.035);
+  \draw[color=purple] (2.367,-3.965) .. controls (3.000,-3.965) and (3.000,-1.965) .. (3.633,-1.965);
+  \draw (3.633,-2.035) -- (5.508,-2.035);
+  \draw (3.633,-1.965) -- (5.508,-1.965);
+  \draw[color=teal] (5.508,-2.035) .. controls (6.000,-2.035) and (6.000,-4.035) .. (6.492,-4.035);
+  \draw[color=teal] (5.508,-1.965) .. controls (6.000,-1.965) and (6.000,-3.965) .. (6.492,-3.965);
+  \draw (6.492,-4.035) -- (7.500,-4.035);
+  \draw (6.492,-3.965) -- (7.500,-3.965);
+  \node[anchor=east] at (0,-4.000) {\texttt{bit}};
+  \node[anchor=west] at (7.500,-4.000) {\texttt{bit}};
+  \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (1.500,-0.000) {\texttt{H}};
+  \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (4.500,-0.000) {\texttt{X}};
+  \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (4.500,-1.000) {\texttt{Y}};
+  \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (4.500,-4.000) {\texttt{Z}};
+\end{tikzpicture}
+\end{document}

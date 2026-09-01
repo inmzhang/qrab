@@ -1,0 +1,32 @@
+---
+source: tests/snapshots.rs
+---
+#set page(width: auto, height: auto, margin: 6pt, fill: white)
+#import "@preview/quill:0.8.0" as quill
+
+#quill.quantum-circuit(
+  wires: 2,
+  row-spacing: 12.000pt,
+  column-spacing: 12.000pt,
+  scale: 100.000%,
+  gate-padding: 5.000pt,
+  fill: white,
+  quill.setwire(1, stroke: black),
+  4,
+  quill.setwire(2, stroke: black),
+  1,
+  [\ ],
+  quill.setwire(1, stroke: black),
+  4,
+  quill.setwire(2, stroke: black),
+  1,
+  quill.lstick(text("|0>"), x: 0, y: 0),
+  quill.rstick(text("bell"), x: 4, y: 0),
+  quill.lstick(text("|0>"), x: 0, y: 1),
+  quill.rstick(text("bell"), x: 4, y: 1),
+  quill.gate(text("H"), x: 1, y: 0, fill: yellow),
+  quill.ctrl(1, open: false, x: 2, y: 0),
+  quill.targ(x: 2, y: 1),
+  quill.meter(x: 3, y: 0),
+  quill.meter(x: 3, y: 1),
+)

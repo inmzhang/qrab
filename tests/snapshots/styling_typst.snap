@@ -1,0 +1,40 @@
+---
+source: tests/snapshots.rs
+---
+#set page(width: auto, height: auto, margin: 6pt, fill: rgb("#F7F8FC"))
+#import "@preview/quill:0.8.0" as quill
+
+#rotate(-90deg, reflow: true)[
+#show text: it => rotate(90deg, reflow: true, it)
+#quill.quantum-circuit(
+  wires: 3,
+  row-spacing: 14.400pt,
+  column-spacing: 13.600pt,
+  scale: 110.000%,
+  gate-padding: 5.000pt,
+  fill: rgb("#F7F8FC"),
+  quill.setwire(1, stroke: rgb("#1F4E79")),
+  6,
+  quill.setwire(2, stroke: rgb("#1F4E79")),
+  1,
+  [\ ],
+  quill.setwire(1, stroke: rgb("#1F4E79")),
+  7,
+  [\ ],
+  quill.setwire(1, stroke: rgb("#1F4E79")),
+  7,
+  quill.lstick(text("|0>"), x: 0, y: 0),
+  quill.lstick(text("|0>"), x: 0, y: 1),
+  quill.lstick(text("|0>"), x: 0, y: 2),
+  quill.gate(box(height: 24.000pt, text("H")), x: 1, y: 0, fill: rgb("#FCE8A2"), stroke: rgb("#1F4E79"), radius: 999pt, width: 24.000pt),
+  quill.ctrl(-1, open: true, x: 2, y: 1, fill: green.transparentize(35.000%), stroke: (paint: blue.transparentize(35.000%), dash: "dashed"), wire-stroke: (paint: blue.transparentize(35.000%), dash: "dashed")),
+  quill.mqgate(box(height: 30.000pt, link("https://example.com/qrab?gate=U", text("U"))), n: 3, x: 2, y: 0, pass-through: (1,), fill: green.transparentize(35.000%), stroke: (paint: blue.transparentize(35.000%), dash: "dashed")),
+  quill.ctrl(1, open: false, x: 3, y: 0, fill: white, stroke: teal, wire-stroke: teal),
+  quill.gate(text("+"), x: 3, y: 1, fill: white, stroke: teal, radius: 999pt),
+  quill.gate(box(height: 22.000pt, text("P(theta/2)")), x: 3, y: 2, fill: yellow, stroke: red, radius: 999pt, width: 22.000pt),
+  quill.swap(2, x: 4, y: 0, stroke: red, wire-stroke: red),
+  quill.swap(x: 4, y: 2, stroke: red, wire-stroke: red),
+  quill.gate(text("Z"), x: 5, y: 0, fill: yellow, stroke: blue, width: 20.000pt, radius: (top-right: 999pt, bottom-right: 999pt)),
+  quill.phantom(x: 6, y: 2, width: 0pt, height: 0pt),
+)
+]

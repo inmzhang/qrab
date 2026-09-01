@@ -2315,81 +2315,6 @@ mod tests {
 
     use super::*;
 
-    const BELL: &str = r#"
-        circuit bell {
-          qubit q[2]: "|0>" -> "bell"
-          h q[0]
-          x q[1] if q[0]
-          measure q[0], q[1]
-        }
-    "#;
-
-    #[test]
-    fn emits_tikz_and_quill_from_the_same_circuit() {
-        let circuit = parse(BELL).expect("valid circuit");
-        let latex = render(&circuit, Target::Latex);
-        let typst = render(&circuit, Target::Typst);
-
-        assert!(latex.contains("\\begin{tikzpicture}"));
-        assert!(latex.contains("circle[radius=4.0pt]"));
-        assert!(typst.contains("@preview/quill:0.8.0"));
-        assert!(typst.contains("quill.targ"));
-    }
-
-    #[test]
-    fn spaces_labels_and_endpoints_have_portable_rendering() {
-        let circuit = parse(
-            r#"
-                circuit portable {
-                  qubit q
-                  space q with width: 40, height: 12
-                  space q
-                  label "stage" on q with stroke: blue, fill: yellow, shape: box, opacity: 0.5, link: "https://example.com/stage"
-                  end q as "done" with stroke: red, opacity: 0.25
-                }
-            "#,
-        )
-        .expect("valid portable styles");
-        let latex = render_latex(&circuit);
-        let typst = render_typst(&circuit);
-
-        assert!(latex.contains("minimum width=40.000pt,minimum height=12.000pt"));
-        assert!(!latex.contains("minimum width=0.000pt"));
-        assert!(latex.contains("text=blue,fill=yellow,opacity=0.500"));
-        assert!(!latex.contains("draw=blue"));
-        assert!(latex.contains("\\href{https://example.com/stage}"));
-        assert!(typst.contains("quill.phantom(x: 1, y: 0, width: 40.000pt, height: 12.000pt)"));
-        assert!(typst.contains(
-            "link(\"https://example.com/stage\", text(fill: blue.transparentize(50.000%), \"stage\"))"
-        ));
-        assert!(!typst.contains("stroke: blue"));
-        assert!(typst.contains("line(start: (0pt, -3.7pt), end: (0pt, 3.7pt)"));
-        assert!(typst.contains("pos: right"));
-    }
-
-    #[test]
-    fn typst_vertical_layout_preserves_wire_order_and_page_dimensions() {
-        let circuit = parse(
-            r#"
-                circuit vertical {
-                  layout {
-                    orientation: vertical
-                  }
-                  qubit q[2]
-                  gate "wide" on q[0] with width: 48
-                  gate "tall" on q[1] with height: 36
-                }
-            "#,
-        )
-        .expect("valid vertical circuit");
-        let typst = render_typst(&circuit);
-
-        assert!(typst.contains("#rotate(-90deg, reflow: true)"));
-        assert!(typst.contains("#show text: it => rotate(90deg, reflow: true, it)"));
-        assert!(typst.contains("quill.gate(box(height: 48.000pt, text(\"wide\")), x: 1, y: 0)"));
-        assert!(typst.contains("quill.gate(text(\"tall\"), x: 1, y: 1, width: 36.000pt)"));
-    }
-
     #[test]
     fn permutation_moves_later_operations_and_output_labels() {
         let circuit = parse(
@@ -2410,9 +2335,6 @@ mod tests {
         );
         assert_eq!(scheduled[1].positions[2], 0);
         assert_eq!(final_positions, vec![1, 2, 0]);
-        let typst = render_typst(&circuit);
-        assert!(typst.contains("quill.permute(1, 2, 0,"));
-        assert!(typst.contains("quill.gate(text(\"H\"), x: 2, y: 0)"));
     }
 
     #[test]
@@ -2463,7 +2385,6 @@ mod tests {
                 .collect::<Vec<_>>(),
             [0, 0, 1]
         );
-        assert!(render_typst(&circuit).contains("pos: bottom"));
     }
 
     #[test]
@@ -2485,25 +2406,6 @@ mod tests {
 
         assert_eq!(scheduled[0].column, 2);
         assert_eq!(scheduled[4].column, 3);
-    }
-
-    #[test]
-    fn quill_wire_changes_stay_on_their_physical_row() {
-        let circuit = parse(
-            r#"
-                circuit measured_second_wire {
-                  qubit q[2]
-                  measure q[1]
-                }
-            "#,
-        )
-        .expect("valid measurement");
-        let typst = render_typst(&circuit);
-        let rows = typst.split("[\\ ],").collect::<Vec<_>>();
-
-        assert!(!rows[0].contains("quill.setwire(2"));
-        assert!(rows[1].contains("quill.setwire(2, stroke: black)"));
-        assert!(!typst.contains("setwire(2, x:"));
     }
 
     #[test]

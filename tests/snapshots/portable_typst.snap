@@ -1,0 +1,24 @@
+---
+source: tests/snapshots.rs
+---
+#set page(width: auto, height: auto, margin: 6pt, fill: white)
+#import "@preview/quill:0.8.0" as quill
+
+#quill.quantum-circuit(
+  wires: 1,
+  row-spacing: 12.000pt,
+  column-spacing: 12.000pt,
+  scale: 100.000%,
+  gate-padding: 5.000pt,
+  fill: white,
+  quill.setwire(1, stroke: black),
+  5,
+  quill.setwire(0, stroke: black),
+  1,
+  quill.lstick(text("q"), x: 0, y: 0),
+  quill.phantom(x: 1, y: 0, width: 40.000pt, height: 12.000pt),
+  quill.phantom(x: 2, y: 0, width: 0.000pt, height: 0.000pt),
+  quill.midstick(link("https://example.com/stage", text(fill: blue.transparentize(50.000%), "stage")), n: 1, x: 3, y: 0, fill: yellow.transparentize(50.000%)),
+  quill.midstick(line(start: (0pt, -3.7pt), end: (0pt, 3.7pt), stroke: red.transparentize(75.000%)), x: 4, y: 0, label: (content: text(fill: red.transparentize(75.000%), "done"), pos: right)),
+  quill.phantom(x: 5, y: 0, width: 0pt, height: 0pt),
+)

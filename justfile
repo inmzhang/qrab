@@ -10,10 +10,10 @@ lint:
     cargo clippy --all-targets --all-features -- -D warnings
 
 test:
-    cargo test --all-targets
+    cargo nextest run --all-targets
 
 test-artifacts:
-    cargo test --test artifacts -- --ignored
+    cargo nextest run --test artifacts --run-ignored ignored-only
 
 check: fmt-check lint test
 

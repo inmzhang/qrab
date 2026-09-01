@@ -1,0 +1,40 @@
+---
+source: tests/snapshots.rs
+---
+#set page(width: auto, height: auto, margin: 6pt, fill: white)
+#import "@preview/quill:0.8.0" as quill
+
+#quill.quantum-circuit(
+  wires: 3,
+  row-spacing: 12.000pt,
+  column-spacing: 12.000pt,
+  scale: 100.000%,
+  gate-padding: 6.000pt,
+  fill: white,
+  quill.setwire(1, stroke: black),
+  10,
+  [\ ],
+  quill.setwire(1, stroke: black),
+  10,
+  [\ ],
+  quill.setwire(1, stroke: black),
+  10,
+  quill.lstick(text("|0>"), x: 0, y: 0),
+  quill.rstick(text("out"), x: 9, y: 0),
+  quill.lstick(text("|0>"), x: 0, y: 1),
+  quill.rstick(text("out"), x: 9, y: 1),
+  quill.lstick(text("|0>"), x: 0, y: 2),
+  quill.rstick(text("out"), x: 9, y: 2),
+  quill.midstick(text("data"), x: 1, y: 0, fill: yellow),
+  quill.midstick(text("work"), x: 1, y: 1, fill: yellow),
+  quill.midstick(text("flag"), x: 1, y: 2, fill: yellow),
+  quill.mqgate(box([#text(size: 36.000pt, fill: blue, "{") #h(3pt) #text(fill: blue, "input")]), n: 3, x: 2, y: 0, fill: white, stroke: none),
+  quill.gate(text("H"), x: 3, y: 0),
+  quill.gategroup(1, 1, x: 3, y: 1, padding: 0pt, stroke: none, label: (content: block(width: 72.000pt, align(center, text("decode"))), pos: top)),
+  quill.mqgate(box([#text(size: 36.000pt, fill: teal, "{") #h(3pt) #text(fill: teal, "encode") #h(3pt) #text(size: 36.000pt, fill: teal, "}")]), n: 3, x: 4, y: 0, fill: rgb("#F3F3F3"), stroke: none),
+  quill.mqgate(box([#text(fill: purple, "result") #h(3pt) #text(size: 36.000pt, fill: purple, "}")]), n: 3, x: 5, y: 0, fill: white, stroke: none),
+  quill.slice(n: 3, x: 6, y: 0, stroke: (paint: red, thickness: 0.7pt, dash: "dashed"), label: text("stage")),
+  quill.ctrl(2, open: false, x: 7, y: 0),
+  quill.targ(x: 7, y: 2),
+  quill.mqgate(box([#text(size: 36.000pt, fill: blue, "{") #h(3pt) #text(fill: blue, "repeat") #h(3pt) #text(size: 36.000pt, fill: blue, "}")]), n: 3, x: 8, y: 0, fill: white, stroke: none),
+)

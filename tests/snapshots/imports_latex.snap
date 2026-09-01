@@ -1,0 +1,32 @@
+---
+source: tests/snapshots.rs
+---
+\documentclass[tikz,border=6pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathreplacing,shapes.geometric}
+\begin{document}
+\begin{tikzpicture}[line cap=round,line join=round,font=\sffamily,scale=1.000]
+% circuit: imported_bell
+  \draw (0.000,-0.000) -- (4.840,-0.000);
+  \draw (4.840,-0.035) -- (6.000,-0.035);
+  \draw (4.840,0.035) -- (6.000,0.035);
+  \node[anchor=east] at (0,-0.000) {\texttt{|0>}};
+  \node[anchor=west] at (6.000,-0.000) {\texttt{bell}};
+  \draw (0.000,-1.000) -- (4.840,-1.000);
+  \draw (4.840,-1.035) -- (6.000,-1.035);
+  \draw (4.840,-0.965) -- (6.000,-0.965);
+  \node[anchor=east] at (0,-1.000) {\texttt{|0>}};
+  \node[anchor=west] at (6.000,-1.000) {\texttt{bell}};
+  \node[draw=black,fill=yellow,minimum width=20.000pt,minimum height=20.000pt] at (1.500,-0.000) {\texttt{H}};
+  \draw (3.000,-0.000) -- (3.000,-1.000);
+  \draw[draw=black,fill=black] (3.000,-0.000) circle[radius=2.2pt];
+  \draw[draw=black,fill=white] (3.000,-1.000) circle[radius=4.0pt];
+  \draw (2.860,-1.000) -- (3.140,-1.000) (3.000,-1.140) -- (3.000,-0.860);
+  \draw[draw=black,fill=white] (4.149,-0.351) rectangle (4.851,0.351);
+  \draw (4.280,0.100) arc[start angle=180,end angle=0,radius=0.22];
+  \draw[->] (4.500,0.100) -- (4.670,-0.120);
+  \draw[draw=black,fill=white] (4.149,-1.351) rectangle (4.851,-0.649);
+  \draw (4.280,-0.900) arc[start angle=180,end angle=0,radius=0.22];
+  \draw[->] (4.500,-0.900) -- (4.670,-1.120);
+\end{tikzpicture}
+\end{document}

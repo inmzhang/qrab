@@ -1,0 +1,39 @@
+---
+source: tests/snapshots.rs
+---
+\documentclass[tikz,border=6pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathreplacing,shapes.geometric}
+\begin{document}
+\begin{tikzpicture}[line cap=round,line join=round,font=\sffamily,scale=1.000]
+% circuit: marked_regions
+  \draw[draw=orange,fill=yellow,opacity=0.200,rounded corners=5pt] (0.980,0.480) rectangle (5.020,-3.480);
+  \node[anchor=south west] at (0.980,0.480) {\texttt{encoding}};
+  \draw[draw=purple,fill=none,dashed] (0.980,0.480) rectangle (6.520,-3.480);
+  \node[anchor=south west] at (0.980,0.720) {\texttt{full pass}};
+  \draw (0.000,-0.000) -- (7.500,-0.000);
+  \node[anchor=east] at (0,-0.000) {\texttt{|0>}};
+  \node[anchor=west] at (7.500,-0.000) {\texttt{out}};
+  \draw (0.000,-1.000) -- (7.500,-1.000);
+  \node[anchor=east] at (0,-1.000) {\texttt{|0>}};
+  \node[anchor=west] at (7.500,-1.000) {\texttt{out}};
+  \draw (0.000,-2.000) -- (7.500,-2.000);
+  \node[anchor=east] at (0,-2.000) {\texttt{|0>}};
+  \node[anchor=west] at (7.500,-2.000) {\texttt{out}};
+  \draw (0.000,-3.000) -- (7.500,-3.000);
+  \node[anchor=east] at (0,-3.000) {\texttt{|0>}};
+  \node[anchor=west] at (7.500,-3.000) {\texttt{out}};
+  \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (3.000,-0.000) {\texttt{H}};
+  \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (3.000,-1.000) {\texttt{H}};
+  \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (3.000,-2.000) {\texttt{H}};
+  \draw (4.500,-0.000) -- (4.500,-3.000);
+  \draw[draw=black,fill=black] (4.500,-0.000) circle[radius=2.2pt];
+  \draw[draw=black,fill=white] (4.500,-3.000) circle[radius=4.0pt];
+  \draw (4.360,-3.000) -- (4.640,-3.000) (4.500,-3.140) -- (4.500,-2.860);
+  \draw (6.000,-1.000) -- (6.000,-2.000);
+  \draw[draw=black,fill=black] (6.000,-1.000) circle[radius=2.2pt];
+  \draw[draw=black,fill=white] (6.000,-2.000) circle[radius=4.0pt];
+  \draw (5.860,-2.000) -- (6.140,-2.000) (6.000,-2.140) -- (6.000,-1.860);
+  \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (6.000,-3.000) {\texttt{H}};
+\end{tikzpicture}
+\end{document}

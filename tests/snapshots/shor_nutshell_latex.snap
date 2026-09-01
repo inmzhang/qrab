@@ -1,0 +1,65 @@
+---
+source: tests/snapshots.rs
+---
+\documentclass[tikz,border=6pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathreplacing,shapes.geometric}
+\definecolor{qrabDDEEFF}{HTML}{DDEEFF}
+\begin{document}
+\begin{tikzpicture}[line cap=round,line join=round,font=\sffamily,scale=1.000]
+% circuit: shor_nutshell
+  \draw (0.000,-0.000) -- (9.340,-0.000);
+  \draw (9.340,-0.035) -- (12.000,-0.035);
+  \draw (9.340,0.035) -- (12.000,0.035);
+  \node[anchor=east] at (0,-0.000) {\texttt{|0>}};
+  \node[anchor=west] at (12.000,-0.000) {\texttt{phase}};
+  \draw (0.000,-1.000) -- (9.340,-1.000);
+  \draw (9.340,-1.035) -- (12.000,-1.035);
+  \draw (9.340,-0.965) -- (12.000,-0.965);
+  \node[anchor=east] at (0,-1.000) {\texttt{|0>}};
+  \node[anchor=west] at (12.000,-1.000) {\texttt{phase}};
+  \draw (0.000,-2.000) -- (9.340,-2.000);
+  \draw (9.340,-2.035) -- (12.000,-2.035);
+  \draw (9.340,-1.965) -- (12.000,-1.965);
+  \node[anchor=east] at (0,-2.000) {\texttt{|0>}};
+  \node[anchor=west] at (12.000,-2.000) {\texttt{phase}};
+  \draw (0.000,-3.000) -- (9.340,-3.000);
+  \draw (9.340,-3.035) -- (12.000,-3.035);
+  \draw (9.340,-2.965) -- (12.000,-2.965);
+  \node[anchor=east] at (0,-3.000) {\texttt{|0>}};
+  \node[anchor=west] at (12.000,-3.000) {\texttt{phase}};
+  \draw (0.000,-4.000) -- (12.000,-4.000);
+  \node[anchor=east] at (0,-4.000) {\texttt{|1>}};
+  \node[anchor=west] at (12.000,-4.000) {\texttt{a\textasciicircum{}x mod N}};
+  \draw (0.000,-5.000) -- (12.000,-5.000);
+  \node[anchor=east] at (0,-5.000) {\texttt{|1>}};
+  \node[anchor=west] at (12.000,-5.000) {\texttt{a\textasciicircum{}x mod N}};
+  \draw (0.000,-6.000) -- (12.000,-6.000);
+  \node[anchor=east] at (0,-6.000) {\texttt{|1>}};
+  \node[anchor=west] at (12.000,-6.000) {\texttt{a\textasciicircum{}x mod N}};
+  \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (3.000,-0.000) {\texttt{H}};
+  \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (3.000,-1.000) {\texttt{H}};
+  \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (3.000,-2.000) {\texttt{H}};
+  \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (3.000,-3.000) {\texttt{H}};
+  \draw (4.500,-0.000) -- (4.500,-6.000);
+  \draw[draw=black,fill=qrabDDEEFF] (4.500,-0.000) circle[radius=2.2pt];
+  \draw[draw=black,fill=qrabDDEEFF] (4.500,-1.000) circle[radius=2.2pt];
+  \draw[draw=black,fill=qrabDDEEFF] (4.500,-2.000) circle[radius=2.2pt];
+  \draw[draw=black,fill=qrabDDEEFF] (4.500,-3.000) circle[radius=2.2pt];
+  \node[draw=black,fill=qrabDDEEFF,minimum width=20.000pt,minimum height=2.703cm] at (4.500,-5.000) {\texttt{modexp}};
+  \draw[dashed] (6.000,0.420) -- (6.000,-6.420); % barrier on 7 wire(s)
+  \node[draw=black,fill=yellow,minimum width=20.000pt,minimum height=3.703cm] at (7.500,-1.500) {\texttt{inverse QFT}};
+  \draw[draw=black,fill=white] (8.649,-0.351) -- (9.000,-0.351) arc[start angle=-90,end angle=90,radius=0.351] -- (8.649,0.351) -- cycle;
+  \node at (9.000,-0.000) {\texttt{bits}};
+  \draw[draw=black,fill=white] (8.649,-1.351) -- (9.000,-1.351) arc[start angle=-90,end angle=90,radius=0.351] -- (8.649,-0.649) -- cycle;
+  \node at (9.000,-1.000) {\texttt{bits}};
+  \draw[draw=black,fill=white] (8.649,-2.351) -- (9.000,-2.351) arc[start angle=-90,end angle=90,radius=0.351] -- (8.649,-1.649) -- cycle;
+  \node at (9.000,-2.000) {\texttt{bits}};
+  \draw[draw=black,fill=white] (8.649,-3.351) -- (9.000,-3.351) arc[start angle=-90,end angle=90,radius=0.351] -- (8.649,-2.649) -- cycle;
+  \node at (9.000,-3.000) {\texttt{bits}};
+  \draw[decorate,decoration={brace,amplitude=4pt}] (10.280,-3.340) -- (10.280,0.340);
+  \node[inner sep=2pt,fill=white] at (10.500,-1.500) {\texttt{period register}};
+  \draw[decorate,decoration={brace,amplitude=4pt}] (7.280,-6.340) -- (7.280,-3.660);
+  \node[inner sep=2pt,fill=white] at (7.500,-5.000) {\texttt{value register}};
+\end{tikzpicture}
+\end{document}

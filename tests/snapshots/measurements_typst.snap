@@ -1,0 +1,36 @@
+---
+source: tests/snapshots.rs
+---
+#set page(width: auto, height: auto, margin: 6pt, fill: white)
+#import "@preview/quill:0.8.0" as quill
+
+#quill.quantum-circuit(
+  wires: 3,
+  row-spacing: 12.000pt,
+  column-spacing: 12.000pt,
+  scale: 100.000%,
+  gate-padding: 5.000pt,
+  fill: white,
+  quill.setwire(1, stroke: black),
+  3,
+  quill.setwire(2, stroke: black),
+  1,
+  [\ ],
+  quill.setwire(1, stroke: black),
+  2,
+  quill.setwire(2, stroke: black),
+  2,
+  [\ ],
+  quill.setwire(1, stroke: black),
+  2,
+  quill.setwire(2, stroke: black),
+  2,
+  quill.lstick(text("|0>"), x: 0, y: 0),
+  quill.lstick(text("|0>"), x: 0, y: 1),
+  quill.lstick(text("|0>"), x: 0, y: 2),
+  quill.gate(text("H"), x: 1, y: 0),
+  quill.meter(x: 2, y: 0),
+  quill.gate(text("Z"), x: 1, y: 1, fill: rgb("#DDEEFF"), stroke: blue, width: 20.000pt, radius: (top-right: 999pt, bottom-right: 999pt)),
+  quill.gate(box(width: 20.000pt, height: 14.000pt, inset: 0pt, [#place(polygon(fill: yellow, stroke: red, (0pt, 7.000pt), (6.667pt, 0pt), (20.000pt, 0pt), (20.000pt, 14.000pt), (6.667pt, 14.000pt))) #align(center + horizon, text("X"))]), x: 1, y: 2, box: false, width: 20.000pt),
+  quill.phantom(x: 3, y: 2, width: 0pt, height: 0pt),
+)

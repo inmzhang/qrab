@@ -1,0 +1,42 @@
+---
+source: tests/snapshots.rs
+---
+\documentclass[tikz,border=6pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathreplacing,shapes.geometric}
+\definecolor{qrabF3F3F3}{HTML}{F3F3F3}
+\begin{document}
+\begin{tikzpicture}[line cap=round,line join=round,font=\sffamily,scale=1.000]
+% circuit: annotations
+  \draw (0.000,-0.000) -- (13.500,-0.000);
+  \node[anchor=east] at (0,-0.000) {\texttt{|0>}};
+  \node[anchor=west] at (13.500,-0.000) {\texttt{out}};
+  \draw (0.000,-1.000) -- (13.500,-1.000);
+  \node[anchor=east] at (0,-1.000) {\texttt{|0>}};
+  \node[anchor=west] at (13.500,-1.000) {\texttt{out}};
+  \draw (0.000,-2.000) -- (13.500,-2.000);
+  \node[anchor=east] at (0,-2.000) {\texttt{|0>}};
+  \node[anchor=west] at (13.500,-2.000) {\texttt{out}};
+  \node[inner sep=2pt,fill=yellow] at (1.500,-0.000) {\texttt{data}};
+  \node[inner sep=2pt,fill=yellow] at (1.500,-1.000) {\texttt{work}};
+  \node[inner sep=2pt,fill=yellow] at (1.500,-2.000) {\texttt{flag}};
+  \draw[decorate,decoration={brace,amplitude=4pt},color=blue] (2.780,-2.340) -- (2.780,0.340);
+  \node[inner sep=2pt,text=blue,fill=white] at (3.000,-1.000) {\texttt{input}};
+  \node[draw=black,fill=white,minimum width=22.000pt,minimum height=22.000pt] at (4.500,-0.000) {\texttt{H}};
+  \node[anchor=south,text width=72.000pt,align=center] at (4.500,-0.580) {\texttt{decode}};
+  \draw[decorate,decoration={brace,amplitude=4pt},color=teal] (5.780,-2.340) -- (5.780,0.340);
+  \draw[decorate,decoration={brace,amplitude=4pt,mirror},color=teal] (6.220,-2.340) -- (6.220,0.340);
+  \node[inner sep=2pt,text=teal,fill=qrabF3F3F3] at (6.000,-1.000) {\texttt{encode}};
+  \draw[decorate,decoration={brace,amplitude=4pt,mirror},color=purple] (7.720,-2.340) -- (7.720,0.340);
+  \node[inner sep=2pt,text=purple,fill=white] at (7.500,-1.000) {\texttt{result}};
+  \draw[color=red,dashed] (9.000,0.420) -- (9.000,-2.420);
+  \node[anchor=south] at (9.000,0.420) {\texttt{stage}};
+  \draw (10.500,-0.000) -- (10.500,-2.000);
+  \draw[draw=black,fill=black] (10.500,-0.000) circle[radius=2.2pt];
+  \draw[draw=black,fill=white] (10.500,-2.000) circle[radius=4.0pt];
+  \draw (10.360,-2.000) -- (10.640,-2.000) (10.500,-2.140) -- (10.500,-1.860);
+  \draw[decorate,decoration={brace,amplitude=4pt},color=blue] (11.780,-2.340) -- (11.780,0.340);
+  \draw[decorate,decoration={brace,amplitude=4pt,mirror},color=blue] (12.220,-2.340) -- (12.220,0.340);
+  \node[inner sep=2pt,text=blue,fill=white] at (12.000,-1.000) {\texttt{repeat}};
+\end{tikzpicture}
+\end{document}

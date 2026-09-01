@@ -1,0 +1,43 @@
+---
+source: tests/snapshots.rs
+---
+#set page(width: auto, height: auto, margin: 6pt, fill: white)
+#import "@preview/quill:0.8.0" as quill
+
+#quill.quantum-circuit(
+  wires: 4,
+  row-spacing: 12.000pt,
+  column-spacing: 12.000pt,
+  scale: 100.000%,
+  gate-padding: 5.000pt,
+  fill: white,
+  quill.setwire(1, stroke: black),
+  6,
+  [\ ],
+  quill.setwire(1, stroke: black),
+  6,
+  [\ ],
+  quill.setwire(1, stroke: black),
+  6,
+  [\ ],
+  quill.setwire(1, stroke: black),
+  6,
+  quill.gategroup(4, 3, x: 1, y: 0, label: (content: text("encoding"), pos: top, dy: -12pt), padding: 3pt, stroke: orange.transparentize(80.000%), fill: yellow.transparentize(80.000%), radius: 5pt),
+  quill.gategroup(4, 4, x: 1, y: 0, label: (content: text("full pass"), pos: top, dy: -24pt), padding: 3pt, stroke: (paint: purple, dash: "dashed")),
+  quill.lstick(text("|0>"), x: 0, y: 0),
+  quill.rstick(text("out"), x: 5, y: 0),
+  quill.lstick(text("|0>"), x: 0, y: 1),
+  quill.rstick(text("out"), x: 5, y: 1),
+  quill.lstick(text("|0>"), x: 0, y: 2),
+  quill.rstick(text("out"), x: 5, y: 2),
+  quill.lstick(text("|0>"), x: 0, y: 3),
+  quill.rstick(text("out"), x: 5, y: 3),
+  quill.gate(text("H"), x: 2, y: 0),
+  quill.gate(text("H"), x: 2, y: 1),
+  quill.gate(text("H"), x: 2, y: 2),
+  quill.ctrl(3, open: false, x: 3, y: 0),
+  quill.targ(x: 3, y: 3),
+  quill.ctrl(1, open: false, x: 4, y: 1),
+  quill.targ(x: 4, y: 2),
+  quill.gate(text("H"), x: 4, y: 3),
+)

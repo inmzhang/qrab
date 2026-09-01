@@ -1,0 +1,44 @@
+---
+source: tests/snapshots.rs
+---
+#set page(width: auto, height: auto, margin: 6pt, fill: white)
+#import "@preview/quill:0.8.0" as quill
+
+#quill.quantum-circuit(
+  wires: 3,
+  row-spacing: 12.000pt,
+  column-spacing: 12.000pt,
+  scale: 100.000%,
+  gate-padding: 5.000pt,
+  fill: white,
+  quill.setwire(1, stroke: black),
+  7,
+  quill.setwire(2, stroke: black),
+  3,
+  [\ ],
+  quill.setwire(1, stroke: black),
+  7,
+  quill.setwire(2, stroke: black),
+  3,
+  [\ ],
+  quill.setwire(1, stroke: black),
+  10,
+  quill.lstick(text("|psi>"), x: 0, y: 0),
+  quill.rstick(text("|psi>"), x: 9, y: 0),
+  quill.lstick(text("|0>"), x: 0, y: 1),
+  quill.lstick(text("|0>"), x: 0, y: 2),
+  quill.rstick(text("|psi>"), x: 9, y: 2),
+  quill.gate(text("H"), x: 1, y: 1),
+  quill.ctrl(1, open: false, x: 2, y: 1),
+  quill.targ(x: 2, y: 2),
+  quill.slice(n: 3, x: 3, y: 0, stroke: (paint: black, thickness: 0.7pt, dash: "dashed")),
+  quill.ctrl(1, open: false, x: 4, y: 0),
+  quill.targ(x: 4, y: 1),
+  quill.gate(text("H"), x: 5, y: 0),
+  quill.meter(x: 6, y: 0),
+  quill.meter(x: 6, y: 1),
+  quill.ctrl(1, open: false, x: 7, y: 1),
+  quill.targ(x: 7, y: 2),
+  quill.ctrl(2, open: false, x: 8, y: 0),
+  quill.ctrl(x: 8, y: 2),
+)
