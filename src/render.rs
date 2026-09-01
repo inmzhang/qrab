@@ -882,6 +882,7 @@ fn draw_latex_brace(
     );
 }
 
+// Empty selections remain "all wires" for callers constructing the public AST directly.
 fn includes_wire(wires: &[usize], wire: usize, wire_count: usize) -> bool {
     (wires.is_empty() && wire < wire_count) || wires.contains(&wire)
 }
@@ -2295,6 +2296,7 @@ fn latex_url(value: &str) -> String {
 }
 
 fn latex_comment(value: &str) -> String {
+    // `render` also accepts manually constructed Circuits, bypassing parser identifiers.
     value.replace(['\n', '\r'], " ").replace('%', "")
 }
 

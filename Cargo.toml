@@ -6,6 +6,7 @@ description = "A readable quantum-circuit compiler for TikZ and Typst"
 license = "MIT"
 readme = "README.md"
 documentation = "https://docs.rs/qrab"
+# Added with the canonical remote before first publication; see docs/releasing.md.
 rust-version = "1.95"
 keywords = ["quantum", "circuit", "tikz", "typst", "compiler"]
 categories = ["command-line-utilities", "science", "visualization"]

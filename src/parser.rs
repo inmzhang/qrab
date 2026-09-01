@@ -1685,6 +1685,8 @@ impl Parser {
     }
 
     fn parse_wire_reference(&mut self) -> Result<usize, Diagnostic> {
+        // ponytail: reuse the checked range parser; split out a scalar path only if this
+        // one-element allocation becomes measurable.
         Ok(self
             .parse_wire_selection(false)?
             .into_iter()

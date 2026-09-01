@@ -256,18 +256,8 @@ impl OperationKind {
             ),
             Self::Measure { targets, .. } => Cow::Borrowed(targets),
             Self::Swap { left, right } => Cow::Owned(vec![*left, *right]),
-            Self::Barrier { .. }
-            | Self::WireChange { .. }
-            | Self::Endpoint { .. }
-            | Self::Label { .. }
-            | Self::Permute { .. }
-            | Self::Phantom { .. }
-            | Self::Touch { .. }
-            | Self::WireLabels { .. }
-            | Self::Brace { .. }
-            | Self::Note { .. }
-            | Self::Cut { .. } => unreachable!("wire selections returned above"),
             Self::Bundle { wire, .. } => Cow::Owned(vec![*wire]),
+            _ => unreachable!("wire selections returned above"),
         }
     }
 
