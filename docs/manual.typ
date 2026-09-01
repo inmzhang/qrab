@@ -981,6 +981,15 @@ Parity and its evidence are tracked in `docs/qpic-coverage.md`.
 
 = Appendix: statement index
 
+Newlines terminate statements, `;` separates several on one line, and `//`
+starts a comment. An omitted wire list selects every active wire on `end`,
+`barrier`, `label`, `labels`, `equals`, `brace`, `note`, `cut`, `space`, and
+`touch`, and every _inactive_ wire on `start`; a statement is rejected when that
+default selection turns out to be empty.
+
+// Tightened so the whole index stays on one openable spread.
+#[
+#set table(inset: (x: 6pt, y: 3.4pt))
 #table(
   columns: (auto, 1fr),
   table.header[Statement][Summary],
@@ -1028,7 +1037,4 @@ Parity and its evidence are tracked in `docs/qpic-coverage.md`.
   [`parallel { ... }`], [Align a layer.],
   [`overlay { ... }`], [Force one column.],
 )
-
-Newlines terminate statements, `;` separates several on one line, and `//`
-starts a comment. An omitted wire list selects every active wire --- every
-_inactive_ one for `start` --- and is rejected when that selection is empty.
+]

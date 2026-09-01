@@ -268,8 +268,7 @@ example for every construct. It is typeset from
 [docs/manual/examples](docs/manual/examples) that `qrab` itself renders, so the
 code and the picture beside it can never drift apart.
 
-The condensed frontend reference is [docs/language.md](docs/language.md). Parity
-with qpic and its evidence are tracked in
+Parity with qpic and its evidence are tracked in
 [docs/qpic-coverage.md](docs/qpic-coverage.md), and maintainers can follow
 [docs/releasing.md](docs/releasing.md).
 
