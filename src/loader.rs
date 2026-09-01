@@ -1,14 +1,47 @@
 use std::collections::HashSet;
-use std::error::Error;
-use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
+
+use miette::{Diagnostic, MietteError, MietteSpanContents, SourceCode, SourceSpan, SpanContents};
+use thiserror::Error;
 
 /// Expanded source text plus original file/line mappings.
 #[derive(Debug, Clone)]
 pub struct LoadedSource {
     text: String,
-    origins: Vec<(PathBuf, usize)>,
+    line_starts: Vec<usize>,
+    origins: Vec<(usize, usize)>,
+    sources: Vec<SourceFile>,
+}
+
+#[derive(Debug, Clone)]
+struct SourceFile {
+    path: PathBuf,
+    text: String,
+    line_starts: Vec<usize>,
+}
+
+impl SourceFile {
+    fn new(path: PathBuf, text: String) -> Self {
+        let line_starts = std::iter::once(0)
+            .chain(text.match_indices('\n').map(|(offset, _)| offset + 1))
+            .collect();
+        Self {
+            path,
+            text,
+            line_starts,
+        }
+    }
+
+    fn line_range(&self, line: usize) -> Option<std::ops::Range<usize>> {
+        let start = *self.line_starts.get(line.checked_sub(1)?)?;
+        let end = self
+            .line_starts
+            .get(line)
+            .copied()
+            .unwrap_or(self.text.len());
+        Some(start..end)
+    }
 }
 
 impl LoadedSource {
@@ -21,12 +54,54 @@ impl LoadedSource {
     pub fn origin(&self, expanded_line: usize) -> Option<(&Path, usize)> {
         self.origins
             .get(expanded_line.checked_sub(1)?)
-            .map(|(path, line)| (path.as_path(), *line))
+            .and_then(|(source, line)| Some((self.sources.get(*source)?.path.as_path(), *line)))
+    }
+}
+
+impl SourceCode for LoadedSource {
+    fn read_span<'a>(
+        &'a self,
+        span: &SourceSpan,
+        _context_lines_before: usize,
+        _context_lines_after: usize,
+    ) -> Result<Box<dyn SpanContents<'a> + 'a>, MietteError> {
+        let line = self
+            .line_starts
+            .partition_point(|start| *start <= span.offset())
+            .checked_sub(1)
+            .ok_or(MietteError::OutOfBounds)?;
+        let expanded_start = self.line_starts[line];
+        let (source, source_line) = *self.origins.get(line).ok_or(MietteError::OutOfBounds)?;
+        let source = self.sources.get(source).ok_or(MietteError::OutOfBounds)?;
+        let range = source
+            .line_range(source_line)
+            .ok_or(MietteError::OutOfBounds)?;
+        let data = source
+            .text
+            .as_bytes()
+            .get(range)
+            .ok_or(MietteError::OutOfBounds)?;
+        if span.offset() - expanded_start + span.len() > data.len() {
+            return Err(MietteError::OutOfBounds);
+        }
+        // ponytail: imported spans are line-local; add virtual file offsets if
+        // diagnostics ever need labels or context crossing source lines.
+        let contents = MietteSpanContents::new_named(
+            source.path.display().to_string(),
+            data,
+            (expanded_start, data.len()).into(),
+            source_line - 1,
+            0,
+            1,
+        )
+        .with_language("qrab");
+        Ok(Box::new(contents))
     }
 }
 
 /// An I/O, syntax, or cycle error encountered while expanding imports.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Diagnostic, Error)]
+#[error("{message}")]
 pub struct LoadError {
     message: String,
 }
@@ -39,21 +114,15 @@ impl LoadError {
     }
 }
 
-impl fmt::Display for LoadError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(&self.message)
-    }
-}
-
-impl Error for LoadError {}
-
 /// Loads a `.qrab` file and recursively expands file-scope relative imports.
 ///
 /// Each canonical path is loaded once, and import cycles are rejected.
 pub fn load_source(path: impl AsRef<Path>) -> Result<LoadedSource, LoadError> {
     let mut loaded = LoadedSource {
         text: String::new(),
+        line_starts: Vec::new(),
         origins: Vec::new(),
+        sources: Vec::new(),
     };
     load_file(
         path.as_ref(),
@@ -90,6 +159,10 @@ fn load_file(
 
     let source = fs::read_to_string(&path)
         .map_err(|error| LoadError::new(format!("cannot read {}: {error}", path.display())))?;
+    let source_index = loaded.sources.len();
+    loaded
+        .sources
+        .push(SourceFile::new(path.clone(), source.clone()));
     stack.push(path.clone());
     let mut depth = 0_usize;
     for (line_index, line) in source.lines().enumerate() {
@@ -109,9 +182,10 @@ fn load_file(
             continue;
         }
 
+        loaded.line_starts.push(loaded.text.len());
         loaded.text.push_str(line);
         loaded.text.push('\n');
-        loaded.origins.push((path.clone(), line_index + 1));
+        loaded.origins.push((source_index, line_index + 1));
         let (opens, closes) = brace_counts(line);
         depth = depth.saturating_add(opens).saturating_sub(closes);
     }

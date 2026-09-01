@@ -16,6 +16,12 @@ pub struct Span {
     pub column: usize,
 }
 
+impl From<Span> for miette::SourceSpan {
+    fn from(span: Span) -> Self {
+        (span.offset, span.length).into()
+    }
+}
+
 /// A parsed and semantically checked quantum circuit.
 #[derive(Debug, Clone, PartialEq)]
 #[non_exhaustive]

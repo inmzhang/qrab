@@ -72,3 +72,53 @@ fn clap_handles_help_errors_delimiters_and_conflicts() {
         .stderr(predicate::str::contains("cannot read"))
         .stderr(predicate::str::contains("Usage:").not());
 }
+
+#[test]
+fn miette_reports_imported_source_help_and_multiple_errors() {
+    let directory = std::env::temp_dir().join(format!(
+        "qrab-diagnostics-{}-{}",
+        std::process::id(),
+        line!()
+    ));
+    fs::create_dir(&directory).expect("create diagnostic test directory");
+    fs::write(
+        directory.join("gates.qrab"),
+        "fn broken(a) {\n\th missing\n}\n",
+    )
+    .expect("write imported source");
+    let imported = directory.join("imported.qrab");
+    fs::write(
+        &imported,
+        "import \"gates.qrab\"\ncircuit imported { qubit q; broken(q) }\n",
+    )
+    .expect("write importing source");
+    cargo_bin_cmd!("qrab")
+        .env("NO_COLOR", "1")
+        .arg("check")
+        .arg(&imported)
+        .assert()
+        .code(1)
+        .stderr(predicate::str::contains("gates.qrab"))
+        .stderr(predicate::str::contains("h missing"))
+        .stderr(predicate::str::contains(
+            "declare it before use or enable `autowires`",
+        ));
+
+    let multiple = directory.join("multiple.qrab");
+    fs::write(
+        &multiple,
+        "circuit bad {\n\tqubit q\n\th missing\n\tx absent\n}\n",
+    )
+    .expect("write multiple-error source");
+    cargo_bin_cmd!("qrab")
+        .env("NO_COLOR", "1")
+        .arg("check")
+        .arg(&multiple)
+        .assert()
+        .code(1)
+        .stderr(predicate::str::contains("2 errors found"))
+        .stderr(predicate::str::contains("unknown wire `missing`"))
+        .stderr(predicate::str::contains("unknown wire `absent`"));
+
+    fs::remove_dir_all(directory).expect("remove diagnostic test directory");
+}

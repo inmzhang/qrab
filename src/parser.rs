@@ -1,9 +1,9 @@
 use std::collections::HashMap;
-use std::error::Error;
-use std::fmt;
 use std::ops::Range;
 
 use logos::Logos;
+use miette::Diagnostic as MietteDiagnostic;
+use thiserror::Error;
 
 use crate::ast::{
     BackendEscapes, BraceSide, Circuit, Control, EscapeBlock, Group, Layout, MeasurementShape,
@@ -14,13 +14,21 @@ use crate::ast::{
 ///
 /// Diagnostics are produced by [`parse`](crate::parse) and are not constructed
 /// by downstream code.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, MietteDiagnostic, Error)]
+#[error("{message}")]
 #[non_exhaustive]
 pub struct Diagnostic {
     /// Human-readable explanation of the error.
     pub message: String,
-    /// One-based source location where the error was detected.
+    /// Byte range and derived source location where the error was detected.
     pub span: Span,
+    /// Actionable advice, when the error has a direct remedy.
+    #[help]
+    pub help: Option<String>,
+    #[label]
+    label: Option<miette::SourceSpan>,
+    #[related]
+    related: Box<[Diagnostic]>,
 }
 
 impl Diagnostic {
@@ -28,21 +36,41 @@ impl Diagnostic {
         Self {
             message: message.into(),
             span,
+            help: None,
+            label: Some(span.into()),
+            related: Box::default(),
         }
     }
-}
 
-impl fmt::Display for Diagnostic {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            formatter,
-            "{}:{}: {}",
-            self.span.line, self.span.column, self.message
-        )
+    fn with_help(message: impl Into<String>, help: impl Into<String>, span: Span) -> Self {
+        Self {
+            message: message.into(),
+            span,
+            help: Some(help.into()),
+            label: Some(span.into()),
+            related: Box::default(),
+        }
+    }
+
+    fn multiple(mut diagnostics: Vec<Self>) -> Self {
+        debug_assert!(!diagnostics.is_empty());
+        if diagnostics.len() == 1 {
+            return diagnostics.pop().expect("one diagnostic exists");
+        }
+        Self {
+            message: format!("{} errors found", diagnostics.len()),
+            span: diagnostics[0].span,
+            help: None,
+            label: None,
+            related: diagnostics.into_boxed_slice(),
+        }
+    }
+
+    /// Returns independently located errors collected after parser recovery.
+    pub fn related(&self) -> &[Self] {
+        &self.related
     }
 }
-
-impl Error for Diagnostic {}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum TokenKind {
@@ -311,6 +339,7 @@ fn is_style_property(name: &str) -> bool {
     )
 }
 
+#[derive(Clone)]
 struct Parser {
     tokens: Vec<Token>,
     position: usize,
@@ -375,16 +404,30 @@ impl Parser {
         self.expect(TokenKind::LeftBrace, "`{`")?;
         self.skip_newlines();
 
-        while !self.at(&TokenKind::RightBrace) {
-            if self.at(&TokenKind::End) {
-                return Err(self.error("expected `}` to close the circuit"));
+        let mut diagnostics = Vec::new();
+        while !self.at(&TokenKind::RightBrace) && !self.at(&TokenKind::End) {
+            // ponytail: checkpoints clone small circuits; use transactional state if large
+            // inputs make recovery measurable.
+            let checkpoint = self.clone();
+            if let Err(diagnostic) = self.parse_statement() {
+                self = checkpoint;
+                self.recover_statement();
+                diagnostics.push(diagnostic);
             }
-            self.parse_statement()?;
             self.skip_newlines();
         }
-        self.advance();
-        self.skip_newlines();
-        self.expect(TokenKind::End, "end of file")?;
+        if self.at(&TokenKind::End) {
+            diagnostics.push(self.error("expected `}` to close the circuit"));
+        } else {
+            self.advance();
+            self.skip_newlines();
+            if let Err(diagnostic) = self.expect(TokenKind::End, "end of file") {
+                diagnostics.push(diagnostic);
+            }
+        }
+        if !diagnostics.is_empty() {
+            return Err(Diagnostic::multiple(diagnostics));
+        }
 
         if self.wires.is_empty() {
             return Err(Diagnostic::new(
@@ -821,11 +864,12 @@ impl Parser {
                 .copied()
             {
                 if std::mem::replace(&mut occupied[wire], true) {
-                    return Err(Diagnostic::new(
+                    return Err(Diagnostic::with_help(
                         format!(
-                            "overlay operations cannot share wire `{}`; use `parallel` to serialize them",
+                            "overlay operations cannot share wire `{}`",
                             self.wires[wire].name
                         ),
+                        "use `parallel` to serialize operations on the same wire",
                         span,
                     ));
                 }
@@ -858,7 +902,7 @@ impl Parser {
     fn parse_operation_block(&mut self, name: &str) -> Result<Vec<Operation>, Diagnostic> {
         self.expect(TokenKind::LeftBrace, "`{`")?;
         let start = self.operations.len();
-        // Inner parse errors abort parsing, so depth only needs restoring on success.
+        // The caller either succeeds or restores the whole statement from a checkpoint.
         self.operation_block_depth += 1;
         self.skip_newlines();
         while !self.at(&TokenKind::RightBrace) {
@@ -873,6 +917,32 @@ impl Parser {
         let body = self.operations.split_off(start);
         self.expect_statement_end()?;
         Ok(body)
+    }
+
+    fn recover_statement(&mut self) {
+        let mut braces = 0_usize;
+        loop {
+            match self.current().kind {
+                TokenKind::End => break,
+                TokenKind::LeftBrace => {
+                    braces += 1;
+                    self.advance();
+                }
+                TokenKind::RightBrace if braces == 0 => break,
+                TokenKind::RightBrace => {
+                    braces -= 1;
+                    self.advance();
+                    if braces == 0 {
+                        break;
+                    }
+                }
+                TokenKind::Newline if braces == 0 => {
+                    self.advance();
+                    break;
+                }
+                _ => self.advance(),
+            }
+        }
     }
 
     fn parse_layout(&mut self) -> Result<(), Diagnostic> {
@@ -1106,8 +1176,9 @@ impl Parser {
             ));
         }
         if style.shape.is_some() {
-            return Err(Diagnostic::new(
-                "measurement shapes use `using d` or `using tag`, not the generic `shape` style",
+            return Err(Diagnostic::with_help(
+                "the generic `shape` style does not apply to measurements",
+                "use `using d` or `using tag` after the measurement target",
                 span,
             ));
         }
@@ -1723,8 +1794,9 @@ impl Parser {
             return Ok(*wire);
         }
         if !self.auto_wires {
-            return Err(Diagnostic::new(
-                format!("unknown wire `{name}`; declare it before use or enable `autowires`"),
+            return Err(Diagnostic::with_help(
+                format!("unknown wire `{name}`"),
+                "declare it before use or enable `autowires`",
                 span,
             ));
         }
@@ -2021,6 +2093,21 @@ mod tests {
             (28, 7, 3, 5)
         );
         assert!(error.message.contains("unknown wire `missing`"));
+        assert_eq!(
+            error.help.as_deref(),
+            Some("declare it before use or enable `autowires`")
+        );
+    }
+
+    #[test]
+    fn recovers_at_statement_boundaries_to_report_multiple_errors() {
+        let error = parse("circuit bad {\n  qubit q\n  h missing\n  x absent\n}\n")
+            .expect_err("both unknown wires should fail");
+
+        assert_eq!(error.message, "2 errors found");
+        assert_eq!(error.related().len(), 2);
+        assert!(error.related()[0].message.contains("`missing`"));
+        assert!(error.related()[1].message.contains("`absent`"));
     }
 
     #[test]
