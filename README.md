@@ -14,7 +14,18 @@ circuit bell {
 
 ## Install and use
 
-Build and install the Rust binary:
+The distribution channels below are configured but remain pending until the first public release.
+
+| Channel | Command |
+| --- | --- |
+| Cargo | `cargo install qrab` |
+| cargo-binstall | `cargo binstall qrab` |
+| npm / Bun | `npm i -g qrab`<br>`npx qrab`<br>`bunx qrab` |
+| Homebrew | `brew install --formula https://github.com/inmzhang/qrab/releases/latest/download/qrab.rb` |
+| Shell | `curl --proto '=https' --tlsv1.2 -LsSf https://github.com/inmzhang/qrab/releases/latest/download/qrab-installer.sh \| sh` |
+| PowerShell | `powershell -ExecutionPolicy Bypass -c "irm https://github.com/inmzhang/qrab/releases/latest/download/qrab-installer.ps1 \| iex"` |
+
+To install from a local checkout before then:
 
 ```sh
 cargo install --path . --locked

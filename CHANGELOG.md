@@ -5,6 +5,7 @@ All notable changes are documented here. This project follows Semantic Versionin
 ## [Unreleased]
 
 - Adopted Logos, Clap, Miette, and supporting test/build tooling; the measured stripped release binary grew from 756,952 B to 1,570,280 B (+107%).
+- Added release-plz versioning and cargo-dist delivery through crates.io, cargo-binstall, npm/Bun, Homebrew, shell, and PowerShell across six binary targets.
 
 ## [0.1.0] - 2026-09-01
 

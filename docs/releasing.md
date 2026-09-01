@@ -1,19 +1,36 @@
 # Releasing
 
-1. Update `Cargo.toml` and `CHANGELOG.md`, then commit with a clean worktree.
-2. Run `just release-check`. This formats, lints, runs all unit and 238-PDF artifact checks, builds the locked release binary, and verifies the source package.
-3. Create and push a tag matching the crate version exactly, for example `v0.1.0`.
-4. The release workflow rechecks the tag/version match, builds the Linux archive, writes its SHA-256 checksum, and attaches both files to the GitHub release.
+## Automated flow
 
-The archive expands to a versioned directory containing `qrab`, `completions/`, and `man/`. From that directory, a per-user Bash installation is:
+1. Use conventional commit subjects and merge changes into `main`. Release-plz maintains a release PR containing the next version and changelog.
+2. Run `just release-check`, review the release PR, and merge it with a clean CI run.
+3. With publishing enabled, release-plz publishes the crate and creates the matching `vX.Y.Z` tag. Cargo-dist reacts to that tag, verifies it matches the crate version, builds all configured targets and installers, and creates the GitHub release.
+4. After the GitHub release succeeds, cargo-dist publishes the generated npm package.
+
+Cargo-dist produces archives for Linux GNU on x86-64 and Arm64, Linux musl on x86-64, macOS on Intel and Apple Silicon, and Windows MSVC on x86-64. Every archive includes the generated completions and man pages in `assets/`.
+
+## Publish gate
+
+The repository variable `ENABLE_PUBLISHING` is currently `false`. The release-plz release job—including `cargo publish` and tag creation—does not run until it is set to `true`; release PR generation remains active.
+
+Before opening the gate:
+
+1. Make the repository public.
+2. Configure crates.io trusted publishing for `inmzhang/qrab` and `.github/workflows/release-plz.yml`.
+3. Add an npm publish access token as the GitHub Actions secret `NPM_TOKEN`.
+4. Set the gate with `gh variable set ENABLE_PUBLISHING --body true`, then merge the release-plz PR.
+
+No Homebrew tap is required: the generated formula is attached to each GitHub release and can be installed directly by URL. Add a tap and cargo-dist Homebrew publisher only if a shorter `brew install owner/tap/qrab` command becomes worthwhile.
+
+## Manual archive installation
+
+Each archive expands to `qrab-<target>/`, containing the executable, `assets/`, the README, changelog, and license. From an extracted Unix archive, a per-user Bash installation is:
 
 ```sh
 mkdir -p ~/.local/bin ~/.local/share/man/man1 ~/.local/share/bash-completion/completions
 install -m 0755 qrab ~/.local/bin/qrab
-install -m 0644 man/*.1 ~/.local/share/man/man1/
-install -m 0644 completions/qrab.bash ~/.local/share/bash-completion/completions/qrab
+install -m 0644 assets/*.1 ~/.local/share/man/man1/
+install -m 0644 assets/qrab.bash ~/.local/share/bash-completion/completions/qrab
 ```
 
-For another shell, copy its file from `completions/` to that shell's user completion directory.
-
-Publishing a tag is intentionally a maintainer action; local verification never pushes or publishes anything.
+For another shell, copy its file from `assets/` to that shell's user completion directory. Checksums are published alongside every archive. Local verification never pushes a tag or publishes a package.
