@@ -4,6 +4,7 @@ use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+/// Expanded source text plus original file/line mappings.
 #[derive(Debug, Clone)]
 pub struct LoadedSource {
     text: String,
@@ -11,10 +12,12 @@ pub struct LoadedSource {
 }
 
 impl LoadedSource {
+    /// Returns the expanded source accepted by [`crate::parse`] or [`crate::compile`].
     pub fn as_str(&self) -> &str {
         &self.text
     }
 
+    /// Maps a one-based expanded line to its original path and line number.
     pub fn origin(&self, expanded_line: usize) -> Option<(&Path, usize)> {
         self.origins
             .get(expanded_line.checked_sub(1)?)
@@ -22,6 +25,7 @@ impl LoadedSource {
     }
 }
 
+/// An I/O, syntax, or cycle error encountered while expanding imports.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LoadError {
     message: String,
@@ -43,6 +47,9 @@ impl fmt::Display for LoadError {
 
 impl Error for LoadError {}
 
+/// Loads a `.qrab` file and recursively expands file-scope relative imports.
+///
+/// Each canonical path is loaded once, and import cycles are rejected.
 pub fn load_source(path: impl AsRef<Path>) -> Result<LoadedSource, LoadError> {
     let mut loaded = LoadedSource {
         text: String::new(),

@@ -9,6 +9,7 @@ documentation = "https://docs.rs/qrab"
 rust-version = "1.95"
 keywords = ["quantum", "circuit", "tikz", "typst", "compiler"]
 categories = ["command-line-utilities", "science", "visualization"]
+exclude = ["tests/qpic/**", "tests/qpic-manual/**"]
 
 [dependencies]
 

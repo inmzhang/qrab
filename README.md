@@ -32,6 +32,10 @@ typst compile examples/teleportation.typ target/teleportation-typst.pdf
 
 Tectonic is only needed to turn the generated TikZ source into a PDF. Typst 0.15.1 downloads Quill 0.8.0 on its first build. Neither renderer is required for `qrab check` or source generation.
 
+## Library API
+
+`qrab::compile` is the shortest in-memory API; `load_source` expands file imports, while `parse` and `render` expose the checked AST pipeline separately. Public enums are non-exhaustive. AST structs intentionally keep public fields so callers can build or adjust circuits; before 1.0, minor releases may change those fields.
+
 The language supports typed values and styles, functions and relative imports, checked wire arrays/ranges, repetition and marked reverse replay, safe parallel and explicit overlay blocks, lifecycle changes, persistent permutation, annotations, hyperlinks, and target-isolated raw hooks. Declaration-only modules use `import "relative/path.qrab"`; imports resolve relative to each source file, load once, and reject cycles. See [the import example](examples/imports.qrab).
 
 ## Development

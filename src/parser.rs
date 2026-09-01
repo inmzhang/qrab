@@ -7,9 +7,12 @@ use crate::ast::{
     NoteSide, Operation, OperationKind, Orientation, Shape, Span, Style, Wire, WireKind,
 };
 
+/// A source-located lexer, parser, or semantic diagnostic.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Diagnostic {
+    /// Human-readable explanation of the error.
     pub message: String,
+    /// One-based source location where the error was detected.
     pub span: Span,
 }
 
@@ -61,6 +64,9 @@ struct Token {
     span: Span,
 }
 
+/// Parses one expanded `.qrab` source string into a checked circuit.
+///
+/// Use [`crate::load_source`] first when the source contains imports.
 pub fn parse(source: &str) -> Result<Circuit, Diagnostic> {
     Parser::new(lex(source)?).parse_circuit()
 }

@@ -64,12 +64,14 @@ impl Default for Layout {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Orientation {
     Horizontal,
     Vertical,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum WireKind {
     Quantum,
     Classical,
@@ -107,6 +109,7 @@ pub struct Style {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Shape {
     Box,
     Circle,
@@ -115,12 +118,14 @@ pub enum Shape {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum MeasurementShape {
     D,
     Tag,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum BraceSide {
     Left,
     Right,
@@ -128,12 +133,14 @@ pub enum BraceSide {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum NoteSide {
     Above,
     Below,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum OperationKind {
     Gate {
         label: String,

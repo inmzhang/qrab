@@ -20,12 +20,17 @@ macro_rules! emit {
     };
 }
 
+/// Output format produced by [`render`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Target {
+    /// A standalone LaTeX document using TikZ.
     Latex,
+    /// A standalone Typst document using Quill.
     Typst,
 }
 
+/// Renders a parsed circuit as a standalone document for `target`.
 pub fn render(circuit: &Circuit, target: Target) -> String {
     match target {
         Target::Latex => render_latex(circuit),
@@ -491,7 +496,7 @@ fn render_latex(circuit: &Circuit) -> String {
                 }
             }
             OperationKind::Touch { .. } => {
-                if *operation.style != Style::default() {
+                if has_line_style(operation.style) {
                     let (first, last) = (operation.first, operation.last);
                     let top = -(first as f32) * circuit.layout.wire_gap + 0.35;
                     let bottom = -(last as f32) * circuit.layout.wire_gap - 0.35;
@@ -819,6 +824,10 @@ fn merged_line_style(base: &Style, overlay: &Style) -> Style {
         opacity: overlay.opacity.or(base.opacity),
         ..Style::default()
     }
+}
+
+fn has_line_style(style: &Style) -> bool {
+    style.stroke.is_some() || style.dashed || style.opacity.is_some()
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -1641,7 +1650,7 @@ fn render_typst(circuit: &Circuit) -> String {
                 }
             }
             OperationKind::Touch { .. } => {
-                if style != Style::default() {
+                if has_line_style(&style) {
                     let (first, last) = (operation.first, operation.last);
                     emit!(
                         output,
