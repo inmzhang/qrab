@@ -93,7 +93,7 @@ fn compile_command(arguments: &[String]) -> Result<(), String> {
 
     let input = input.ok_or_else(|| usage_error("compile needs an input file"))?;
     if target == OutputTarget::All && output.is_some() {
-        return Err(usage_error("-o cannot be used with --target all"));
+        return Err(usage_error("-o requires --target latex or --target typst"));
     }
     let source = load_source(&input).map_err(|error| error.to_string())?;
 
@@ -175,15 +175,30 @@ mod tests {
 
     #[test]
     fn usage_is_only_attached_to_argument_errors() {
+        let missing = std::env::temp_dir().join(format!(
+            "qrab-missing-source-{}-{}.qrab",
+            std::process::id(),
+            line!()
+        ));
         assert!(
             run(Vec::new())
                 .expect_err("missing command")
                 .contains(USAGE)
         );
         assert!(
-            !run(vec!["check".into(), "Cargo.toml".into()])
-                .expect_err("Cargo.toml is not qrab source")
+            !run(vec!["check".into(), missing.to_string_lossy().into_owned()])
+                .expect_err("missing source must fail")
                 .contains(USAGE)
+        );
+        assert!(
+            run(vec![
+                "compile".into(),
+                "x.qrab".into(),
+                "-o".into(),
+                "x.tex".into()
+            ])
+            .expect_err("single output needs an explicit target")
+            .starts_with("-o requires --target latex or --target typst")
         );
     }
 }

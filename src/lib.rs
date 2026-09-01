@@ -1,3 +1,5 @@
+#![warn(missing_docs)]
+
 //! Compiler library for the human-readable `.qrab` quantum-circuit language.
 //!
 //! Use [`compile`] for in-memory source, or [`load_source`] before [`compile`]

@@ -9,6 +9,7 @@ use crate::ast::{
 
 /// A source-located lexer, parser, or semantic diagnostic.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct Diagnostic {
     /// Human-readable explanation of the error.
     pub message: String,
@@ -448,14 +449,14 @@ impl Parser {
                     .collect::<Vec<_>>()
             };
 
-            let defaulted = match &mut operation.kind {
+            let defaulted_empty = match &mut operation.kind {
                 OperationKind::Endpoint { wires, start, .. } if wires.is_empty() => {
                     *wires = if *start {
                         inactive_wires()
                     } else {
                         active_wires()
                     };
-                    true
+                    wires.is_empty()
                 }
                 OperationKind::Barrier { wires }
                 | OperationKind::Label { wires, .. }
@@ -468,16 +469,11 @@ impl Parser {
                     if wires.is_empty() =>
                 {
                     *wires = active_wires();
-                    true
+                    wires.is_empty()
                 }
                 _ => false,
             };
-            if defaulted
-                && operation
-                    .kind
-                    .wire_selection()
-                    .is_some_and(<[usize]>::is_empty)
-            {
+            if defaulted_empty {
                 return Err(Diagnostic::new(
                     "the targetless statement has no applicable active wires",
                     operation.span,

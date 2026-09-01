@@ -1,50 +1,90 @@
+use std::borrow::Cow;
+
+/// A one-based location in expanded `.qrab` source.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct Span {
+    /// One-based line number.
     pub line: usize,
+    /// One-based column number.
     pub column: usize,
 }
 
+/// A parsed and semantically checked quantum circuit.
 #[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
 pub struct Circuit {
+    /// Circuit identifier.
     pub name: String,
+    /// Global layout settings.
     pub layout: Layout,
+    /// Wires in declaration order.
     pub wires: Vec<Wire>,
+    /// Lowered operations in source order.
     pub operations: Vec<Operation>,
+    /// Mark-delimited visual groups.
     pub groups: Vec<Group>,
+    /// Explicit backend-only snippets.
     pub escapes: BackendEscapes,
 }
 
+/// Raw snippets isolated by output backend.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct BackendEscapes {
+    /// LaTeX-only snippets.
     pub latex: EscapeBlock,
+    /// Typst-only snippets.
     pub typst: EscapeBlock,
 }
 
+/// Raw snippets inserted at defined points in one backend document.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct EscapeBlock {
+    /// Snippets inserted with imports or package declarations.
     pub preamble: Vec<String>,
+    /// Snippets inserted immediately before the rendered circuit.
     pub before: Vec<String>,
+    /// Snippets inserted immediately after the rendered circuit.
     pub after: Vec<String>,
 }
 
+/// A labeled region spanning a half-open operation range.
 #[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
 pub struct Group {
+    /// Displayed group label.
     pub label: String,
+    /// Selected wire indices, or all wires when empty.
     pub wires: Vec<usize>,
+    /// First operation index included in the group.
     pub start: usize,
+    /// Operation index immediately after the group.
     pub end: usize,
+    /// Group border and fill style.
     pub style: Style,
 }
 
+/// Global circuit geometry and page appearance.
 #[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
 pub struct Layout {
+    /// Direction in which operations advance.
     pub orientation: Orientation,
+    /// Overall render scale.
     pub scale: f32,
+    /// Abstract gap between operation columns.
     pub column_gap: f32,
+    /// Abstract gap between wire rows.
     pub wire_gap: f32,
+    /// Default gate size in points.
     pub gate_size: f32,
+    /// Permutation bend radius in points.
     pub corner_radius: f32,
+    /// Note text width in points.
     pub comment_width: f32,
+    /// Portable named or hexadecimal background color.
     pub background: String,
 }
 
@@ -63,184 +103,250 @@ impl Default for Layout {
     }
 }
 
+/// Direction in which operation columns advance.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[non_exhaustive]
 pub enum Orientation {
+    /// Wires run from left to right.
     Horizontal,
+    /// Wires run from top to bottom.
     Vertical,
 }
 
+/// Visual and semantic state of a wire segment.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[non_exhaustive]
 pub enum WireKind {
+    /// A single quantum wire.
     Quantum,
+    /// A doubled classical wire.
     Classical,
+    /// No visible wire.
     Hidden,
 }
 
+/// One declared circuit wire.
 #[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
 pub struct Wire {
+    /// Unique source-level wire name.
     pub name: String,
+    /// Initial wire kind.
     pub kind: WireKind,
+    /// Whether the row represents an ellipsis gap.
     pub ellipsis: bool,
+    /// Optional left endpoint label.
     pub input: Option<String>,
+    /// Optional right endpoint label.
     pub output: Option<String>,
+    /// Persistent line style.
     pub style: Style,
 }
 
+/// One scheduled visual operation before backend rendering.
 #[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
 pub struct Operation {
+    /// Operation data.
     pub kind: OperationKind,
+    /// Source location used for diagnostics.
     pub span: Span,
+    /// Portable visual style.
     pub style: Style,
+    /// Identifier shared by operations forced into one overlay column.
     pub overlay: Option<usize>,
 }
 
+/// Portable visual properties shared by circuit elements.
 #[derive(Debug, Clone, Default, PartialEq)]
+#[non_exhaustive]
 pub struct Style {
+    /// Stroke or text color.
     pub stroke: Option<String>,
+    /// Interior or label-background color.
     pub fill: Option<String>,
+    /// Absolute HTTP(S) or mailto hyperlink.
     pub link: Option<String>,
+    /// Requested width in points.
     pub width: Option<f32>,
+    /// Requested height in points.
     pub height: Option<f32>,
+    /// Requested geometric shape.
     pub shape: Option<Shape>,
+    /// Whether supported strokes are dashed.
     pub dashed: bool,
+    /// Opacity from zero through one.
     pub opacity: Option<f32>,
 }
 
+/// Geometric shape requested for a supported visual element.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[non_exhaustive]
 pub enum Shape {
+    /// A rectangular box.
     Box,
+    /// A circle.
     Circle,
+    /// An ellipse.
     Ellipse,
+    /// No visible border or box.
     None,
 }
 
+/// Shape used for a labeled measurement result.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[non_exhaustive]
 pub enum MeasurementShape {
+    /// A rounded D-shaped marker.
     D,
+    /// A pointed tag marker.
     Tag,
 }
 
+/// Side on which a brace is drawn.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[non_exhaustive]
 pub enum BraceSide {
+    /// Left side only.
     Left,
+    /// Right side only.
     Right,
+    /// Both sides.
     Both,
 }
 
+/// Vertical placement of a note.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[non_exhaustive]
 pub enum NoteSide {
+    /// Above the selected wires.
     Above,
+    /// Below the selected wires.
     Below,
 }
 
+/// Semantic operation rendered into one circuit column.
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[non_exhaustive]
 pub enum OperationKind {
+    /// A named gate with one or more targets and optional controls.
     Gate {
+        /// Displayed gate label.
         label: String,
+        /// Target wire indices.
         targets: Vec<usize>,
+        /// Positive or negative controls.
         controls: Vec<Control>,
     },
+    /// A measurement that changes each target to a classical wire.
     Measure {
+        /// Measured wire indices.
         targets: Vec<usize>,
+        /// Optional result-marker label.
         label: Option<String>,
+        /// Marker shape used when a label is present.
         shape: MeasurementShape,
     },
+    /// A visual swap between two wires.
     Swap {
+        /// First wire index.
         left: usize,
+        /// Second wire index.
         right: usize,
     },
+    /// A dashed barrier across selected wires.
     Barrier {
+        /// Selected wire indices, or all wires when empty.
         wires: Vec<usize>,
     },
+    /// A persistent wire-kind change with an optional value marker.
     WireChange {
+        /// Changed wire indices.
         wires: Vec<usize>,
+        /// New wire kind.
         kind: WireKind,
+        /// Optional known-value label.
         label: Option<String>,
     },
+    /// A wire lifecycle start or end tick.
     Endpoint {
+        /// Selected wire indices, or all wires when empty.
         wires: Vec<usize>,
+        /// `true` for a start and `false` for an end.
         start: bool,
+        /// Optional endpoint label.
         label: Option<String>,
     },
+    /// Text centered over a selected wire span.
     Label {
+        /// Selected wire indices, or all wires when empty.
         wires: Vec<usize>,
+        /// Displayed text.
         label: String,
+        /// Optional surrounding brace placement.
         brace: Option<BraceSide>,
     },
+    /// A bundle-count slash on one wire.
     Bundle {
+        /// Wire index.
         wire: usize,
+        /// Displayed bundle count.
         label: String,
     },
+    /// A persistent visual reordering of selected wires.
     Permute {
+        /// Wire indices listed in their destination-row order.
         wires: Vec<usize>,
     },
+    /// Invisible space reserved on selected wires.
     Phantom {
+        /// Selected wire indices, or all wires when empty.
         wires: Vec<usize>,
     },
+    /// An alignment-only operation, optionally drawn as a slice.
     Touch {
+        /// Selected wire indices, or all wires when empty.
         wires: Vec<usize>,
     },
+    /// Per-wire labels at one column.
     WireLabels {
+        /// Selected wire indices, or all wires when empty.
         wires: Vec<usize>,
+        /// One repeated label or one label per selected wire.
         labels: Vec<String>,
     },
+    /// A brace and label spanning selected wires.
     Brace {
+        /// Selected wire indices, or all wires when empty.
         wires: Vec<usize>,
+        /// Displayed brace label.
         label: String,
+        /// Brace placement.
         side: BraceSide,
     },
+    /// Free text above or below selected wires.
     Note {
+        /// Selected wire indices, or all wires when empty.
         wires: Vec<usize>,
+        /// Displayed note text.
         text: String,
+        /// Note placement.
         side: NoteSide,
     },
+    /// A dashed stage separator across selected wires.
     Cut {
+        /// Selected wire indices, or all wires when empty.
         wires: Vec<usize>,
+        /// Optional separator label.
         label: Option<String>,
     },
 }
 
+/// One positive or negative gate control.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct Control {
+    /// Control wire index.
     pub wire: usize,
+    /// `true` for a closed control and `false` for an open control.
     pub positive: bool,
 }
 
 impl OperationKind {
-    pub(crate) fn wire_selection(&self) -> Option<&[usize]> {
-        match self {
-            Self::Barrier { wires }
-            | Self::WireChange { wires, .. }
-            | Self::Endpoint { wires, .. }
-            | Self::Label { wires, .. }
-            | Self::Permute { wires }
-            | Self::Phantom { wires }
-            | Self::Touch { wires }
-            | Self::WireLabels { wires, .. }
-            | Self::Brace { wires, .. }
-            | Self::Note { wires, .. }
-            | Self::Cut { wires, .. } => Some(wires),
-            Self::Gate { .. } | Self::Measure { .. } | Self::Swap { .. } | Self::Bundle { .. } => {
-                None
-            }
-        }
-    }
-
     pub(crate) fn occupied_wires(&self, wire_count: usize) -> Cow<'_, [usize]> {
-        if let Some(wires) = self.wire_selection() {
-            return if wires.is_empty() {
-                Cow::Owned((0..wire_count).collect())
-            } else {
-                Cow::Borrowed(wires)
-            };
-        }
         match self {
             Self::Gate {
                 targets, controls, ..
@@ -256,8 +362,24 @@ impl OperationKind {
             ),
             Self::Measure { targets, .. } => Cow::Borrowed(targets),
             Self::Swap { left, right } => Cow::Owned(vec![*left, *right]),
+            Self::Barrier { wires }
+            | Self::WireChange { wires, .. }
+            | Self::Endpoint { wires, .. }
+            | Self::Label { wires, .. }
+            | Self::Permute { wires }
+            | Self::Phantom { wires }
+            | Self::Touch { wires }
+            | Self::WireLabels { wires, .. }
+            | Self::Brace { wires, .. }
+            | Self::Note { wires, .. }
+            | Self::Cut { wires, .. } => {
+                if wires.is_empty() {
+                    Cow::Owned((0..wire_count).collect())
+                } else {
+                    Cow::Borrowed(wires)
+                }
+            }
             Self::Bundle { wire, .. } => Cow::Owned(vec![*wire]),
-            _ => unreachable!("wire selections returned above"),
         }
     }
 
@@ -304,4 +426,3 @@ impl OperationKind {
         operation
     }
 }
-use std::borrow::Cow;

@@ -34,7 +34,7 @@ Tectonic is only needed to turn the generated TikZ source into a PDF. Typst 0.15
 
 ## Library API
 
-`qrab::compile` is the shortest in-memory API; `load_source` expands file imports, while `parse` and `render` expose the checked AST pipeline separately. Public enums are non-exhaustive. AST structs intentionally keep public fields so callers can build or adjust circuits; before 1.0, minor releases may change those fields.
+`qrab::compile` is the shortest in-memory API; `load_source` expands file imports, while `parse` and `render` expose the checked AST pipeline separately. Public AST structs are non-exhaustive and should be obtained through `parse`, with public fields available for adjustments. Enums remain exhaustive so model additions break downstream matches at compile time; before 1.0, minor releases may make such changes.
 
 The language supports typed values and styles, functions and relative imports, checked wire arrays/ranges, repetition and marked reverse replay, safe parallel and explicit overlay blocks, lifecycle changes, persistent permutation, annotations, hyperlinks, and target-isolated raw hooks. Declaration-only modules use `import "relative/path.qrab"`; imports resolve relative to each source file, load once, and reject cycles. See [the import example](examples/imports.qrab).
 
@@ -47,7 +47,7 @@ just install-hooks
 just ci
 ```
 
-The artifact suite requires all 44 translated qpic golden tests and all 64 documented examples, then compiles those plus 11 focused qrab fixtures through both Tectonic and Typst/Quill (238 PDFs total). Twelve tolerant page-geometry baselines guard representative dense, vertical, annotated, overlaid, and imported layouts without brittle pixel snapshots.
+The artifact suite requires all 44 translated qpic golden tests and all 64 documented examples, then compiles those plus 11 focused qrab fixtures through both Tectonic and Typst/Quill (238 PDFs total). Fourteen tolerant page-geometry baselines guard representative dense, vertical, annotated, overlaid, imported, lifecycle, and colored-background layouts without brittle pixel snapshots.
 
 The frontend reference is in [docs/language.md](docs/language.md). The phased parity plan and its evidence are tracked in [docs/qpic-coverage.md](docs/qpic-coverage.md) and [docs/roadmap.md](docs/roadmap.md); maintainers can follow [docs/releasing.md](docs/releasing.md) for a verified tag release.
 

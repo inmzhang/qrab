@@ -22,7 +22,6 @@ macro_rules! emit {
 
 /// Output format produced by [`render`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[non_exhaustive]
 pub enum Target {
     /// A standalone LaTeX document using TikZ.
     Latex,
@@ -44,8 +43,17 @@ struct Scheduled<'a> {
     style: &'a Style,
     column: usize,
     positions: Vec<usize>,
+    permutation: Option<Vec<usize>>,
     first: usize,
     last: usize,
+}
+
+impl Scheduled<'_> {
+    fn permuted_row(&self, wire: usize) -> usize {
+        self.permutation
+            .as_deref()
+            .expect("permutation operation has a row mapping")[self.positions[wire]]
+    }
 }
 
 fn schedule(circuit: &Circuit) -> (Vec<Scheduled<'_>>, Vec<usize>) {
@@ -101,26 +109,31 @@ fn schedule(circuit: &Circuit) -> (Vec<Scheduled<'_>>, Vec<usize>) {
             }
             column
         };
-        scheduled.push(Scheduled {
+        let scheduled_operation = Scheduled {
             kind: &operation.kind,
             style: &operation.style,
             column,
             // ponytail: snapshots keep render reads simple; intern if large permuted circuits
             // make this clone measurable.
             positions: positions.clone(),
+            permutation: if let OperationKind::Permute { wires } = &operation.kind {
+                Some(permutation_mapping(wires, &positions))
+            } else {
+                None
+            },
             first,
             last,
-        });
-        if let OperationKind::Permute { wires } = &operation.kind {
-            let mapping = permutation_mapping(wires, &positions);
+        };
+        if let Some(mapping) = &scheduled_operation.permutation {
             let previous_order = order.clone();
-            for (source, destination) in mapping.into_iter().enumerate() {
+            for (source, destination) in mapping.iter().copied().enumerate() {
                 order[destination] = previous_order[source];
             }
             for (row, wire) in order.iter().enumerate() {
                 positions[*wire] = row;
             }
         }
+        scheduled.push(scheduled_operation);
     }
     delay_starts(circuit, &mut scheduled);
     (scheduled, positions)
@@ -219,7 +232,7 @@ fn group_bounds(
             let current = operation.positions[*wire];
             let moved = match operation.kind {
                 OperationKind::Permute { wires: permutation } if permutation.contains(wire) => {
-                    permuted_row(*wire, permutation, &operation.positions)
+                    operation.permuted_row(*wire)
                 }
                 _ => current,
             };
@@ -485,14 +498,16 @@ fn render_latex(circuit: &Circuit) -> String {
             }
             OperationKind::Permute { .. } => {}
             OperationKind::Phantom { wires } => {
-                for wire in expanded_wires(wires, circuit.wires.len()) {
-                    let y = -(operation.positions[wire] as f32) * circuit.layout.wire_gap;
-                    emit!(
-                        output,
-                        "  \\node[inner sep=0pt,minimum width={:.3}pt,minimum height={:.3}pt] at ({x:.3},{y:.3}) {{}};",
-                        operation.style.width.unwrap_or(0.0),
-                        operation.style.height.unwrap_or(0.0)
-                    );
+                if operation.style.width.is_some() || operation.style.height.is_some() {
+                    for wire in expanded_wires(wires, circuit.wires.len()) {
+                        let y = -(operation.positions[wire] as f32) * circuit.layout.wire_gap;
+                        emit!(
+                            output,
+                            "  \\node[inner sep=0pt,minimum width={:.3}pt,minimum height={:.3}pt] at ({x:.3},{y:.3}) {{}};",
+                            operation.style.width.unwrap_or(0.0),
+                            operation.style.height.unwrap_or(0.0)
+                        );
+                    }
                 }
             }
             OperationKind::Touch { .. } => {
@@ -708,7 +723,7 @@ fn draw_latex_wire(
                 .width
                 .map_or(0.45, |width| width / (2.0 * POINTS_PER_CENTIMETER))
                 .min(circuit.layout.column_gap * 0.45);
-            let next_row = permuted_row(wire_index, wires, &operation.positions);
+            let next_row = operation.permuted_row(wire_index);
             let source_y = -(row as f32) * circuit.layout.wire_gap;
             let destination_y = -(next_row as f32) * circuit.layout.wire_gap;
             draw_wire_segment(output, kind, start_x, x - half_width, source_y, &wire.style);
@@ -755,10 +770,6 @@ fn draw_latex_wire(
             latex_text(label)
         );
     }
-}
-
-fn permuted_row(wire: usize, wires: &[usize], positions: &[usize]) -> usize {
-    permutation_mapping(wires, positions)[positions[wire]]
 }
 
 fn permutation_mapping(wires: &[usize], positions: &[usize]) -> Vec<usize> {
@@ -1272,27 +1283,6 @@ fn latex_label_option_values(style: &Style) -> Vec<String> {
     if let Some(fill) = &style.fill {
         options.push(format!("fill={}", latex_color(fill)));
     }
-    match style.shape {
-        Some(Shape::Box) => options.push(format!(
-            "draw={}",
-            latex_color(style.stroke.as_deref().unwrap_or("black"))
-        )),
-        Some(Shape::Circle) => {
-            options.push("circle".into());
-            options.push(format!(
-                "draw={}",
-                latex_color(style.stroke.as_deref().unwrap_or("black"))
-            ));
-        }
-        Some(Shape::Ellipse) => {
-            options.push("ellipse".into());
-            options.push(format!(
-                "draw={}",
-                latex_color(style.stroke.as_deref().unwrap_or("black"))
-            ));
-        }
-        Some(Shape::None) | None => {}
-    }
     push_latex_common(&mut options, style);
     options
 }
@@ -1596,14 +1586,17 @@ fn render_typst(circuit: &Circuit) -> String {
                     operation.positions[*wire]
                 );
             }
-            OperationKind::Permute { wires } => {
+            OperationKind::Permute { .. } => {
                 let (first, last) = (operation.first, operation.last);
                 let mut row_wires = vec![0; circuit.wires.len()];
                 for (wire, row) in operation.positions.iter().enumerate() {
                     row_wires[*row] = wire;
                 }
                 let span_wires = &row_wires[first..=last];
-                let mapping = permutation_mapping(wires, &operation.positions)[first..=last]
+                let mapping = operation
+                    .permutation
+                    .as_deref()
+                    .expect("permutation operation has a row mapping")[first..=last]
                     .iter()
                     .map(|destination| destination - first)
                     .collect::<Vec<_>>();
@@ -1798,7 +1791,7 @@ fn write_typst_wire_streams(
             }
             for wire in &row_wires[operation.first..=operation.last] {
                 let row = if wires.contains(wire) {
-                    permuted_row(*wire, wires, &operation.positions)
+                    operation.permuted_row(*wire)
                 } else {
                     operation.positions[*wire]
                 };
@@ -2350,7 +2343,8 @@ mod tests {
                 circuit portable {
                   qubit q
                   space q with width: 40, height: 12
-                  label "stage" on q with stroke: blue, fill: yellow, opacity: 0.5, link: "https://example.com/stage"
+                  space q
+                  label "stage" on q with stroke: blue, fill: yellow, shape: box, opacity: 0.5, link: "https://example.com/stage"
                   end q as "done" with stroke: red, opacity: 0.25
                 }
             "#,
@@ -2360,12 +2354,15 @@ mod tests {
         let typst = render_typst(&circuit);
 
         assert!(latex.contains("minimum width=40.000pt,minimum height=12.000pt"));
+        assert!(!latex.contains("minimum width=0.000pt"));
         assert!(latex.contains("text=blue,fill=yellow,opacity=0.500"));
+        assert!(!latex.contains("draw=blue"));
         assert!(latex.contains("\\href{https://example.com/stage}"));
         assert!(typst.contains("quill.phantom(x: 1, y: 0, width: 40.000pt, height: 12.000pt)"));
         assert!(typst.contains(
             "link(\"https://example.com/stage\", text(fill: blue.transparentize(50.000%), \"stage\"))"
         ));
+        assert!(!typst.contains("stroke: blue"));
         assert!(typst.contains("line(start: (0pt, -3.7pt), end: (0pt, 3.7pt)"));
         assert!(typst.contains("pos: right"));
     }
@@ -2407,6 +2404,10 @@ mod tests {
         .expect("valid permutation");
         let (scheduled, final_positions) = schedule(&circuit);
 
+        assert_eq!(
+            scheduled[0].permutation.as_deref(),
+            Some([1, 2, 0].as_slice())
+        );
         assert_eq!(scheduled[1].positions[2], 0);
         assert_eq!(final_positions, vec![1, 2, 0]);
         let typst = render_typst(&circuit);

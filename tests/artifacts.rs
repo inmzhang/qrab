@@ -131,6 +131,8 @@ const PAGE_SIZE_BASELINES: &[(&str, f32, f32)] = &[
     ("qpic-Steane_NOOP-typst", 593.74, 416.62),
     ("imports", 232.33, 60.61),
     ("imports-typst", 166.125, 65.66),
+    ("styling", 161.63, 436.02),
+    ("qpic-start_and_end-typst", 151.89, 119.44),
 ];
 
 #[test]
