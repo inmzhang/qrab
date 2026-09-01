@@ -40,8 +40,8 @@ installed.
   opacity, and hyperlinks — all of which mean the same thing in every backend.
 - **Diagnostics that point at your source.** Errors carry a line, a column, a
   labelled span, and a suggestion, and one run reports more than one error.
-- **Escape hatches.** `escape latex { … }` and `escape typst { … }` inject raw
-  code into exactly one backend.
+- **Escape hatches.** `backend latex { … }` and `backend typst { … }` inject
+  raw code into exactly one backend.
 
 ## Design philosophy
 
@@ -56,7 +56,7 @@ that compiles is a circuit every backend can draw.
 
 **Portable styling or none at all.** Style options exist only where all
 backends can honor them. Anything genuinely backend-specific goes in an
-`escape` block, where it is visibly quarantined instead of silently ignored
+`backend` block, where it is visibly quarantined instead of silently ignored
 somewhere else.
 
 **Errors are part of the language.** Every diagnostic knows where it came
@@ -261,8 +261,15 @@ releases may make such changes.
 
 ## Documentation
 
-The frontend reference is [docs/language.md](docs/language.md). Parity with
-qpic and its evidence are tracked in
+**[The qrab Manual](docs/manual.pdf)** is the place to start: 42 pages covering
+the language, the compiler, and the rendering model, with a worked, rendered
+example for every construct. It is typeset from
+[docs/manual.typ](docs/manual.typ), and every snippet in it is a real file under
+[docs/manual/examples](docs/manual/examples) that `qrab` itself renders, so the
+code and the picture beside it can never drift apart.
+
+The condensed frontend reference is [docs/language.md](docs/language.md). Parity
+with qpic and its evidence are tracked in
 [docs/qpic-coverage.md](docs/qpic-coverage.md), and maintainers can follow
 [docs/releasing.md](docs/releasing.md).
 
@@ -275,6 +282,10 @@ Install stable Rust, Tectonic, Typst 0.15.1, Poppler (`pdfinfo`),
 just install-hooks
 just ci
 ```
+
+`just gen-assets` regenerates the committed CLI assets and diagrams; `just
+manual` does that and then typesets [docs/manual.pdf](docs/manual.pdf). CI
+fails on any drift in the generated files.
 
 The artifact suite compiles all 44 translated qpic golden tests, all 64
 documented examples, and 11 focused fixtures through both Tectonic and
