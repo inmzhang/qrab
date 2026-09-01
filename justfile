@@ -7,10 +7,10 @@ fmt-check:
     cargo fmt --all -- --check
 
 lint:
-    cargo clippy --all-targets --all-features -- -D warnings
+    cargo clippy --workspace --all-targets --all-features -- -D warnings
 
 test:
-    cargo nextest run --all-targets
+    cargo nextest run --workspace --all-targets
     cargo test --doc
 
 test-artifacts:
@@ -29,6 +29,14 @@ release-check: ci
 
 gen-assets:
     cargo run --locked --quiet -p xtask
+
+# Build the WebAssembly module the playground loads.
+playground:
+    wasm-pack build playground --target web --out-dir www/pkg --no-typescript
+
+# Serve the playground at http://localhost:8080 after building it.
+playground-serve: playground
+    python3 -m http.server 8080 --directory playground/www
 
 install-local:
     cargo install --path . --locked

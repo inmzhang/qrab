@@ -1,0 +1,28 @@
+[package]
+name = "qrab-playground"
+version = "0.0.0"
+edition = "2024"
+publish = false
+description = "WebAssembly bindings behind the qrab playground"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+qrab = { path = ".." }
+wasm-bindgen = "0.2.108"
+
+[lints]
+workspace = true
+
+# wasm-pack ships an older wasm-opt than the features rustc now emits, so the
+# post-processing pass has to be told which proposals to accept.
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = [
+    "-Oz",
+    "--enable-bulk-memory",
+    "--enable-nontrapping-float-to-int",
+    "--enable-sign-ext",
+    "--enable-mutable-globals",
+    "--enable-reference-types",
+]

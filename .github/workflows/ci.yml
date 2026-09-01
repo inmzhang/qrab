@@ -35,6 +35,18 @@ jobs:
       - run: cargo run --locked --quiet -p xtask
       - run: git diff --exit-code -- assets
 
+  playground:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-pack
+      - run: wasm-pack build playground --target web --out-dir www/pkg --no-typescript
+
   msrv:
     runs-on: ubuntu-latest
     steps:
@@ -42,7 +54,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: 1.95.0
-      - run: cargo check --all-targets --locked
+      - run: cargo check --workspace --all-targets --locked
 
   cross-target:
     if: github.event_name == 'pull_request'
@@ -78,7 +90,7 @@ jobs:
       - run: |
           sudo apt-get update
           sudo apt-get install -y poppler-utils
-      - run: cargo clippy --all-targets --all-features -- -D warnings
-      - run: cargo test --all-targets
+      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+      - run: cargo test --workspace --all-targets
       - run: cargo test --doc
       - run: cargo test --test artifacts -- --ignored

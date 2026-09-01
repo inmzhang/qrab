@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>qrab playground</title>
+    <meta
+      name="description"
+      content="Write a quantum circuit in qrab and see it rendered, entirely in your browser."
+    />
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='14'>%E2%9A%9B</text></svg>"
+    />
+  </head>
+  <body>
+    <header class="toolbar">
+      <h1>qrab<span>playground</span></h1>
+
+      <label class="field">
+        <span>Example</span>
+        <select id="examples"></select>
+      </label>
+
+      <label class="field">
+        <span>Output</span>
+        <select id="target">
+          <option value="svg">SVG preview</option>
+          <option value="latex">LaTeX / TikZ</option>
+          <option value="typst">Typst / Quill</option>
+        </select>
+      </label>
+
+      <div class="spacer"></div>
+
+      <button id="share" type="button" title="Copy a link that reopens this circuit">Copy link</button>
+      <button id="download" type="button">Download</button>
+      <a class="repository" href="https://github.com/inmzhang/qrab">GitHub</a>
+    </header>
+
+    <main id="panes">
+      <section class="pane" id="editor-pane">
+        <div class="pane-header">
+          <span>circuit.qrab</span>
+          <span class="hint">imports need the CLI</span>
+        </div>
+        <div class="editor">
+          <div class="gutter" id="gutter" aria-hidden="true"></div>
+          <textarea
+            id="source"
+            spellcheck="false"
+            autocapitalize="off"
+            autocomplete="off"
+            aria-label="qrab source"
+          ></textarea>
+        </div>
+        <div class="status" id="status"></div>
+      </section>
+
+      <div class="splitter" id="splitter" role="separator" aria-orientation="vertical"></div>
+
+      <section class="pane" id="output-pane">
+        <div class="pane-header">
+          <span id="output-title">Diagram</span>
+          <div class="zoom" id="zoom">
+            <button type="button" data-zoom="out" title="Zoom out">&minus;</button>
+            <button type="button" data-zoom="fit" title="Fit to pane">Fit</button>
+            <button type="button" data-zoom="in" title="Zoom in">+</button>
+          </div>
+        </div>
+        <div class="preview" id="preview"></div>
+      </section>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

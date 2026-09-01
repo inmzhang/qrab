@@ -1,0 +1,49 @@
+name: Playground
+
+# The playground is a static page: the compiler is the same Rust crate the CLI
+# uses, built to WebAssembly, so there is no server to deploy.
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never cancel a deployment mid-flight; queue the next one behind it.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-pack
+      - run: wasm-pack build playground --target web --out-dir www/pkg --no-typescript
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: playground/www
+
+  deploy:
+    needs: build
+    # Publishing is deliberately gated the same way releases are, so a private
+    # repository does not get a public page before its maintainer asks for one.
+    if: github.repository_owner == 'inmzhang' && vars.ENABLE_PLAYGROUND == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

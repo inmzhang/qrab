@@ -8,3 +8,7 @@ git_tag_name = "v{{ version }}"
 [[package]]
 name = "xtask"
 release = false
+
+[[package]]
+name = "qrab-playground"
+release = false

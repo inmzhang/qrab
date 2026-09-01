@@ -1,0 +1,291 @@
+/* Two fixed panes with a draggable splitter, in the spirit of Compiler
+   Explorer: a thin toolbar, no chrome around the work area, and the diagram
+   always visible next to the source that produced it. */
+
+:root {
+  color-scheme: light dark;
+
+  --background: #ffffff;
+  --surface: #f4f5f7;
+  --border: #d8dbe0;
+  --text: #1c1f24;
+  --muted: #6b7280;
+  --accent: #2f6feb;
+  --error: #c22a2a;
+  --error-surface: #fdecec;
+  --paper: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #16181d;
+    --surface: #1e2128;
+    --border: #2f333c;
+    --text: #e6e8eb;
+    --muted: #9aa1ad;
+    --accent: #6b9bff;
+    --error: #ff8080;
+    --error-surface: #3a1f1f;
+    /* Diagrams are drawn on their own white ground, so the preview keeps a
+       light backdrop even in dark mode rather than inverting the artwork. */
+    --paper: #f7f7f8;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  background: var(--background);
+  color: var(--text);
+  font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Toolbar ------------------------------------------------------------- */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex: none;
+}
+
+.toolbar h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.toolbar h1 span {
+  margin-left: 6px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.field select {
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 3px 6px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.toolbar button,
+.repository {
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 4px 10px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.toolbar button:hover,
+.repository:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Panes --------------------------------------------------------------- */
+
+#panes {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(220px, 40fr) 6px minmax(220px, 60fr);
+  min-height: 0;
+}
+
+.pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.pane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 12px;
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+
+.hint {
+  font-style: italic;
+  opacity: 0.75;
+}
+
+.splitter {
+  background: var(--border);
+  cursor: col-resize;
+}
+
+.splitter:hover {
+  background: var(--accent);
+}
+
+/* Editor -------------------------------------------------------------- */
+
+.editor {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.gutter {
+  flex: none;
+  padding: 10px 8px 10px 12px;
+  text-align: right;
+  color: var(--muted);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+  user-select: none;
+  white-space: pre;
+}
+
+.gutter .current {
+  color: var(--error);
+  font-weight: 700;
+}
+
+#source {
+  flex: 1;
+  padding: 10px 12px;
+  border: 0;
+  outline: none;
+  resize: none;
+  font: inherit;
+  color: var(--text);
+  background: var(--background);
+  white-space: pre;
+  overflow: auto;
+  tab-size: 2;
+}
+
+.status {
+  flex: none;
+  padding: 6px 12px;
+  min-height: 30px;
+  /* A long list of recovered diagnostics scrolls instead of squeezing the
+     editor out of the pane. */
+  max-height: 30%;
+  overflow: auto;
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  white-space: pre-wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.status.failed {
+  color: var(--error);
+  background: var(--error-surface);
+}
+
+/* Output -------------------------------------------------------------- */
+
+.zoom {
+  display: flex;
+  gap: 4px;
+}
+
+.zoom button {
+  font: inherit;
+  font-size: 12px;
+  min-width: 26px;
+  color: var(--text);
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.zoom button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.preview {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+  background: var(--paper);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.preview img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.preview pre {
+  margin: 0;
+  width: 100%;
+  color: #1c1f24;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.55;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.preview .empty {
+  margin: auto;
+  color: #9aa1ad;
+  font-style: italic;
+}
+
+@media (max-width: 720px) {
+  #panes {
+    grid-template-columns: none;
+    grid-template-rows: 1fr 6px 1fr;
+  }
+
+  .splitter {
+    cursor: row-resize;
+  }
+}

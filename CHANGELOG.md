@@ -4,6 +4,7 @@ All notable changes are documented here. This project follows Semantic Versionin
 
 ## [Unreleased]
 
+- Added a browser playground built on the SVG backend and WebAssembly, deployed to GitHub Pages behind the `ENABLE_PLAYGROUND` repository variable.
 - Added an SVG backend (`qrab compile --target svg`) that needs no external toolchain. `Target` gained an `Svg` variant, which is a breaking change for exhaustive downstream matches.
 
 - Adopted Logos, Clap, Miette, and supporting test/build tooling; the measured stripped release binary grew from 756,952 B to 1,570,280 B (+107%).

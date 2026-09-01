@@ -34,11 +34,8 @@ logos = "0.16.1"
 miette = { version = "7.6.0", features = ["fancy"] }
 thiserror = "2.0.20"
 
-[lints.rust]
-unsafe_code = "forbid"
-
-[lints.clippy]
-all = "warn"
+[lints]
+workspace = true
 
 [profile.release]
 lto = "thin"
@@ -56,6 +53,13 @@ predicates = "3.1.4"
 quick-xml = "0.42.0"
 
 [workspace]
-members = ["xtask"]
+members = ["playground", "xtask"]
 default-members = ["."]
 resolver = "3"
+
+# Shared with the workspace members through `[lints] workspace = true`.
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all = "warn"

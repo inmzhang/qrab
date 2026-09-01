@@ -9,6 +9,10 @@
 
 Cargo-dist produces archives for Linux GNU on x86-64 and Arm64, Linux musl on x86-64, macOS on Intel and Apple Silicon, and Windows MSVC on x86-64. Every archive includes the generated completions and man pages in `assets/`.
 
+## Playground gate
+
+The playground is a separate deployment with its own switch. `.github/workflows/playground.yml` builds the WebAssembly module on every push to `main`, but publishes to GitHub Pages only when the repository variable `ENABLE_PLAYGROUND` is `true`. Enable Pages with the GitHub Actions source, then run `gh variable set ENABLE_PLAYGROUND --body true`. Building it unconditionally means a change that breaks the WebAssembly build fails CI whether or not the page is live.
+
 ## Publish gate
 
 The repository variable `ENABLE_PUBLISHING` is currently `false`. The release-plz release job—including `cargo publish` and tag creation—does not run until it is set to `true`; release PR generation remains active.
