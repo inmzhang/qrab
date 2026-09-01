@@ -19,12 +19,14 @@ The repository variable `ENABLE_PUBLISHING` is currently `false`. The release-pl
 
 Before opening the gate:
 
-1. Make the repository public.
-2. Configure crates.io trusted publishing for `inmzhang/qrab` and `.github/workflows/release-plz.yml`.
-3. Add an npm publish access token as the GitHub Actions secret `NPM_TOKEN`.
+1. Make the repository public. Cargo-dist's shell, PowerShell, and Homebrew installers fetch release assets over unauthenticated HTTPS, so they only work against a public repository.
+2. Add a crates.io API token as the GitHub Actions secret `CARGO_REGISTRY_TOKEN`. Trusted publishing cannot be set up yet: crates.io accepts a trusted publisher only for a crate that already exists, so the first version has to go out under a token.
+3. Add an npm publish access token as the GitHub Actions secret `NPM_TOKEN`, or drop `publish-jobs = ["npm"]` from `dist-workspace.toml` and regenerate the workflow with `dist generate`. Without a token the npm job fails after the GitHub release has already been created, leaving a release that looks successful but ships no npm package.
 4. Set the gate with `gh variable set ENABLE_PUBLISHING --body true`.
 
-For the first public release, no release PR exists because the unpublished crate is already at `0.1.0` with an up-to-date changelog. After opening the gate, run `gh workflow run release-plz.yml`; release-plz will publish and tag `0.1.0`, then cargo-dist takes over. Later releases use the normal release-PR merge flow above.
+For the first release, no release PR exists because the unpublished crate is already at `0.1.0` with an up-to-date changelog. After opening the gate, run `gh workflow run release-plz.yml`; release-plz publishes the crate and pushes the `v0.1.0` tag, and cargo-dist takes over from the tag.
+
+Once `0.1.0` is on crates.io, configure trusted publishing for `inmzhang/qrab` and `.github/workflows/release-plz.yml`, then delete the `CARGO_REGISTRY_TOKEN` secret; the release job already requests the `id-token: write` permission it needs. Later releases use the normal release-PR merge flow above.
 
 No Homebrew tap is required: the generated formula is attached to each GitHub release and can be installed directly by URL. Add a tap and cargo-dist Homebrew publisher only if a shorter `brew install owner/tap/qrab` command becomes worthwhile.
 
