@@ -5,10 +5,15 @@ release_always = false
 git_release_enable = false
 git_tag_name = "v{{ version }}"
 
+# Both are `publish = false` in their own Cargo.toml, and release-plz rejects a
+# package whose manifest and configuration disagree, so the flag is repeated
+# here rather than left at its default.
 [[package]]
 name = "xtask"
 release = false
+publish = false
 
 [[package]]
 name = "qrab-playground"
 release = false
+publish = false
