@@ -2,6 +2,14 @@
 
 All notable changes are documented here. This project follows Semantic Versioning.
 
+## [0.1.2] - 2026-09-01
+
+### Fixed
+
+- Publish the npm package under a scope
+
+
+
 ## [0.1.1] - 2026-09-01
 
 ### Build
