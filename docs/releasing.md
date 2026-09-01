@@ -22,7 +22,7 @@ Before opening the gate:
 2. Add a crates.io API token as the GitHub Actions secret `CARGO_REGISTRY_TOKEN`. Trusted publishing cannot be set up yet: crates.io accepts a trusted publisher only for a crate that already exists, so the first version has to go out under a token.
 3. Set the gate with `gh variable set ENABLE_PUBLISHING --body true`.
 
-For the first release, no release PR exists because the unpublished crate is already at `0.1.0` with an up-to-date changelog. After opening the gate, run `gh workflow run release-plz.yml`; release-plz publishes the crate and pushes the `v0.1.0` tag, and cargo-dist takes over from the tag.
+For the first release, no release PR exists, and none can: release-plz opens one only to change something, and the unpublished crate is already at `0.1.0` with an up-to-date changelog. `release_always = true` is what lets the release job publish anyway, on any push to `main` whose version is not yet on crates.io. Opening the gate and pushing is therefore the whole first release; release-plz publishes the crate and pushes the `v0.1.0` tag, and cargo-dist takes over from the tag.
 
 Once `0.1.0` is on crates.io, configure trusted publishing for `inmzhang/qrab` and `.github/workflows/release-plz.yml`, then delete the `CARGO_REGISTRY_TOKEN` secret; the release job already requests the `id-token: write` permission it needs. Later releases use the normal release-PR merge flow above.
 

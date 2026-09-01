@@ -1,7 +1,12 @@
 [workspace]
 changelog_config = "cliff.toml"
 repo_url = "https://github.com/inmzhang/qrab"
-release_always = false
+# The release job publishes whenever the manifest version is not yet on the
+# registry, rather than only from a release-PR merge. Merging a release PR still
+# publishes, but the first version cannot arrive that way: release-plz opens no
+# PR when the version already matches what it would release, so the two halves
+# would wait on each other forever.
+release_always = true
 git_release_enable = false
 git_tag_name = "v{{ version }}"
 
