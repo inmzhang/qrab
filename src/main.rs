@@ -1,23 +1,22 @@
-use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
+use clap::{CommandFactory, Parser, error::ErrorKind};
 use qrab::{Diagnostic, LoadedSource, Target, compile, load_source, parse};
 
-const USAGE: &str = "\
-qrab — readable quantum circuits for TikZ and Typst/Quill
+mod cli;
 
-Usage:
-  qrab compile <input.qrab> [--target latex|typst|all] [-o <output>]
-  qrab check <input.qrab>
-  qrab --help
-
-`--target all` writes <input>.tex and <input>.typ and cannot be combined with -o.
-The default target is all.";
+use cli::{Cli, Command, CompileArgs, OutputTarget};
 
 fn main() -> ExitCode {
-    match run(env::args().skip(1).collect()) {
+    let cli = Cli::parse();
+    if let Command::Compile(arguments) = &cli.command
+        && let Err(error) = validate_compile_args(arguments)
+    {
+        error.exit();
+    }
+    match run(cli.command) {
         Ok(()) => ExitCode::SUCCESS,
         Err(error) => {
             eprintln!("error: {error}");
@@ -26,30 +25,15 @@ fn main() -> ExitCode {
     }
 }
 
-fn run(arguments: Vec<String>) -> Result<(), String> {
-    let Some(command) = arguments.first().map(String::as_str) else {
-        return Err(usage_error("missing command"));
-    };
+fn run(command: Command) -> Result<(), String> {
     match command {
-        "--help" | "-h" | "help" => {
-            println!("{USAGE}");
-            Ok(())
-        }
-        "--version" | "-V" => {
-            println!("qrab {}", env!("CARGO_PKG_VERSION"));
-            Ok(())
-        }
-        "check" => check_command(&arguments[1..]),
-        "compile" => compile_command(&arguments[1..]),
-        unknown => Err(usage_error(format!("unknown command `{unknown}`"))),
+        Command::Check { input } => check_command(&input),
+        Command::Compile(arguments) => compile_command(arguments),
     }
 }
 
-fn check_command(arguments: &[String]) -> Result<(), String> {
-    if arguments.len() != 1 {
-        return Err(usage_error("check expects exactly one input file"));
-    }
-    let source = load_source(Path::new(&arguments[0])).map_err(|error| error.to_string())?;
+fn check_command(input: &Path) -> Result<(), String> {
+    let source = load_source(input).map_err(|error| error.to_string())?;
     let circuit = parse(source.as_str()).map_err(|error| format_diagnostic(&source, &error))?;
     println!(
         "{}: {} wire(s), {} operation(s)",
@@ -60,41 +44,12 @@ fn check_command(arguments: &[String]) -> Result<(), String> {
     Ok(())
 }
 
-fn compile_command(arguments: &[String]) -> Result<(), String> {
-    let mut input = None;
-    let mut output = None;
-    let mut target = OutputTarget::All;
-    let mut position = 0;
-
-    while position < arguments.len() {
-        match arguments[position].as_str() {
-            "--target" | "-t" => {
-                position += 1;
-                let value = arguments
-                    .get(position)
-                    .ok_or_else(|| usage_error("--target needs latex, typst, or all"))?;
-                target = OutputTarget::parse(value).map_err(usage_error)?;
-            }
-            "--output" | "-o" => {
-                position += 1;
-                let value = arguments
-                    .get(position)
-                    .ok_or_else(|| usage_error("--output needs a path"))?;
-                output = Some(PathBuf::from(value));
-            }
-            option if option.starts_with('-') => {
-                return Err(usage_error(format!("unknown option `{option}`")));
-            }
-            path if input.is_none() => input = Some(PathBuf::from(path)),
-            path => return Err(usage_error(format!("unexpected second input `{path}`"))),
-        }
-        position += 1;
-    }
-
-    let input = input.ok_or_else(|| usage_error("compile needs an input file"))?;
-    if target == OutputTarget::All && output.is_some() {
-        return Err(usage_error("-o requires --target latex or --target typst"));
-    }
+fn compile_command(arguments: CompileArgs) -> Result<(), String> {
+    let CompileArgs {
+        input,
+        target,
+        output,
+    } = arguments;
     let source = load_source(&input).map_err(|error| error.to_string())?;
 
     match target {
@@ -120,8 +75,18 @@ fn compile_command(arguments: &[String]) -> Result<(), String> {
     Ok(())
 }
 
-fn usage_error(message: impl std::fmt::Display) -> String {
-    format!("{message}\n\n{USAGE}")
+fn validate_compile_args(arguments: &CompileArgs) -> Result<(), clap::Error> {
+    if arguments.target != OutputTarget::All || arguments.output.is_none() {
+        return Ok(());
+    }
+    let mut command = Cli::command();
+    let compile = command
+        .find_subcommand_mut("compile")
+        .expect("compile subcommand is defined");
+    Err(compile.error(
+        ErrorKind::ArgumentConflict,
+        "the argument '--output <OUTPUT>' cannot be used with '--target all'",
+    ))
 }
 
 fn write_compiled(source: &LoadedSource, target: Target, path: PathBuf) -> Result<(), String> {
@@ -149,56 +114,4 @@ fn format_diagnostic(source: &LoadedSource, diagnostic: &Diagnostic) -> String {
         diagnostic.message,
         " ".repeat(diagnostic.span.column.saturating_sub(1))
     )
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum OutputTarget {
-    Latex,
-    Typst,
-    All,
-}
-
-impl OutputTarget {
-    fn parse(value: &str) -> Result<Self, String> {
-        match value {
-            "latex" | "tikz" => Ok(Self::Latex),
-            "typst" | "quill" => Ok(Self::Typst),
-            "all" => Ok(Self::All),
-            _ => Err(format!("unknown target `{value}`")),
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn usage_is_only_attached_to_argument_errors() {
-        let missing = std::env::temp_dir().join(format!(
-            "qrab-missing-source-{}-{}.qrab",
-            std::process::id(),
-            line!()
-        ));
-        assert!(
-            run(Vec::new())
-                .expect_err("missing command")
-                .contains(USAGE)
-        );
-        assert!(
-            !run(vec!["check".into(), missing.to_string_lossy().into_owned()])
-                .expect_err("missing source must fail")
-                .contains(USAGE)
-        );
-        assert!(
-            run(vec![
-                "compile".into(),
-                "x.qrab".into(),
-                "-o".into(),
-                "x.tex".into()
-            ])
-            .expect_err("single output needs an explicit target")
-            .starts_with("-o requires --target latex or --target typst")
-        );
-    }
 }

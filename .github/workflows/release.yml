@@ -26,7 +26,14 @@ jobs:
       - name: Package binary
         run: |
           archive="qrab-${GITHUB_REF_NAME}-x86_64-unknown-linux-gnu.tar.gz"
-          tar -C target/release -czf "${archive}" qrab
+          stage="${archive%.tar.gz}"
+          assets="$(find target/release/build -type d -path '*/out/assets' -print -quit)"
+          test -n "${assets}"
+          mkdir -p "${stage}/completions" "${stage}/man"
+          install -m 0755 target/release/qrab "${stage}/qrab"
+          install -m 0644 "${assets}"/{qrab.bash,qrab.elv,qrab.fish,_qrab,_qrab.ps1} "${stage}/completions/"
+          install -m 0644 "${assets}/qrab.1" "${stage}/man/qrab.1"
+          tar -czf "${archive}" "${stage}"
           sha256sum "${archive}" > "${archive}.sha256"
       - uses: softprops/action-gh-release@v3
         with:
