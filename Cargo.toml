@@ -2,14 +2,14 @@
 name = "qrab"
 version = "0.1.2"
 edition = "2024"
-description = "A readable quantum-circuit compiler for TikZ and Typst"
+description = "A readable quantum-circuit compiler for TikZ, Typst, SVG, and Quirk"
 license = "MIT"
 readme = "README.md"
 documentation = "https://docs.rs/qrab"
 repository = "https://github.com/inmzhang/qrab"
 homepage = "https://github.com/inmzhang/qrab"
 rust-version = "1.95"
-keywords = ["quantum", "circuit", "tikz", "typst", "compiler"]
+keywords = ["quantum", "circuit", "typst", "compiler", "quirk"]
 categories = ["command-line-utilities", "science", "visualization"]
 exclude = [
     "tests/qpic/**",

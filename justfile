@@ -54,6 +54,7 @@ example:
     cargo run -- compile examples/teleportation.qrab -t latex -o target/example/teleportation.tex
     cargo run -- compile examples/teleportation.qrab -t typst -o target/example/teleportation.typ
     cargo run -- compile examples/teleportation.qrab -t svg -o target/example/teleportation.svg
+    cargo run -- compile examples/teleportation.qrab -t quirk -o target/example/teleportation.url
     tectonic target/example/teleportation.tex --outdir target/example
     typst compile target/example/teleportation.typ target/example/teleportation-typst.pdf
 

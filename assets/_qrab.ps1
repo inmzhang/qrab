@@ -26,7 +26,7 @@ Register-ArgumentCompleter -Native -CommandName 'qrab' -ScriptBlock {
             [CompletionResult]::new('-V', '-V ', [CompletionResultType]::ParameterName, 'Print version')
             [CompletionResult]::new('--version', '--version', [CompletionResultType]::ParameterName, 'Print version')
             [CompletionResult]::new('check', 'check', [CompletionResultType]::ParameterValue, 'Check a circuit without rendering it')
-            [CompletionResult]::new('compile', 'compile', [CompletionResultType]::ParameterValue, 'Compile a circuit to LaTeX, Typst, SVG, or all of them')
+            [CompletionResult]::new('compile', 'compile', [CompletionResultType]::ParameterValue, 'Compile a circuit to LaTeX, Typst, SVG, Quirk, or all of them')
             [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
             break
         }
@@ -50,7 +50,7 @@ Register-ArgumentCompleter -Native -CommandName 'qrab' -ScriptBlock {
         }
         'qrab;help' {
             [CompletionResult]::new('check', 'check', [CompletionResultType]::ParameterValue, 'Check a circuit without rendering it')
-            [CompletionResult]::new('compile', 'compile', [CompletionResultType]::ParameterValue, 'Compile a circuit to LaTeX, Typst, SVG, or all of them')
+            [CompletionResult]::new('compile', 'compile', [CompletionResultType]::ParameterValue, 'Compile a circuit to LaTeX, Typst, SVG, Quirk, or all of them')
             [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
             break
         }

@@ -35,7 +35,7 @@ pub struct Compiled {
     pub column: u32,
 }
 
-/// Compiles `source` for `target`, which is one of `svg`, `latex`, or `typst`.
+/// Compiles `source` for `target`, which is `svg`, `latex`, `typst`, or `quirk`.
 ///
 /// An unknown target falls back to SVG so a stale query string cannot leave the
 /// page with nothing to show.
@@ -44,6 +44,7 @@ pub fn compile(source: &str, target: &str) -> Compiled {
     let target = match target {
         "latex" => Target::Latex,
         "typst" => Target::Typst,
+        "quirk" => Target::Quirk,
         _ => Target::Svg,
     };
     match parse(source) {
@@ -134,5 +135,15 @@ mod tests {
         assert_eq!(compiled.line, 2);
         assert!(!compiled.message.is_empty());
         assert!(compiled.output.is_empty());
+    }
+
+    #[test]
+    fn quirk_target_returns_an_openable_url() {
+        let compiled = compile("circuit bell { qubit q; h q }", "quirk");
+        assert!(
+            compiled
+                .output
+                .starts_with("https://algassert.com/quirk#circuit=")
+        );
     }
 }

@@ -31,6 +31,7 @@ macro_rules! emit {
 }
 
 mod latex;
+mod quirk;
 mod svg;
 mod typst;
 
@@ -41,6 +42,12 @@ pub enum Target {
     Latex,
     /// A standalone Typst document using Quill.
     Typst,
+    /// A URL that opens the circuit in the interactive Quirk simulator.
+    ///
+    /// Quirk supports at most 16 qubits. Visual-only constructs without a
+    /// Quirk equivalent are omitted, while arbitrary named gates are retained
+    /// as labeled no-op custom gates because qrab assigns them no unitary.
+    Quirk,
     /// A standalone SVG image.
     ///
     /// Unlike the other two targets this one needs no external toolchain, so it
@@ -55,6 +62,7 @@ pub fn render(circuit: &Circuit, target: Target) -> String {
     match target {
         Target::Latex => latex::render_latex(circuit),
         Target::Typst => typst::render_typst(circuit),
+        Target::Quirk => quirk::render_quirk(circuit),
         Target::Svg => svg::render_svg(circuit),
     }
 }

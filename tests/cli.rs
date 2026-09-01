@@ -58,6 +58,12 @@ fn clap_handles_help_errors_delimiters_and_conflicts() {
     assert!(source.with_extension("tex").is_file());
     assert!(source.with_extension("typ").is_file());
     assert!(source.with_extension("svg").is_file());
+    assert!(source.with_extension("url").is_file());
+    assert!(
+        fs::read_to_string(source.with_extension("url"))
+            .expect("read Quirk URL")
+            .starts_with("https://algassert.com/quirk#circuit=")
+    );
     fs::remove_dir_all(directory).expect("remove CLI test directory");
 
     let missing = std::env::temp_dir().join(format!(

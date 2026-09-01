@@ -23,7 +23,7 @@ set edit:completion:arg-completer[qrab] = {|@words|
             cand -V 'Print version'
             cand --version 'Print version'
             cand check 'Check a circuit without rendering it'
-            cand compile 'Compile a circuit to LaTeX, Typst, SVG, or all of them'
+            cand compile 'Compile a circuit to LaTeX, Typst, SVG, Quirk, or all of them'
             cand help 'Print this message or the help of the given subcommand(s)'
         }
         &'qrab;check'= {
@@ -44,7 +44,7 @@ set edit:completion:arg-completer[qrab] = {|@words|
         }
         &'qrab;help'= {
             cand check 'Check a circuit without rendering it'
-            cand compile 'Compile a circuit to LaTeX, Typst, SVG, or all of them'
+            cand compile 'Compile a circuit to LaTeX, Typst, SVG, Quirk, or all of them'
             cand help 'Print this message or the help of the given subcommand(s)'
         }
         &'qrab;help;check'= {

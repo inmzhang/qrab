@@ -11,6 +11,7 @@ const preview = document.getElementById("preview");
 const examples = document.getElementById("examples");
 const target = document.getElementById("target");
 const outputTitle = document.getElementById("output-title");
+const openQuirk = document.getElementById("open-quirk");
 
 const EXTENSIONS = { svg: "svg", latex: "tex", typst: "typ" };
 const TITLES = { svg: "Diagram", latex: "LaTeX / TikZ", typst: "Typst / Quill" };
@@ -95,6 +96,7 @@ function render() {
   const result = compile(source.value, kind);
   latest = { output: result.output, target: kind };
   outputTitle.textContent = TITLES[kind];
+  openQuirk.disabled = Boolean(result.message);
   drawGutter(result.message ? result.line : 0);
 
   if (result.message) {
@@ -159,6 +161,11 @@ source.addEventListener("keydown", (event) => {
 });
 
 // Toolbar ---------------------------------------------------------------
+
+openQuirk.addEventListener("click", () => {
+  const result = compile(source.value, "quirk");
+  if (!result.message) window.open(result.output, "_blank", "noopener,noreferrer");
+});
 
 document.getElementById("share").addEventListener("click", async (event) => {
   const url = `${location.origin}${location.pathname}#${encodeFragment(source.value)}`;

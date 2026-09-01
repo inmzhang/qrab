@@ -1,10 +1,11 @@
 # qrab
 
 `qrab` compiles a small, readable quantum-circuit language into standalone
-LaTeX/TikZ, Typst ([Quill](https://github.com/Mc-Zen/quill)), or SVG. It is
-inspired by [qpic](https://github.com/qpic/qpic), but a circuit is written as
-statements in a language with types, functions, and imports rather than as
-positional commands and token-substitution macros.
+LaTeX/TikZ, Typst ([Quill](https://github.com/Mc-Zen/quill)), SVG, or a URL for
+the interactive [Quirk simulator](https://algassert.com/quirk). It is inspired
+by [qpic](https://github.com/qpic/qpic), but a circuit is written as statements
+in a language with types, functions, and imports rather than as positional
+commands and token-substitution macros.
 
 ```qrab
 circuit bell_pair {
@@ -24,9 +25,9 @@ installed.
 
 ## Features
 
-- **Three backends from one source.** LaTeX/TikZ and Typst/Quill for papers,
-  SVG for the web and for a quick look. The SVG backend needs no external
-  toolchain at all.
+- **Four backends from one source.** LaTeX/TikZ and Typst/Quill for papers,
+  SVG for the web and quick previews, and Quirk URLs for interactive
+  simulation. SVG and Quirk need no external toolchain.
 - **Named wires, arrays, and ranges.** `qubit q[4]`, `q[0..3]`, and named
   registers instead of counting rows.
 - **Real composition.** `fn`, `let`, named `style` blocks, and relative
@@ -37,7 +38,8 @@ installed.
   barriers, braces, cuts, notes, groups, permutations, ellipses, wire
   lifecycle changes, and orientation.
 - **Portable styling.** Twelve named colors plus hex, sizes in points, shapes,
-  opacity, and hyperlinks — all of which mean the same thing in every backend.
+  opacity, and hyperlinks — all of which mean the same thing in every document
+  backend.
 - **Diagnostics that point at your source.** Errors carry a line, a column, a
   labelled span, and a suggestion, and one run reports more than one error.
 - **Escape hatches.** `backend latex { … }` and `backend typst { … }` inject
@@ -51,13 +53,13 @@ the constructs you already reach for — naming a thing, calling it twice,
 importing it from another file — and checks that you used them correctly.
 
 **Say it once, get every format.** The parser produces one semantic model. Each
-backend renders that model; none of them can see the source text. A circuit
-that compiles is a circuit every backend can draw.
+backend renders that model; none of them can see the source text.
 
 **Portable styling or none at all.** Style options exist only where all
-backends can honor them. Anything genuinely backend-specific goes in an
-`backend` block, where it is visibly quarantined instead of silently ignored
-somewhere else.
+document backends can honor them. Anything genuinely backend-specific goes in
+a `backend` block, where it is visibly quarantined instead of silently ignored
+somewhere else. Quirk intentionally receives circuit semantics, not page
+styling.
 
 **Errors are part of the language.** Every diagnostic knows where it came
 from — across `import` boundaries — and says what to do about it.
@@ -86,14 +88,15 @@ cargo install --path . --locked
 
 ```sh
 qrab check circuit.qrab                      # parse and report, render nothing
-qrab compile circuit.qrab                    # writes circuit.tex, circuit.typ, circuit.svg
+qrab compile circuit.qrab                    # also writes circuit.url
 qrab compile circuit.qrab --target svg       # writes circuit.svg
+qrab compile circuit.qrab --target quirk     # writes an interactive URL to circuit.url
 qrab compile circuit.qrab -t latex -o out.tex
 ```
 
-`--target` takes `latex` (alias `tikz`), `typst` (alias `quill`), `svg`, or
-`all`; `-o` requires a single backend. SVG is finished output. The other two
-are sources, so hand them to their own compiler:
+`--target` takes `latex` (alias `tikz`), `typst` (alias `quill`), `svg`,
+`quirk`, or `all`; `-o` requires a single backend. SVG and the Quirk URL are
+finished output. The other two are sources, so hand them to their own compiler:
 
 ```sh
 tectonic circuit.tex --outdir build
@@ -103,6 +106,12 @@ typst compile circuit.typ build/circuit.pdf
 Tectonic and Typst are only needed to turn those sources into PDFs; neither is
 required for `qrab check`, for source generation, or for SVG. Typst 0.15.1
 downloads Quill 0.8.0 on its first build.
+
+The Quirk target maps H, X, Y, Z, S, T, indexed phase gates, controls,
+measurements, swaps, and recognized input states. Arbitrary named boxes become
+labeled no-op custom gates because qrab does not define their unitary. Quirk is
+limited to 16 qubits; regions, styling, wire labels, and other drawing-only
+annotations without a Quirk equivalent are omitted.
 
 ## Examples
 
@@ -140,7 +149,7 @@ circuit teleportation {
 
 Ranges (`q[0..3]`) select several wires at once. `labels`, `brace`, `equals`,
 `note`, and `cut` annotate a column without consuming one, and `layout` tunes
-the shared geometry that every backend reads.
+the shared geometry that every document backend reads.
 
 ```qrab
 circuit annotations {

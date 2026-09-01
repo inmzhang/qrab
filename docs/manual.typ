@@ -131,7 +131,7 @@
   #v(0.4cm)
   #text(size: 13pt, fill: luma(90))[
     A readable language for quantum circuit diagrams, \
-    and the compiler that turns it into LaTeX, Typst, and SVG
+    and the compiler that turns it into LaTeX, Typst, SVG, and Quirk URLs
   ]
   #v(1.2cm)
   #image("manual/images/worked-teleport.svg", width: 88%)
@@ -153,10 +153,10 @@
 == What qrab is
 
 `qrab` compiles a small language for describing quantum circuits into three
-finished formats: standalone LaTeX/TikZ, standalone Typst using
-#link("https://github.com/Mc-Zen/quill")[Quill], and SVG. One source file
-produces all three, and the three agree because they are rendered from a single
-checked model rather than from the text you wrote.
+finished document formats --- standalone LaTeX/TikZ, standalone Typst using
+#link("https://github.com/Mc-Zen/quill")[Quill], and SVG --- plus a URL for the
+interactive #link("https://algassert.com/quirk")[Quirk simulator]. Every target
+is rendered from the same checked model rather than from the text you wrote.
 
 The language is a descendant of #link("https://github.com/qpic/qpic")[qpic] and
 draws the same pictures, but a circuit is written as statements rather than as
@@ -179,14 +179,15 @@ importing it from another file --- and checks that you used them correctly.
 *Say it once, get every format.* The parser produces one semantic model, and
 each backend renders that model without ever seeing the source text.
 
-*Portable styling or none at all.* Style options exist only where every backend
-can honour them. Anything genuinely backend-specific goes in a `backend` block,
-where it is visibly quarantined rather than silently ignored somewhere else.
+*Portable styling or none at all.* Style options mean the same thing in every
+document backend. Anything genuinely backend-specific goes in a `backend`
+block, where it is visibly quarantined rather than silently ignored somewhere
+else. The simulator export deliberately omits drawing-only styling.
 
 *Errors are part of the language.* Every diagnostic knows where it came from,
 across `import` boundaries, and says what to do about it.
 
-== The three backends
+== The four backends
 
 #table(
   columns: (auto, 1fr, auto),
@@ -197,12 +198,10 @@ across `import` boundaries, and says what to do about it.
     participates in Typst's own layout. Alias: `quill`.], [Typst 0.15.1],
   [`svg`], [Finished SVG. No external toolchain at all, which is what the
     browser playground runs on.], [nothing],
+  [`quirk`], [An HTTPS URL for Quirk. Maps built-ins, phase gates, controls,
+    measurements, swaps, and input states; named boxes become no-op custom
+    gates. Limited to 16 qubits; drawing-only features are omitted.], [a browser],
 )
-
-The first two emit _source_, not pictures: hand the file to its own compiler.
-Quill lays out its own grid, so the Typst output is the same circuit drawn by a
-different engine rather than a copy of the other two; @backends has the
-details.
 
 // ============================================================================
 
@@ -229,8 +228,8 @@ cargo install --path . --locked
 ```
 
 Nothing else is required to check a circuit, to generate LaTeX or Typst source,
-or to render SVG. A TeX engine and Typst are needed only to turn the generated
-sources into PDFs.
+to render SVG, or to create a Quirk URL. A TeX engine and Typst are needed only
+to turn the generated sources into PDFs.
 
 #note-box[No installation at all][
   The #link("https://inmzhang.com/qrab/")[playground] runs the compiler as
@@ -261,16 +260,17 @@ bell_pair: 2 wire(s), 6 operation(s)
 == Compiling
 
 ```sh
-qrab compile circuit.qrab                    # circuit.tex, circuit.typ, circuit.svg
+qrab compile circuit.qrab                    # also writes circuit.url
 qrab compile circuit.qrab --target svg       # circuit.svg
+qrab compile circuit.qrab --target quirk     # circuit.url
 qrab compile circuit.qrab -t latex -o out.tex
 qrab compile circuit.qrab -t typst -o -      # write to stdout
 ```
 
 `--target` (`-t`) takes `latex` (alias `tikz`), `typst` (alias `quill`), `svg`,
-or `all`, and defaults to `all`. `--output` (`-o`) names a single output file
-and therefore requires a single backend; without it, each output is written
-next to the input with the matching extension.
+`quirk`, or `all`, and defaults to `all`. `--output` (`-o`) names a single
+output file and therefore requires a single backend; without it, each output
+is written next to the input with the matching extension.
 
 == From source to PDF
 
@@ -386,7 +386,7 @@ qubit result -> "m"
 qubit plain
 ```
 
-Labels are plain text in every backend. They are not LaTeX maths: write
+Labels are plain text in every document backend. They are not LaTeX maths: write
 `"|psi>"` rather than `"$\ket{\psi}$"`, and the same string appears in the SVG,
 the TikZ, and the Typst output. If you need real mathematics in a paper, reach
 for a `backend latex` block (@escapes).
@@ -545,7 +545,7 @@ nothing, because the abstract gap is a floor.
 
 == Geometry
 
-`layout` sets the shared geometry every backend reads. Sizes are in points;
+`layout` sets the shared geometry every document backend reads. Sizes are in points;
 gaps are abstract units that each backend maps to its own grid.
 
 #table(
@@ -764,11 +764,11 @@ that mean something for it; the rest are accepted and ignored.
 
 == Colours
 
-Twelve named colours are portable across all three backends: `black`, `white`,
+Twelve named colours are portable across all three document backends: `black`, `white`,
 `gray`, `red`, `green`, `blue`, `teal`, `purple`, `orange`, `yellow`, `olive`,
 and `lime`. Anything else is written as a quoted six-digit hex value such as
 `"#336699"`. A name that is not on the list is an error rather than a silent
-fallback, because the point of the list is that every backend draws the same
+fallback, because the point of the list is that every document backend draws the same
 colour.
 
 #ex("style-colors")
@@ -826,7 +826,7 @@ and carries verbatim strings that are emitted only for it.
 Each block may repeat `preamble`, `before`, or `after`. `preamble` lands in the
 document preamble, `before` just inside the picture, and `after` just before it
 closes. The SVG backend has no escape block and ignores both of these, so the
-picture below is what every backend draws with the hooks removed:
+picture below is what every document backend draws with the hooks removed:
 
 #pic("backend-escape")
 
@@ -968,11 +968,11 @@ The differences are deliberate:
   [Token substitution macros], [`let`, `style`, and `fn`, resolved into a typed
     tree],
   [`\input` of another file], [`import`, path-aware and cycle-checked],
-  [Labels are LaTeX], [Labels are plain text in every backend; LaTeX goes in a
+  [Labels are LaTeX], [Labels are plain text in every document backend; LaTeX goes in a
     `backend` block],
   [Uppercase directives (`VERTICAL`, `SCALE`, ...)], [A `layout` block],
   [Shapes clip their labels], [Shapes grow to fit them (@growth)],
-  [One output: TikZ], [Three outputs from one model],
+  [One output: TikZ], [Four targets from one model],
 )
 
 Parity and its evidence are tracked in `docs/qpic-coverage.md`.

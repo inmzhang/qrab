@@ -6,7 +6,7 @@ use clap::{Args, Parser, Subcommand, ValueEnum};
 #[command(
     name = "qrab",
     version,
-    about = "Readable quantum circuits for TikZ and Typst/Quill",
+    about = "Readable quantum circuits for TikZ, Typst/Quill, SVG, and Quirk",
     propagate_version = true,
     arg_required_else_help = true
 )]
@@ -22,7 +22,7 @@ pub(crate) enum Command {
         /// Input `.qrab` file.
         input: PathBuf,
     },
-    /// Compile a circuit to LaTeX, Typst, SVG, or all of them.
+    /// Compile a circuit to LaTeX, Typst, SVG, Quirk, or all of them.
     Compile(CompileArgs),
 }
 
@@ -45,5 +45,6 @@ pub(crate) enum OutputTarget {
     #[value(alias = "quill")]
     Typst,
     Svg,
+    Quirk,
     All,
 }

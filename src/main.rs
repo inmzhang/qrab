@@ -71,10 +71,18 @@ fn compile_command(arguments: CompileArgs) -> Result<()> {
                 output.unwrap_or_else(|| input.with_extension("svg")),
             )?;
         }
+        OutputTarget::Quirk => {
+            write_compiled(
+                &circuit,
+                Target::Quirk,
+                output.unwrap_or_else(|| input.with_extension("url")),
+            )?;
+        }
         OutputTarget::All => {
             write_compiled(&circuit, Target::Latex, input.with_extension("tex"))?;
             write_compiled(&circuit, Target::Typst, input.with_extension("typ"))?;
             write_compiled(&circuit, Target::Svg, input.with_extension("svg"))?;
+            write_compiled(&circuit, Target::Quirk, input.with_extension("url"))?;
         }
     }
     Ok(())

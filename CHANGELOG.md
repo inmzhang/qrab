@@ -2,6 +2,12 @@
 
 All notable changes are documented here. This project follows Semantic Versioning.
 
+## [Unreleased]
+
+### Added
+
+- Add an interactive Quirk URL backend to the library, CLI, and playground
+
 ## [0.1.2] - 2026-09-01
 
 ### Fixed
