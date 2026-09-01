@@ -106,7 +106,8 @@ downloads Quill 0.8.0 on its first build.
 ## Examples
 
 Every example below is a file in [`examples/`](examples), and every diagram is
-generated from it by `qrab` itself.
+generated from it by `qrab` itself. The three run from the simplest circuit to
+the most involved.
 
 ### Teleportation
 
@@ -133,6 +134,36 @@ circuit teleportation {
 ```
 
 ![The teleportation circuit](docs/images/teleportation.svg)
+
+### Annotations
+
+Ranges (`q[0..3]`) select several wires at once. `labels`, `brace`, `equals`,
+`note`, and `cut` annotate a column without consuming one, and `layout` tunes
+the shared geometry that every backend reads.
+
+```qrab
+circuit annotations {
+  layout {
+    gate_size: 22
+    corner_radius: 3
+    comment_width: 72
+  }
+
+  qubit q[3]: "|0>" -> "out"
+
+  labels "data", "work", "flag" on q[0..3] with fill: yellow
+  brace left "input" on q[0..3] with stroke: blue
+  h q[0]
+  note "decode" on q[1]
+  equals "encode" on q[0..3] braced both with fill: "#F3F3F3", stroke: teal
+  brace right "result" on q[0..3] with stroke: purple
+  cut on q[0..3] as "stage" with stroke: red
+  x q[2] if q[0]
+  brace both "repeat" on q[0..3] with stroke: blue
+}
+```
+
+![An annotated circuit with braces, a note, and a cut](docs/images/annotations.svg)
 
 ### Functions, constants, and styles
 
@@ -173,90 +204,18 @@ circuit function_composition {
 
 ![The GHZ preparation circuit](docs/images/functions.svg)
 
-### Annotations
-
-Ranges (`q[0..3]`) select several wires at once. `labels`, `brace`, `equals`,
-`note`, and `cut` annotate a column without consuming one, and `layout` tunes
-the shared geometry that every backend reads.
-
-```qrab
-circuit annotations {
-  layout {
-    gate_size: 22
-    corner_radius: 3
-    comment_width: 72
-  }
-
-  qubit q[3]: "|0>" -> "out"
-
-  labels "data", "work", "flag" on q[0..3] with fill: yellow
-  brace left "input" on q[0..3] with stroke: blue
-  h q[0]
-  note "decode" on q[1]
-  equals "encode" on q[0..3] braced both with fill: "#F3F3F3", stroke: teal
-  brace right "result" on q[0..3] with stroke: purple
-  cut on q[0..3] as "stage" with stroke: red
-  x q[2] if q[0]
-  brace both "repeat" on q[0..3] with stroke: blue
-}
-```
-
-![An annotated circuit with braces, a note, and a cut](docs/images/annotations.svg)
-
-### Wire lifecycle
-
-Wires do not have to exist for the whole diagram, and they do not have to stay
-in one row. `start` and `end` bound a wire's lifetime, `set … to` changes what
-kind of line it draws, `bundle` marks a multiplicity, `space` reserves width,
-and `permute` reorders rows for everything that follows.
-
-```qrab
-circuit lifecycle {
-  layout {
-    gate_size: 18
-    corner_radius: 2
-    comment_width: 96
-  }
-
-  qubit q[3]: "|0>" -> "out"
-
-  start q[2] as "|aux>"
-  h q[0]
-  set q[1] to hidden as "0" with fill: "#F3F3F3"
-  space q[1] with width: 24
-  set q[1] to quantum as "1"
-  bundle "3" on q[0]
-  label "mix" on q[0], q[2] with fill: yellow
-  set q[0] to classical
-  permute q[2], q[0], q[1] with stroke: purple, width: 30
-  space q[1] with width: 18, height: 8
-  touch q[0], q[2] with stroke: red, dash: dashed
-  end q[2] as "done"
-}
-```
-
-![A circuit showing wire lifecycle changes and a permutation](docs/images/lifecycle.svg)
-
 ### More
 
-[`styling.qrab`](examples/styling.qrab) draws the same circuit top-to-bottom on
-a tinted background with per-gate colors and shapes;
+[`lifecycle.qrab`](examples/lifecycle.qrab) bounds a wire's lifetime with
+`start` and `end`, changes the kind of line it draws, and reorders rows with
+`permute`; [`styling.qrab`](examples/styling.qrab) draws the same circuit
+top-to-bottom on a tinted background with per-gate colors and shapes;
 [`regions.qrab`](examples/regions.qrab) boxes a marked range of operations;
 [`programming.qrab`](examples/programming.qrab) uses `repeat` and `reverse`;
 [`measurements.qrab`](examples/measurements.qrab) covers the measurement
 shapes; [`ellipsis.qrab`](examples/ellipsis.qrab) omits register rows;
 [`escapes.qrab`](examples/escapes.qrab) reaches into one backend; and
 [`imports.qrab`](examples/imports.qrab) pulls declarations from another file.
-
-## Library API
-
-`qrab::compile` is the shortest in-memory API; `load_source` expands file
-imports, while `parse` and `render` expose the checked AST pipeline separately.
-
-Public AST structs are `#[non_exhaustive]` and should be obtained through
-`parse`, with public fields available for adjustments. Enums stay exhaustive so
-model additions break downstream matches at compile time; before 1.0, minor
-releases may make such changes.
 
 ## Documentation
 
@@ -267,30 +226,11 @@ example for every construct. It is typeset from
 [docs/manual/examples](docs/manual/examples) that `qrab` itself renders, so the
 code and the picture beside it can never drift apart.
 
-Parity with qpic and its evidence are tracked in
-[docs/qpic-coverage.md](docs/qpic-coverage.md), and maintainers can follow
-[docs/releasing.md](docs/releasing.md).
-
-## Development
-
-Install stable Rust, Tectonic, Typst 0.15.1, Poppler (`pdfinfo`),
-[`pre-commit`](https://pre-commit.com), and `just`, then:
-
-```sh
-just install-hooks
-just ci
-```
-
-`just gen-assets` regenerates the committed CLI assets and diagrams; `just
-manual` does that and then typesets [docs/manual.pdf](docs/manual.pdf). CI
-fails on any drift in the generated files.
-
-The artifact suite compiles all 44 translated qpic golden tests, all 64
-documented examples, and 11 focused fixtures through both Tectonic and
-Typst/Quill (238 PDFs), and checks fourteen tolerant page-geometry baselines.
-The SVG backend is covered by snapshots and by a well-formedness and bounds
-check over every fixture. `just playground-serve` builds the WebAssembly module
-and serves the playground locally.
+The library API is documented on [docs.rs](https://docs.rs/qrab). Parity with
+qpic and its evidence are tracked in
+[docs/qpic-coverage.md](docs/qpic-coverage.md); building, testing, and adding an
+example are covered by [CONTRIBUTING.md](CONTRIBUTING.md), and maintainers can
+follow [docs/releasing.md](docs/releasing.md).
 
 ## License
 

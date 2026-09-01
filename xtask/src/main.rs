@@ -20,13 +20,7 @@ use qrab::{Target, load_source, parse, render};
 mod cli;
 
 /// Examples the README walks through, in the order it presents them.
-const DIAGRAMS: &[&str] = &[
-    "bell",
-    "teleportation",
-    "functions",
-    "annotations",
-    "lifecycle",
-];
+const DIAGRAMS: &[&str] = &["bell", "teleportation", "annotations", "functions"];
 
 fn main() -> Result<(), Box<dyn Error>> {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..");
