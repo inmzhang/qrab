@@ -1,39 +1,39 @@
 ---
 source: tests/snapshots.rs
 ---
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="435.800" height="206.598" viewBox="-28.600 -17.949 435.800 206.598" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="564.775" height="206.598" viewBox="-28.600 -17.949 564.775 206.598" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10">
   <title>shor_nutshell</title>
-  <rect x="-28.600" y="-17.949" width="435.800" height="206.598" fill="#FFFFFF"/>
+  <rect x="-28.600" y="-17.949" width="564.775" height="206.598" fill="#FFFFFF"/>
   <g>
-    <line x1="0.000" y1="0.000" x2="265.723" y2="0.000" fill="none" stroke="#000000" stroke-width="1"/>
-    <line x1="265.723" y1="0.996" x2="341.400" y2="0.996" fill="none" stroke="#000000" stroke-width="1"/>
-    <line x1="265.723" y1="-0.996" x2="341.400" y2="-0.996" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="0.000" y1="0.000" x2="328.373" y2="0.000" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="328.373" y1="0.996" x2="470.375" y2="0.996" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="328.373" y1="-0.996" x2="470.375" y2="-0.996" fill="none" stroke="#000000" stroke-width="1"/>
     <text x="-13.300" y="3.500" text-anchor="middle" fill="#000000">|0&gt;</text>
-    <text x="360.900" y="3.500" text-anchor="middle" fill="#000000">phase</text>
-    <line x1="0.000" y1="28.450" x2="265.723" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
-    <line x1="265.723" y1="29.446" x2="341.400" y2="29.446" fill="none" stroke="#000000" stroke-width="1"/>
-    <line x1="265.723" y1="27.454" x2="341.400" y2="27.454" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="489.875" y="3.500" text-anchor="middle" fill="#000000">phase</text>
+    <line x1="0.000" y1="28.450" x2="328.373" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="328.373" y1="29.446" x2="470.375" y2="29.446" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="328.373" y1="27.454" x2="470.375" y2="27.454" fill="none" stroke="#000000" stroke-width="1"/>
     <text x="-13.300" y="31.950" text-anchor="middle" fill="#000000">|0&gt;</text>
-    <text x="360.900" y="31.950" text-anchor="middle" fill="#000000">phase</text>
-    <line x1="0.000" y1="56.900" x2="265.723" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
-    <line x1="265.723" y1="57.896" x2="341.400" y2="57.896" fill="none" stroke="#000000" stroke-width="1"/>
-    <line x1="265.723" y1="55.904" x2="341.400" y2="55.904" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="489.875" y="31.950" text-anchor="middle" fill="#000000">phase</text>
+    <line x1="0.000" y1="56.900" x2="328.373" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="328.373" y1="57.896" x2="470.375" y2="57.896" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="328.373" y1="55.904" x2="470.375" y2="55.904" fill="none" stroke="#000000" stroke-width="1"/>
     <text x="-13.300" y="60.400" text-anchor="middle" fill="#000000">|0&gt;</text>
-    <text x="360.900" y="60.400" text-anchor="middle" fill="#000000">phase</text>
-    <line x1="0.000" y1="85.350" x2="265.723" y2="85.350" fill="none" stroke="#000000" stroke-width="1"/>
-    <line x1="265.723" y1="86.346" x2="341.400" y2="86.346" fill="none" stroke="#000000" stroke-width="1"/>
-    <line x1="265.723" y1="84.354" x2="341.400" y2="84.354" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="489.875" y="60.400" text-anchor="middle" fill="#000000">phase</text>
+    <line x1="0.000" y1="85.350" x2="328.373" y2="85.350" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="328.373" y1="86.346" x2="470.375" y2="86.346" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="328.373" y1="84.354" x2="470.375" y2="84.354" fill="none" stroke="#000000" stroke-width="1"/>
     <text x="-13.300" y="88.850" text-anchor="middle" fill="#000000">|0&gt;</text>
-    <text x="360.900" y="88.850" text-anchor="middle" fill="#000000">phase</text>
-    <line x1="0.000" y1="113.800" x2="341.400" y2="113.800" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="489.875" y="88.850" text-anchor="middle" fill="#000000">phase</text>
+    <line x1="0.000" y1="113.800" x2="470.375" y2="113.800" fill="none" stroke="#000000" stroke-width="1"/>
     <text x="-13.300" y="117.300" text-anchor="middle" fill="#000000">|1&gt;</text>
-    <text x="373.300" y="117.300" text-anchor="middle" fill="#000000">a^x mod N</text>
-    <line x1="0.000" y1="142.250" x2="341.400" y2="142.250" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="502.275" y="117.300" text-anchor="middle" fill="#000000">a^x mod N</text>
+    <line x1="0.000" y1="142.250" x2="470.375" y2="142.250" fill="none" stroke="#000000" stroke-width="1"/>
     <text x="-13.300" y="145.750" text-anchor="middle" fill="#000000">|1&gt;</text>
-    <text x="373.300" y="145.750" text-anchor="middle" fill="#000000">a^x mod N</text>
-    <line x1="0.000" y1="170.700" x2="341.400" y2="170.700" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="502.275" y="145.750" text-anchor="middle" fill="#000000">a^x mod N</text>
+    <line x1="0.000" y1="170.700" x2="470.375" y2="170.700" fill="none" stroke="#000000" stroke-width="1"/>
     <text x="-13.300" y="174.200" text-anchor="middle" fill="#000000">|1&gt;</text>
-    <text x="373.300" y="174.200" text-anchor="middle" fill="#000000">a^x mod N</text>
+    <text x="502.275" y="174.200" text-anchor="middle" fill="#000000">a^x mod N</text>
     <rect x="75.350" y="-10.000" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
     <text x="85.350" y="3.500" text-anchor="middle" fill="#000000">H</text>
     <rect x="75.350" y="18.450" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
@@ -42,29 +42,29 @@ source: tests/snapshots.rs
     <text x="85.350" y="60.400" text-anchor="middle" fill="#000000">H</text>
     <rect x="75.350" y="75.350" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
     <text x="85.350" y="88.850" text-anchor="middle" fill="#000000">H</text>
-    <line x1="128.025" y1="0.000" x2="128.025" y2="170.700" fill="none" stroke="#000000" stroke-width="1"/>
-    <circle cx="128.025" cy="0.000" r="2.200" fill="#DDEEFF" stroke="#000000" stroke-width="1"/>
-    <circle cx="128.025" cy="28.450" r="2.200" fill="#DDEEFF" stroke="#000000" stroke-width="1"/>
-    <circle cx="128.025" cy="56.900" r="2.200" fill="#DDEEFF" stroke="#000000" stroke-width="1"/>
-    <circle cx="128.025" cy="85.350" r="2.200" fill="#DDEEFF" stroke="#000000" stroke-width="1"/>
-    <rect x="105.425" y="103.800" width="45.200" height="76.900" fill="#DDEEFF" stroke="#000000" stroke-width="1"/>
-    <text x="128.025" y="145.750" text-anchor="middle" fill="#000000">modexp</text>
-    <line x1="170.700" y1="-11.949" x2="170.700" y2="182.649" fill="none" stroke="#000000" stroke-width="1" stroke-dasharray="3 2"/>
-    <rect x="175.275" y="-10.000" width="76.200" height="105.350" fill="#FFFF00" stroke="#000000" stroke-width="1"/>
-    <text x="213.375" y="46.175" text-anchor="middle" fill="#000000">inverse QFT</text>
-    <path d="M 246.050 10.000 L 256.050 10.000 A 10.000 10.000 0 0 0 256.050 -10.000 L 246.050 -10.000 Z" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
-    <text x="256.050" y="3.500" text-anchor="middle" fill="#000000">bits</text>
-    <path d="M 246.050 38.450 L 256.050 38.450 A 10.000 10.000 0 0 0 256.050 18.450 L 246.050 18.450 Z" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
-    <text x="256.050" y="31.950" text-anchor="middle" fill="#000000">bits</text>
-    <path d="M 246.050 66.900 L 256.050 66.900 A 10.000 10.000 0 0 0 256.050 46.900 L 246.050 46.900 Z" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
-    <text x="256.050" y="60.400" text-anchor="middle" fill="#000000">bits</text>
-    <path d="M 246.050 95.350 L 256.050 95.350 A 10.000 10.000 0 0 0 256.050 75.350 L 246.050 75.350 Z" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
-    <text x="256.050" y="88.850" text-anchor="middle" fill="#000000">bits</text>
-    <path d="M 292.466 -9.673 Q 290.466 -9.673 290.466 16.501 T 288.466 42.675 Q 290.466 42.675 290.466 68.849 T 292.466 95.023" fill="none" stroke="#000000" stroke-width="1"/>
-    <rect x="250.225" y="38.975" width="97.000" height="11.000" fill="#FFFFFF"/>
-    <text x="298.725" y="46.175" text-anchor="middle" fill="#000000">period register</text>
-    <path d="M 207.116 104.127 Q 205.116 104.127 205.116 123.189 T 203.116 142.250 Q 205.116 142.250 205.116 161.312 T 207.116 180.373" fill="none" stroke="#000000" stroke-width="1"/>
-    <rect x="167.975" y="138.550" width="90.800" height="11.000" fill="#FFFFFF"/>
-    <text x="213.375" y="145.750" text-anchor="middle" fill="#000000">value register</text>
+    <line x1="129.287" y1="0.000" x2="129.287" y2="170.700" fill="none" stroke="#000000" stroke-width="1"/>
+    <circle cx="129.287" cy="0.000" r="2.200" fill="#DDEEFF" stroke="#000000" stroke-width="1"/>
+    <circle cx="129.287" cy="28.450" r="2.200" fill="#DDEEFF" stroke="#000000" stroke-width="1"/>
+    <circle cx="129.287" cy="56.900" r="2.200" fill="#DDEEFF" stroke="#000000" stroke-width="1"/>
+    <circle cx="129.287" cy="85.350" r="2.200" fill="#DDEEFF" stroke="#000000" stroke-width="1"/>
+    <rect x="106.687" y="103.800" width="45.200" height="76.900" fill="#DDEEFF" stroke="#000000" stroke-width="1"/>
+    <text x="129.287" y="145.750" text-anchor="middle" fill="#000000">modexp</text>
+    <line x1="173.225" y1="-11.949" x2="173.225" y2="182.649" fill="none" stroke="#000000" stroke-width="1" stroke-dasharray="3 2"/>
+    <rect x="207.863" y="-10.000" width="76.200" height="105.350" fill="#FFFF00" stroke="#000000" stroke-width="1"/>
+    <text x="245.963" y="46.175" text-anchor="middle" fill="#000000">inverse QFT</text>
+    <path d="M 297.300 10.000 L 330.100 10.000 A 10.000 10.000 0 0 0 330.100 -10.000 L 297.300 -10.000 Z" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="313.700" y="3.500" text-anchor="middle" fill="#000000">bits</text>
+    <path d="M 297.300 38.450 L 330.100 38.450 A 10.000 10.000 0 0 0 330.100 18.450 L 297.300 18.450 Z" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="313.700" y="31.950" text-anchor="middle" fill="#000000">bits</text>
+    <path d="M 297.300 66.900 L 330.100 66.900 A 10.000 10.000 0 0 0 330.100 46.900 L 297.300 46.900 Z" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="313.700" y="60.400" text-anchor="middle" fill="#000000">bits</text>
+    <path d="M 297.300 95.350 L 330.100 95.350 A 10.000 10.000 0 0 0 330.100 75.350 L 297.300 75.350 Z" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="313.700" y="88.850" text-anchor="middle" fill="#000000">bits</text>
+    <path d="M 344.038 -9.673 Q 342.038 -9.673 342.038 16.501 T 340.038 42.675 Q 342.038 42.675 342.038 68.849 T 344.038 95.023" fill="none" stroke="#000000" stroke-width="1"/>
+    <rect x="346.038" y="38.975" width="97.000" height="11.000" fill="#FFFFFF"/>
+    <text x="394.538" y="46.175" text-anchor="middle" fill="#000000">period register</text>
+    <path d="M 198.562 104.127 Q 196.562 104.127 196.562 123.189 T 194.562 142.250 Q 196.562 142.250 196.562 161.312 T 198.562 180.373" fill="none" stroke="#000000" stroke-width="1"/>
+    <rect x="200.562" y="138.550" width="90.800" height="11.000" fill="#FFFFFF"/>
+    <text x="245.963" y="145.750" text-anchor="middle" fill="#000000">value register</text>
   </g>
 </svg>

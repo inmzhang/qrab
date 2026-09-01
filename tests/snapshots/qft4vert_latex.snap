@@ -5,37 +5,37 @@ source: tests/snapshots.rs
 \usepackage{tikz}
 \usetikzlibrary{decorations.pathreplacing,shapes.geometric}
 \begin{document}
-\begin{tikzpicture}[line cap=round,line join=round,font=\sffamily,scale=0.900,rotate=90]
+\begin{tikzpicture}[line cap=round,line join=round,font=\sffamily,scale=0.900,rotate=-90]
 % circuit: qft4_vertical
-  \draw (0.000,-0.000) -- (16.500,-0.000);
-  \node[anchor=east] at (0,-0.000) {\texttt{q[0]}};
-  \draw (0.000,-1.000) -- (16.500,-1.000);
-  \node[anchor=east] at (0,-1.000) {\texttt{q[1]}};
-  \draw (0.000,-2.000) -- (16.500,-2.000);
-  \node[anchor=east] at (0,-2.000) {\texttt{q[2]}};
   \draw (0.000,-3.000) -- (16.500,-3.000);
-  \node[anchor=east] at (0,-3.000) {\texttt{q[3]}};
-  \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (1.500,-0.000) {\texttt{H}};
-  \draw (3.000,-0.000) -- (3.000,-1.000);
-  \draw[draw=black,fill=black] (3.000,-1.000) circle[radius=2.2pt];
-  \node[draw=black,fill=white,circle,minimum width=20.000pt,minimum height=20.000pt] at (3.000,-0.000) {\texttt{2}};
-  \draw (4.500,-0.000) -- (4.500,-2.000);
-  \draw[draw=black,fill=black] (4.500,-2.000) circle[radius=2.2pt];
-  \node[draw=black,fill=white,circle,minimum width=20.000pt,minimum height=20.000pt] at (4.500,-0.000) {\texttt{3}};
+  \node[anchor=east] at (0,-3.000) {\texttt{q[0]}};
+  \draw (0.000,-2.000) -- (16.500,-2.000);
+  \node[anchor=east] at (0,-2.000) {\texttt{q[1]}};
+  \draw (0.000,-1.000) -- (16.500,-1.000);
+  \node[anchor=east] at (0,-1.000) {\texttt{q[2]}};
+  \draw (0.000,-0.000) -- (16.500,-0.000);
+  \node[anchor=east] at (0,-0.000) {\texttt{q[3]}};
+  \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (1.500,-3.000) {\texttt{H}};
+  \draw (3.000,-2.000) -- (3.000,-3.000);
+  \draw[draw=black,fill=black] (3.000,-2.000) circle[radius=2.2pt];
+  \node[draw=black,fill=white,circle,minimum width=20.000pt,minimum height=20.000pt] at (3.000,-3.000) {\texttt{2}};
+  \draw (4.500,-1.000) -- (4.500,-3.000);
+  \draw[draw=black,fill=black] (4.500,-1.000) circle[radius=2.2pt];
+  \node[draw=black,fill=white,circle,minimum width=20.000pt,minimum height=20.000pt] at (4.500,-3.000) {\texttt{3}};
   \draw (6.000,-0.000) -- (6.000,-3.000);
-  \draw[draw=black,fill=black] (6.000,-3.000) circle[radius=2.2pt];
-  \node[draw=black,fill=white,circle,minimum width=20.000pt,minimum height=20.000pt] at (6.000,-0.000) {\texttt{4}};
-  \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (7.500,-1.000) {\texttt{H}};
+  \draw[draw=black,fill=black] (6.000,-0.000) circle[radius=2.2pt];
+  \node[draw=black,fill=white,circle,minimum width=20.000pt,minimum height=20.000pt] at (6.000,-3.000) {\texttt{4}};
+  \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (7.500,-2.000) {\texttt{H}};
   \draw (9.000,-1.000) -- (9.000,-2.000);
-  \draw[draw=black,fill=black] (9.000,-2.000) circle[radius=2.2pt];
-  \node[draw=black,fill=white,circle,minimum width=20.000pt,minimum height=20.000pt] at (9.000,-1.000) {\texttt{2}};
-  \draw (10.500,-1.000) -- (10.500,-3.000);
-  \draw[draw=black,fill=black] (10.500,-3.000) circle[radius=2.2pt];
-  \node[draw=black,fill=white,circle,minimum width=20.000pt,minimum height=20.000pt] at (10.500,-1.000) {\texttt{3}};
-  \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (12.000,-2.000) {\texttt{H}};
-  \draw (13.500,-2.000) -- (13.500,-3.000);
-  \draw[draw=black,fill=black] (13.500,-3.000) circle[radius=2.2pt];
-  \node[draw=black,fill=white,circle,minimum width=20.000pt,minimum height=20.000pt] at (13.500,-2.000) {\texttt{2}};
-  \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (15.000,-3.000) {\texttt{H}};
+  \draw[draw=black,fill=black] (9.000,-1.000) circle[radius=2.2pt];
+  \node[draw=black,fill=white,circle,minimum width=20.000pt,minimum height=20.000pt] at (9.000,-2.000) {\texttt{2}};
+  \draw (10.500,-0.000) -- (10.500,-2.000);
+  \draw[draw=black,fill=black] (10.500,-0.000) circle[radius=2.2pt];
+  \node[draw=black,fill=white,circle,minimum width=20.000pt,minimum height=20.000pt] at (10.500,-2.000) {\texttt{3}};
+  \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (12.000,-1.000) {\texttt{H}};
+  \draw (13.500,-0.000) -- (13.500,-1.000);
+  \draw[draw=black,fill=black] (13.500,-0.000) circle[radius=2.2pt];
+  \node[draw=black,fill=white,circle,minimum width=20.000pt,minimum height=20.000pt] at (13.500,-1.000) {\texttt{2}};
+  \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (15.000,-0.000) {\texttt{H}};
 \end{tikzpicture}
 \end{document}

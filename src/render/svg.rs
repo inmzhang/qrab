@@ -42,7 +42,10 @@ pub(super) fn render_svg(circuit: &Circuit) -> String {
     let columns = column_positions(circuit, &scheduled);
     let end_x = columns[last_column + 1];
 
-    let mut canvas = Canvas::default();
+    let mut canvas = Canvas {
+        rotated: circuit.layout.orientation == Orientation::Vertical,
+        ..Canvas::default()
+    };
     for (group_index, group) in circuit.groups.iter().enumerate() {
         draw_group(
             &mut canvas,
@@ -85,14 +88,14 @@ fn assemble(circuit: &Circuit, canvas: Canvas) -> String {
         bottom: 1.0,
     });
 
-    // Vertical circuits are drawn horizontally and then rotated, exactly as the
-    // TikZ backend does with `rotate=90`. In SVG's y-down space the equivalent
-    // rotation maps (x, y) to (y, -x), which is `rotate(-90)`.
+    // Vertical circuits are drawn horizontally and then rotated a quarter turn
+    // so time runs down the page, exactly as the TikZ backend does. In SVG's
+    // y-down space that rotation maps (x, y) to (-y, x), which is `rotate(90)`.
     let vertical = circuit.layout.orientation == Orientation::Vertical;
     let (left, top, width, height) = if vertical {
         (
-            bounds.top,
-            -bounds.right,
+            -bounds.bottom,
+            bounds.left,
             bounds.bottom - bounds.top,
             bounds.right - bounds.left,
         )
@@ -124,7 +127,7 @@ fn assemble(circuit: &Circuit, canvas: Canvas) -> String {
         svg_color(&circuit.layout.background)
     );
     if vertical {
-        output.push_str("  <g transform=\"rotate(-90)\">\n");
+        output.push_str("  <g transform=\"rotate(90)\">\n");
     } else {
         output.push_str("  <g>\n");
     }
@@ -155,6 +158,8 @@ struct Bounds {
 struct Canvas {
     body: String,
     bounds: Option<Bounds>,
+    /// Set for a vertical circuit, whose body is wrapped in `rotate(90)`.
+    rotated: bool,
 }
 
 impl Canvas {
@@ -234,19 +239,37 @@ impl Canvas {
 
     #[allow(clippy::too_many_arguments)]
     fn text(&mut self, x: f32, y: f32, value: &str, anchor: Anchor, style: &Style, boxed: bool) {
-        let (px, py) = self.point(x, y);
+        let (anchor_x, anchor_y) = self.point(x, y);
         let width = text_width(value);
         let (offset_x, offset_y) = anchor.offset(width);
-        let (px, py) = (px + offset_x, py + offset_y);
-        self.cover(px - width / 2.0, py - FONT_SIZE * 0.8);
-        self.cover(px + width / 2.0, py + FONT_SIZE * 0.8);
+        let (px, py) = (anchor_x + offset_x, anchor_y + offset_y);
+
+        // A vertical circuit rotates its whole body, which would lay the text
+        // on its side. Turning each run back the other way about the point it
+        // is placed at cancels the group rotation exactly, leaving a pure
+        // translation, so the offsets above stay in on-screen terms.
+        let turn = if self.rotated {
+            format!(" transform=\"rotate(-90 {anchor_x:.3} {anchor_y:.3})\"")
+        } else {
+            String::new()
+        };
+        if self.rotated {
+            // The run reaches across the page after the group rotation, so in
+            // the body's own coordinates its extent is the other way round.
+            let (cx, cy) = (anchor_x + offset_y, anchor_y - offset_x);
+            self.cover(cx - FONT_SIZE * 0.8, cy - width / 2.0);
+            self.cover(cx + FONT_SIZE * 0.8, cy + width / 2.0);
+        } else {
+            self.cover(px - width / 2.0, py - FONT_SIZE * 0.8);
+            self.cover(px + width / 2.0, py + FONT_SIZE * 0.8);
+        }
 
         if boxed && let Some(fill) = &style.fill {
             let mut attributes = format!(" fill=\"{}\"", svg_color(fill));
             push_opacity(&mut attributes, style);
             emit!(
                 self.body,
-                "    <rect x=\"{:.3}\" y=\"{:.3}\" width=\"{:.3}\" height=\"{:.3}\"{attributes}/>",
+                "    <rect x=\"{:.3}\" y=\"{:.3}\" width=\"{:.3}\" height=\"{:.3}\"{attributes}{turn}/>",
                 px - width / 2.0 - TEXT_PADDING / 2.0,
                 py - FONT_SIZE * 0.72,
                 width + TEXT_PADDING,
@@ -269,7 +292,7 @@ impl Canvas {
         };
         emit!(
             self.body,
-            "    <text x=\"{px:.3}\" y=\"{py:.3}\"{attributes}>{body}</text>"
+            "    <text x=\"{px:.3}\" y=\"{py:.3}\"{attributes}{turn}>{body}</text>"
         );
     }
 }
@@ -370,7 +393,7 @@ fn draw_wire(
 ) {
     let initial_kind = initial_wire_kind(circuit, scheduled, wire_index);
     let mut kind = initial_kind;
-    let mut row = wire_index;
+    let mut row = initial_row(circuit, wire_index);
     let mut start_x = 0.0;
 
     for operation in scheduled {
@@ -416,7 +439,7 @@ fn draw_wire(
     draw_wire_run(canvas, kind, start_x, end_x, y, &wire.style);
     if initial_kind != WireKind::Hidden || wire.ellipsis {
         let input = wire.input.as_deref().unwrap_or(&wire.name);
-        let input_y = -(wire_index as f32) * circuit.layout.wire_gap;
+        let input_y = -(initial_row(circuit, wire_index) as f32) * circuit.layout.wire_gap;
         canvas.text(0.0, input_y, input, Anchor::East, &Style::default(), false);
     }
     if (kind != WireKind::Hidden || wire.ellipsis)
@@ -619,7 +642,8 @@ fn draw_operation(
                 );
             } else {
                 let y = -((first + last) as f32) * wire_gap / 2.0;
-                canvas.text(x, y, label, Anchor::Center, operation.style, true);
+                let masked = masked_style(operation.style, &layout.background);
+                canvas.text(x, y, label, Anchor::Center, &masked, true);
             }
         }
         OperationKind::Bundle { wire, label } => {
@@ -671,7 +695,8 @@ fn draw_operation(
                     &labels[index]
                 };
                 let y = -(operation.positions[*wire] as f32) * wire_gap;
-                canvas.text(x, y, label, Anchor::Center, operation.style, true);
+                let masked = masked_style(operation.style, &layout.background);
+                canvas.text(x, y, label, Anchor::Center, &masked, true);
             }
         }
         OperationKind::Brace { wires, label, side } => {
@@ -698,14 +723,22 @@ fn draw_operation(
                 .map(|wire| operation.positions[*wire])
                 .collect::<Vec<_>>();
             rows.sort_unstable();
-            let above = *side == NoteSide::Above;
+            let above = note_is_above(circuit, *side);
             let row = if above {
                 *rows.first().expect("circuit has a wire") as f32
             } else {
                 *rows.last().expect("circuit has a wire") as f32
             };
             let y = -row * wire_gap + if above { 0.42 } else { -0.42 };
-            let anchor = if above { Anchor::South } else { Anchor::North };
+            // The note reads across the page after the body is rotated, so a
+            // vertical circuit anchors it sideways to keep it clear of the
+            // wires it sits beside rather than above.
+            let anchor = match (circuit.layout.orientation == Orientation::Vertical, above) {
+                (true, true) => Anchor::West,
+                (true, false) => Anchor::East,
+                (false, true) => Anchor::South,
+                (false, false) => Anchor::North,
+            };
             // TODO: notes are rendered on one line. The LaTeX and Typst
             // backends wrap them to `layout.comment_width`; wrapping here needs
             // real text metrics, which SVG does not provide.
@@ -758,10 +791,14 @@ fn draw_gate(
         let first = *targets.iter().min().expect("gate has a target");
         let last = *targets.iter().max().expect("gate has a target");
         let midpoint = -((first + last) as f32) * wire_gap / 2.0;
-        let height = style.height.unwrap_or_else(|| {
-            (last - first) as f32 * wire_gap * PIXELS_PER_CENTIMETER + gate_size
-        });
-        draw_node(canvas, x, midpoint, label, gate_size, height, style);
+        // A requested height is a floor, not a cap: qpic sizes a multi-wire box
+        // from its span and a gate that stops short of the wires it acts on
+        // says nothing.
+        let span = (last - first) as f32 * wire_gap * PIXELS_PER_CENTIMETER + gate_size;
+        let height = span.max(style.height.unwrap_or(0.0));
+        let mut node_style = style.clone();
+        node_style.height = None;
+        draw_node(canvas, x, midpoint, label, gate_size, height, &node_style);
         return;
     }
 
@@ -835,8 +872,13 @@ fn draw_measurement(
     style: &Style,
 ) {
     let y = -(target as f32) * layout.wire_gap;
-    let width = style.width.unwrap_or(layout.gate_size) / PIXELS_PER_CENTIMETER;
     let height = style.height.unwrap_or(layout.gate_size) / PIXELS_PER_CENTIMETER;
+    // Both markers taper at one end, and the taper is room the label cannot
+    // use. Like a gate box, the marker grows to fit its label instead of
+    // clipping it the way qpic does, so the taper is added on top.
+    let nose = height / 2.0;
+    let width = (style.width.unwrap_or(layout.gate_size) / PIXELS_PER_CENTIMETER)
+        .max(label.map_or(0.0, |label| label_width(label) + 2.0 * LABEL_PADDING + nose));
     let (left, right) = (x - width / 2.0, x + width / 2.0);
     let (top, bottom) = (y + height / 2.0, y - height / 2.0);
 
@@ -883,7 +925,13 @@ fn draw_measurement(
         }
         let mut label_style = style.clone();
         label_style.fill = None;
-        canvas.text(x, y, label, Anchor::Center, &label_style, false);
+        // The taper sits on the right of a D and on the left of a tag, so the
+        // label is centred in what is left rather than in the marker as a whole.
+        let text_x = match shape {
+            MeasurementShape::D => x - nose / 2.0,
+            MeasurementShape::Tag => x + nose / 2.0,
+        };
+        canvas.text(text_x, y, label, Anchor::Center, &label_style, false);
         return;
     }
 
@@ -1001,10 +1049,13 @@ fn draw_brace(
 ) {
     let top = -(first as f32) * wire_gap + 0.34;
     let bottom = -(last as f32) * wire_gap - 0.34;
+    // The label is opaque, so a brace closer than half the label sits under it
+    // and loses the central tip that tells a brace apart from a parenthesis.
+    let reach = (label_width(label) / 2.0 + LABEL_PADDING).max(0.22);
     for (offset, mirror) in match side {
-        BraceSide::Left => [Some((-0.22, false)), None],
-        BraceSide::Right => [Some((0.22, true)), None],
-        BraceSide::Both => [Some((-0.22, false)), Some((0.22, true))],
+        BraceSide::Left => [Some((-reach, false)), None],
+        BraceSide::Right => [Some((reach, true)), None],
+        BraceSide::Both => [Some((-reach, false)), Some((reach, true))],
     }
     .into_iter()
     .flatten()
@@ -1016,8 +1067,7 @@ fn draw_brace(
         push_opacity(&mut attributes, style);
         draw_curly_brace(canvas, x + offset, top, bottom, mirror, &attributes);
     }
-    let mut label_style = style.clone();
-    label_style.fill.get_or_insert_with(|| background.into());
+    let label_style = masked_style(style, background);
     canvas.text(
         x,
         (top + bottom) / 2.0,

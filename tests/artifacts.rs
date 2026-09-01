@@ -127,11 +127,11 @@ const PAGE_SIZE_BASELINES: &[(&str, f32, f32)] = &[
     ("qpic-manual-ex.comment-typst", 137.4, 111.4),
     ("qpic-manual-ex.MIXGATES", 209.99, 117.32),
     ("qpic-manual-ex.MIXGATES-typst", 167.78, 122.82),
-    ("qpic-Steane_NOOP", 1034.29, 394.83),
+    ("qpic-Steane_NOOP", 1043.00, 394.83),
     ("qpic-Steane_NOOP-typst", 593.74, 416.62),
     ("imports", 232.33, 60.61),
     ("imports-typst", 166.125, 65.66),
-    ("styling", 161.63, 436.02),
+    ("styling", 161.63, 439.36),
     ("qpic-start_and_end-typst", 151.89, 119.44),
 ];
 

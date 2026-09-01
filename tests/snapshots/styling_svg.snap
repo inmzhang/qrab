@@ -1,36 +1,36 @@
 ---
 source: tests/snapshots.rs
 ---
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="129.778" height="357.269" viewBox="-18.000 -296.190 117.980 324.790" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="141.438" height="340.698" viewBox="-96.880 -10.500 128.580 309.725" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10">
   <title>styled_controls</title>
-  <rect x="-18.000" y="-296.190" width="117.980" height="324.790" fill="#F7F8FC"/>
-  <g transform="rotate(-90)">
-    <line x1="0.000" y1="0.000" x2="251.498" y2="0.000" fill="none" stroke="#1F4E79" stroke-width="1"/>
-    <line x1="251.498" y1="0.996" x2="290.190" y2="0.996" fill="none" stroke="#1F4E79" stroke-width="1"/>
-    <line x1="251.498" y1="-0.996" x2="290.190" y2="-0.996" fill="none" stroke="#1F4E79" stroke-width="1"/>
-    <text x="-13.300" y="3.500" text-anchor="middle" fill="#000000">|0&gt;</text>
-    <line x1="0.000" y1="34.140" x2="290.190" y2="34.140" fill="none" stroke="#1F4E79" stroke-width="1"/>
-    <text x="-13.300" y="37.640" text-anchor="middle" fill="#000000">|0&gt;</text>
-    <line x1="0.000" y1="68.280" x2="290.190" y2="68.280" fill="none" stroke="#1F4E79" stroke-width="1"/>
-    <text x="-13.300" y="71.780" text-anchor="middle" fill="#000000">|0&gt;</text>
-    <circle cx="48.365" cy="0.000" r="12.000" fill="#FCE8A2" stroke="#1F4E79" stroke-width="1"/>
-    <text x="48.365" y="3.500" text-anchor="middle" fill="#1F4E79">H</text>
+  <rect x="-96.880" y="-10.500" width="128.580" height="309.725" fill="#F7F8FC"/>
+  <g transform="rotate(90)">
+    <line x1="0.000" y1="68.280" x2="254.533" y2="68.280" fill="none" stroke="#1F4E79" stroke-width="1"/>
+    <line x1="254.533" y1="69.276" x2="293.225" y2="69.276" fill="none" stroke="#1F4E79" stroke-width="1"/>
+    <line x1="254.533" y1="67.284" x2="293.225" y2="67.284" fill="none" stroke="#1F4E79" stroke-width="1"/>
+    <text x="-13.300" y="71.780" text-anchor="middle" fill="#000000" transform="rotate(-90 0.000 68.280)">|0&gt;</text>
+    <line x1="0.000" y1="34.140" x2="293.225" y2="34.140" fill="none" stroke="#1F4E79" stroke-width="1"/>
+    <text x="-13.300" y="37.640" text-anchor="middle" fill="#000000" transform="rotate(-90 0.000 34.140)">|0&gt;</text>
+    <line x1="0.000" y1="0.000" x2="293.225" y2="0.000" fill="none" stroke="#1F4E79" stroke-width="1"/>
+    <text x="-13.300" y="3.500" text-anchor="middle" fill="#000000" transform="rotate(-90 0.000 0.000)">|0&gt;</text>
+    <circle cx="48.365" cy="68.280" r="12.000" fill="#FCE8A2" stroke="#1F4E79" stroke-width="1"/>
+    <text x="48.365" y="71.780" text-anchor="middle" fill="#1F4E79" transform="rotate(-90 48.365 68.280)">H</text>
     <line x1="96.730" y1="0.000" x2="96.730" y2="68.280" fill="none" stroke="#0000FF" stroke-width="1" stroke-dasharray="3 2" opacity="0.650"/>
     <circle cx="96.730" cy="34.140" r="2.200" fill="#00FF00" stroke="#0000FF" stroke-width="1" stroke-dasharray="3 2" opacity="0.650"/>
     <rect x="81.730" y="-10.000" width="30.000" height="88.280" fill="#00FF00" stroke="#0000FF" stroke-width="1" stroke-dasharray="3 2" opacity="0.650"/>
-    <text x="96.730" y="37.640" text-anchor="middle" fill="#0000FF" opacity="0.650"><a xlink:href="https://example.com/qrab?gate=U" href="https://example.com/qrab?gate=U">U</a></text>
-    <line x1="145.095" y1="0.000" x2="145.095" y2="34.140" fill="none" stroke="#008080" stroke-width="1"/>
-    <circle cx="145.095" cy="0.000" r="2.200" fill="#FFFFFF" stroke="#008080" stroke-width="1"/>
-    <circle cx="145.095" cy="34.140" r="10.000" fill="#FFFFFF" stroke="#008080" stroke-width="1"/>
-    <text x="145.095" y="37.640" text-anchor="middle" fill="#008080">+</text>
-    <circle cx="145.095" cy="68.280" r="25.700" fill="#FFFF00" stroke="#FF0000" stroke-width="1"/>
-    <text x="145.095" y="71.780" text-anchor="middle" fill="#FF0000">theta/2</text>
-    <line x1="193.460" y1="0.000" x2="193.460" y2="68.280" fill="none" stroke="#FF0000" stroke-width="1"/>
-    <line x1="190.331" y1="3.130" x2="196.590" y2="-3.130" fill="none" stroke="#FF0000" stroke-width="1"/>
-    <line x1="190.331" y1="-3.130" x2="196.590" y2="3.130" fill="none" stroke="#FF0000" stroke-width="1"/>
-    <line x1="190.331" y1="71.410" x2="196.590" y2="65.151" fill="none" stroke="#FF0000" stroke-width="1"/>
-    <line x1="190.331" y1="65.151" x2="196.590" y2="71.410" fill="none" stroke="#FF0000" stroke-width="1"/>
-    <path d="M 231.825 10.000 L 241.825 10.000 A 10.000 10.000 0 0 0 241.825 -10.000 L 231.825 -10.000 Z" fill="#FFFF00" stroke="#0000FF" stroke-width="1"/>
-    <text x="241.825" y="3.500" text-anchor="middle" fill="#0000FF">Z</text>
+    <text x="96.730" y="37.640" text-anchor="middle" fill="#0000FF" opacity="0.650" transform="rotate(-90 96.730 34.140)"><a xlink:href="https://example.com/qrab?gate=U" href="https://example.com/qrab?gate=U">U</a></text>
+    <line x1="146.613" y1="34.140" x2="146.613" y2="68.280" fill="none" stroke="#008080" stroke-width="1"/>
+    <circle cx="146.613" cy="68.280" r="2.200" fill="#FFFFFF" stroke="#008080" stroke-width="1"/>
+    <circle cx="146.613" cy="34.140" r="10.000" fill="#FFFFFF" stroke="#008080" stroke-width="1"/>
+    <text x="146.613" y="37.640" text-anchor="middle" fill="#008080" transform="rotate(-90 146.613 34.140)">+</text>
+    <circle cx="146.613" cy="0.000" r="25.700" fill="#FFFF00" stroke="#FF0000" stroke-width="1"/>
+    <text x="146.613" y="3.500" text-anchor="middle" fill="#FF0000" transform="rotate(-90 146.613 0.000)">theta/2</text>
+    <line x1="196.495" y1="68.280" x2="196.495" y2="0.000" fill="none" stroke="#FF0000" stroke-width="1"/>
+    <line x1="193.365" y1="71.410" x2="199.624" y2="65.151" fill="none" stroke="#FF0000" stroke-width="1"/>
+    <line x1="193.365" y1="65.151" x2="199.624" y2="71.410" fill="none" stroke="#FF0000" stroke-width="1"/>
+    <line x1="193.365" y1="3.130" x2="199.624" y2="-3.130" fill="none" stroke="#FF0000" stroke-width="1"/>
+    <line x1="193.365" y1="-3.130" x2="199.624" y2="3.130" fill="none" stroke="#FF0000" stroke-width="1"/>
+    <path d="M 232.760 78.280 L 246.960 78.280 A 10.000 10.000 0 0 0 246.960 58.280 L 232.760 58.280 Z" fill="#FFFF00" stroke="#0000FF" stroke-width="1"/>
+    <text x="239.860" y="71.780" text-anchor="middle" fill="#0000FF" transform="rotate(-90 239.860 68.280)">Z</text>
   </g>
 </svg>

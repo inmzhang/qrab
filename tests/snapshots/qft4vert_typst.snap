@@ -4,8 +4,8 @@ source: tests/snapshots.rs
 #set page(width: auto, height: auto, margin: 6pt, fill: white)
 #import "@preview/quill:0.8.0" as quill
 
-#rotate(-90deg, reflow: true)[
-#show text: it => rotate(90deg, reflow: true, it)
+#rotate(90deg, reflow: true)[
+#show text: it => rotate(-90deg, reflow: true, it)
 #quill.quantum-circuit(
   wires: 4,
   row-spacing: 12.000pt,
@@ -28,22 +28,22 @@ source: tests/snapshots.rs
   quill.lstick(text("q[1]"), x: 0, y: 1),
   quill.lstick(text("q[2]"), x: 0, y: 2),
   quill.lstick(text("q[3]"), x: 0, y: 3),
-  quill.gate(text("H"), x: 1, y: 0),
-  quill.ctrl(-1, open: false, x: 2, y: 1),
-  quill.gate(text("2"), x: 2, y: 0, radius: 999pt),
-  quill.ctrl(-2, open: false, x: 3, y: 2),
-  quill.gate(text("3"), x: 3, y: 0, radius: 999pt),
-  quill.ctrl(-3, open: false, x: 4, y: 3),
-  quill.gate(text("4"), x: 4, y: 0, radius: 999pt),
-  quill.gate(text("H"), x: 5, y: 1),
-  quill.ctrl(-1, open: false, x: 6, y: 2),
-  quill.gate(text("2"), x: 6, y: 1, radius: 999pt),
-  quill.ctrl(-2, open: false, x: 7, y: 3),
-  quill.gate(text("3"), x: 7, y: 1, radius: 999pt),
-  quill.gate(text("H"), x: 8, y: 2),
-  quill.ctrl(-1, open: false, x: 9, y: 3),
-  quill.gate(text("2"), x: 9, y: 2, radius: 999pt),
-  quill.gate(text("H"), x: 10, y: 3),
+  quill.gate(text("H"), x: 1, y: 3),
+  quill.ctrl(1, open: false, x: 2, y: 2),
+  quill.gate(text("2"), x: 2, y: 3, radius: 999pt),
+  quill.ctrl(2, open: false, x: 3, y: 1),
+  quill.gate(text("3"), x: 3, y: 3, radius: 999pt),
+  quill.ctrl(3, open: false, x: 4, y: 0),
+  quill.gate(text("4"), x: 4, y: 3, radius: 999pt),
+  quill.gate(text("H"), x: 5, y: 2),
+  quill.ctrl(1, open: false, x: 6, y: 1),
+  quill.gate(text("2"), x: 6, y: 2, radius: 999pt),
+  quill.ctrl(2, open: false, x: 7, y: 0),
+  quill.gate(text("3"), x: 7, y: 2, radius: 999pt),
+  quill.gate(text("H"), x: 8, y: 1),
+  quill.ctrl(1, open: false, x: 9, y: 0),
+  quill.gate(text("2"), x: 9, y: 1, radius: 999pt),
+  quill.gate(text("H"), x: 10, y: 0),
   quill.phantom(x: 11, y: 3, width: 0pt, height: 0pt),
 )
 ]

@@ -24,9 +24,9 @@ source: tests/snapshots.rs
     <line x1="85.350" y1="2.845" x2="90.187" y2="-3.414" fill="none" stroke="#000000" stroke-width="1"/>
     <line x1="90.187" y1="-3.414" x2="89.687" y2="-1.194" fill="none" stroke="#000000" stroke-width="1"/>
     <line x1="90.187" y1="-3.414" x2="88.164" y2="-2.371" fill="none" stroke="#000000" stroke-width="1"/>
-    <path d="M 32.675 38.450 L 42.675 38.450 A 10.000 10.000 0 0 0 42.675 18.450 L 32.675 18.450 Z" fill="#DDEEFF" stroke="#0000FF" stroke-width="1"/>
-    <text x="42.675" y="31.950" text-anchor="middle" fill="#0000FF">Z</text>
-    <path d="M 32.675 56.900 L 39.342 46.900 L 52.675 46.900 L 52.675 66.900 L 39.342 66.900 Z" fill="#FFFF00" stroke="#FF0000" stroke-width="1"/>
-    <text x="42.675" y="60.400" text-anchor="middle" fill="#FF0000">X</text>
+    <path d="M 30.575 38.450 L 44.775 38.450 A 10.000 10.000 0 0 0 44.775 18.450 L 30.575 18.450 Z" fill="#DDEEFF" stroke="#0000FF" stroke-width="1"/>
+    <text x="37.675" y="31.950" text-anchor="middle" fill="#0000FF">Z</text>
+    <path d="M 30.575 56.900 L 38.642 46.900 L 54.775 46.900 L 54.775 66.900 L 38.642 66.900 Z" fill="#FFFF00" stroke="#FF0000" stroke-width="1"/>
+    <text x="47.675" y="60.400" text-anchor="middle" fill="#FF0000">X</text>
   </g>
 </svg>

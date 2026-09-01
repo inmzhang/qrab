@@ -82,7 +82,7 @@ fn check_document(document: &str, fixture: &Path) {
                 // the same rotation the renderer applies.
                 if element.name().as_ref() == "g" {
                     rotated = attribute(&element, "transform")
-                        .is_some_and(|value| value.contains("rotate(-90)"));
+                        .is_some_and(|value| value.contains("rotate(90)"));
                 }
                 inspect(&element, fixture, &mut view_box, rotated);
             }
@@ -197,7 +197,7 @@ fn inspect(
         _ => Vec::new(),
     };
     for (x, y) in extents {
-        let (x, y) = if rotated { (y, -x) } else { (x, y) };
+        let (x, y) = if rotated { (-y, x) } else { (x, y) };
         assert!(
             x >= left - 0.01
                 && x <= left + width + 0.01

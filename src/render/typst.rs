@@ -18,7 +18,7 @@ pub(super) fn render_typst(circuit: &Circuit) -> String {
     append_raw(&mut output, &circuit.escapes.typst.before);
     if circuit.layout.orientation == Orientation::Vertical {
         output.push_str(
-            "#rotate(-90deg, reflow: true)[\n#show text: it => rotate(90deg, reflow: true, it)\n",
+            "#rotate(90deg, reflow: true)[\n#show text: it => rotate(-90deg, reflow: true, it)\n",
         );
     }
     output.push_str("#quill.quantum-circuit(\n");
@@ -344,7 +344,8 @@ pub(super) fn render_typst(circuit: &Circuit) -> String {
                     .iter()
                     .map(|wire| operation.positions[*wire])
                     .collect::<Vec<_>>();
-                let row = if *side == NoteSide::Above {
+                let above = note_is_above(circuit, *side);
+                let row = if above {
                     rows.iter().min()
                 } else {
                     rows.iter().max()
@@ -355,11 +356,7 @@ pub(super) fn render_typst(circuit: &Circuit) -> String {
                     "  quill.gategroup(1, 1, x: {x}, y: {row}, padding: 0pt, stroke: none, label: (content: block(width: {:.3}pt, align(center, text(\"{}\"))), pos: {})),",
                     circuit.layout.comment_width,
                     typst_string(text),
-                    if *side == NoteSide::Above {
-                        "top"
-                    } else {
-                        "bottom"
-                    },
+                    if above { "top" } else { "bottom" },
                 );
             }
             OperationKind::Cut { label, .. } => {

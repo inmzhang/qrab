@@ -7,31 +7,31 @@ source: tests/snapshots.rs
 \begin{document}
 \begin{tikzpicture}[line cap=round,line join=round,font=\sffamily,scale=1.000]
 % circuit: start_and_end
-  \draw (0.000,-0.000) -- (3.000,-0.000);
-  \draw (4.500,-0.000) -- (6.000,-0.000);
+  \draw (0.000,-0.000) -- (4.005,-0.000);
+  \draw (6.683,-0.000) -- (8.881,-0.000);
   \node[anchor=east] at (0,-0.000) {\texttt{a0}};
-  \node[anchor=west] at (6.000,-0.000) {\texttt{a1}};
-  \draw (0.000,-1.000) -- (4.500,-1.000);
+  \node[anchor=west] at (8.881,-0.000) {\texttt{a1}};
+  \draw (0.000,-1.000) -- (6.683,-1.000);
   \node[anchor=east] at (0,-1.000) {\texttt{b0}};
-  \draw (1.500,-2.000) -- (4.500,-2.000);
-  \draw (1.500,-3.000) -- (6.000,-3.000);
-  \node[anchor=west] at (6.000,-3.000) {\texttt{d1}};
-  \draw (1.500,-2.130) -- (1.500,-1.870);
-  \node[inner sep=2pt,anchor=east] at (1.500,-2.000) {\texttt{late}};
-  \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (1.500,-0.000) {\texttt{H}};
-  \draw (3.000,-0.130) -- (3.000,0.130);
-  \node[inner sep=2pt,anchor=west] at (3.000,-0.000) {\texttt{pause}};
-  \draw (1.500,-3.130) -- (1.500,-2.870);
-  \node[inner sep=2pt,anchor=east] at (1.500,-3.000) {\texttt{late}};
-  \draw (3.000,-1.000) -- (3.000,-2.000);
-  \draw[draw=black,fill=black] (3.000,-2.000) circle[radius=2.2pt];
-  \draw[draw=black,fill=white] (3.000,-1.000) circle[radius=4.0pt];
-  \draw (2.860,-1.000) -- (3.140,-1.000) (3.000,-1.140) -- (3.000,-0.860);
-  \draw (4.500,-1.130) -- (4.500,-0.870);
-  \node[inner sep=2pt,anchor=west] at (4.500,-1.000) {\texttt{done}};
-  \draw (4.500,-0.130) -- (4.500,0.130);
-  \node[inner sep=2pt,anchor=east] at (4.500,-0.000) {\texttt{resume}};
-  \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (3.000,-3.000) {\texttt{H}};
-  \draw (4.500,-2.130) -- (4.500,-1.870);
+  \draw (1.762,-2.000) -- (6.683,-2.000);
+  \draw (1.762,-3.000) -- (8.881,-3.000);
+  \node[anchor=west] at (8.881,-3.000) {\texttt{d1}};
+  \draw (1.762,-2.130) -- (1.762,-1.870);
+  \node[inner sep=2pt,anchor=east] at (1.762,-2.000) {\texttt{late}};
+  \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (1.762,-0.000) {\texttt{H}};
+  \draw (4.005,-0.130) -- (4.005,0.130);
+  \node[inner sep=2pt,anchor=west] at (4.005,-0.000) {\texttt{pause}};
+  \draw (1.762,-3.130) -- (1.762,-2.870);
+  \node[inner sep=2pt,anchor=east] at (1.762,-3.000) {\texttt{late}};
+  \draw (4.005,-1.000) -- (4.005,-2.000);
+  \draw[draw=black,fill=black] (4.005,-2.000) circle[radius=2.2pt];
+  \draw[draw=black,fill=white] (4.005,-1.000) circle[radius=4.0pt];
+  \draw (3.865,-1.000) -- (4.145,-1.000) (4.005,-1.140) -- (4.005,-0.860);
+  \draw (6.683,-1.130) -- (6.683,-0.870);
+  \node[inner sep=2pt,anchor=west] at (6.683,-1.000) {\texttt{done}};
+  \draw (6.683,-0.130) -- (6.683,0.130);
+  \node[inner sep=2pt,anchor=east] at (6.683,-0.000) {\texttt{resume}};
+  \node[draw=black,fill=white,minimum width=20.000pt,minimum height=20.000pt] at (4.005,-3.000) {\texttt{H}};
+  \draw (6.683,-2.130) -- (6.683,-1.870);
 \end{tikzpicture}
 \end{document}

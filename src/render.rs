@@ -7,6 +7,23 @@ use crate::ast::{
 
 const POINTS_PER_CENTIMETER: f32 = 28.45;
 
+/// Advance of one monospaced character, in centimetres.
+///
+/// Neither coordinate backend can measure text, so both estimate a label's
+/// width from its character count at the 10pt monospace advance the SVG canvas
+/// assumes. The estimate is deliberately generous: too wide only spreads a
+/// diagram out, while too narrow lets neighbouring shapes overlap.
+const CHARACTER_WIDTH: f32 = 0.62 * 10.0 / POINTS_PER_CENTIMETER;
+
+/// Room left between a label and the edge of the shape around it, in
+/// centimetres. Matches the SVG canvas padding and TikZ's default `inner sep`.
+const LABEL_PADDING: f32 = 4.0 / POINTS_PER_CENTIMETER;
+
+/// Estimated width of `label` when drawn, in centimetres.
+fn label_width(label: &str) -> f32 {
+    label.chars().count() as f32 * CHARACTER_WIDTH
+}
+
 macro_rules! emit {
     ($output:expr, $($argument:tt)*) => {
         writeln!($output, $($argument)*).expect("writing to a String cannot fail")
@@ -63,8 +80,8 @@ impl Scheduled<'_> {
 
 fn schedule(circuit: &Circuit) -> (Vec<Scheduled<'_>>, Vec<usize>) {
     let mut tracks = vec![0_usize; circuit.wires.len()];
-    let mut order = (0..circuit.wires.len()).collect::<Vec<_>>();
-    let mut positions = order.clone();
+    let mut positions = initial_rows(circuit);
+    let mut order = positions.clone();
     let mut scheduled = Vec::with_capacity(circuit.operations.len());
     let mut overlay_columns = HashMap::new();
     for operation in &circuit.operations {
@@ -142,6 +159,29 @@ fn schedule(circuit: &Circuit) -> (Vec<Scheduled<'_>>, Vec<usize>) {
     }
     delay_starts(circuit, &mut scheduled);
     (scheduled, positions)
+}
+
+/// Row each wire starts in, before any `permute` moves it.
+///
+/// A vertical circuit is drawn horizontally and then rotated by a quarter turn.
+/// The rotation that makes time run down the page, which is how qpic reads,
+/// also swings the first wire over to the right-hand side, so vertical circuits
+/// deal their rows out bottom-up to swing it back. `order` and `positions` are
+/// each other's inverse and reversal is its own inverse, so one vector serves
+/// as both.
+fn initial_rows(circuit: &Circuit) -> Vec<usize> {
+    (0..circuit.wires.len())
+        .map(|wire| initial_row(circuit, wire))
+        .collect()
+}
+
+/// Row `wire` starts in. See [`initial_rows`].
+fn initial_row(circuit: &Circuit, wire: usize) -> usize {
+    if circuit.layout.orientation == Orientation::Vertical {
+        circuit.wires.len() - 1 - wire
+    } else {
+        wire
+    }
 }
 
 fn overlay_column(
@@ -277,14 +317,13 @@ fn wire_transitions(
 /// entry past the last column for the right-hand edge of the diagram.
 ///
 /// Columns are spaced evenly by `layout.column_gap`, which is what the abstract
-/// gap means, until an operation asks for more room than that. `space` is the
-/// only way to ask: the Typst backend hands its width straight to Quill, whose
-/// grid sizes columns to their contents, so the coordinate-based backends have
-/// to widen the same column themselves or the statement means nothing to them.
+/// gap means, until something in the column needs more room than that. The
+/// Typst backend hands widths straight to Quill, whose grid sizes columns to
+/// their contents, so the coordinate-based backends have to measure the same
+/// thing themselves or wide gates land on top of their neighbours.
 ///
 /// The extra width is split around the column that asked for it and shifts
-/// everything after it, so a `space` inserts room rather than overlapping its
-/// neighbours.
+/// everything after it, so the room is inserted rather than borrowed.
 fn column_positions(circuit: &Circuit, scheduled: &[Scheduled<'_>]) -> Vec<f32> {
     let gap = circuit.layout.column_gap;
     let last = scheduled
@@ -295,10 +334,8 @@ fn column_positions(circuit: &Circuit, scheduled: &[Scheduled<'_>]) -> Vec<f32> 
 
     let mut extra = vec![0.0_f32; last + 1];
     for operation in scheduled {
-        if matches!(operation.kind, OperationKind::Phantom { .. }) {
-            let width = operation.style.width.unwrap_or(0.0) / POINTS_PER_CENTIMETER;
-            extra[operation.column] = extra[operation.column].max(width - gap);
-        }
+        let width = occupied_width(operation, &circuit.layout);
+        extra[operation.column] = extra[operation.column].max(width - gap);
     }
 
     let mut positions = Vec::with_capacity(last + 2);
@@ -309,6 +346,64 @@ fn column_positions(circuit: &Circuit, scheduled: &[Scheduled<'_>]) -> Vec<f32> 
     }
     positions.push((last + 2) as f32 * gap + shift);
     positions
+}
+
+/// Whether a note sits on the low-row side of the wires it annotates.
+///
+/// Vertical circuits deal their rows out bottom-up (see [`initial_rows`]), so
+/// the row on a given side of the span is the opposite one. Without the flip a
+/// note would land between the wires instead of clear of them.
+fn note_is_above(circuit: &Circuit, side: NoteSide) -> bool {
+    (side == NoteSide::Above) != (circuit.layout.orientation == Orientation::Vertical)
+}
+
+/// Copies `style` with the diagram background as its fill.
+///
+/// Labels are drawn on top of the wires they annotate. qpic fills every label
+/// node with the background colour so the wire breaks around the text instead
+/// of striking through it; an explicit fill still wins.
+fn masked_style(style: &Style, background: &str) -> Style {
+    let mut masked = style.clone();
+    masked.fill.get_or_insert_with(|| background.to_owned());
+    masked
+}
+
+/// Horizontal room one operation needs, in centimetres.
+///
+/// Shapes grow to fit their label rather than clipping it, so the width a gate
+/// finally occupies is whatever is largest: the requested width, the default
+/// gate size, or the label plus its padding. `space` reserves its requested
+/// width and nothing else; everything else is drawn small enough that the
+/// column gap already covers it.
+fn occupied_width(operation: &Scheduled<'_>, layout: &Layout) -> f32 {
+    let requested = operation.style.width.unwrap_or(0.0) / POINTS_PER_CENTIMETER;
+    let boxed = |label: &str| {
+        requested
+            .max(layout.gate_size / POINTS_PER_CENTIMETER)
+            .max(label_width(label) + 2.0 * LABEL_PADDING)
+    };
+    match operation.kind {
+        OperationKind::Gate { label, .. } => boxed(label),
+        OperationKind::Measure {
+            label: Some(label), ..
+        } => boxed(label),
+        OperationKind::Label { label, brace, .. } => {
+            label_width(label)
+                + if brace.is_some() {
+                    4.0 * LABEL_PADDING
+                } else {
+                    0.0
+                }
+        }
+        OperationKind::Brace { label, .. } => label_width(label) + 4.0 * LABEL_PADDING,
+        // A lifecycle label hangs off one side of its column, so doubling it
+        // leaves exactly the room it needs once the extra is split in two: a
+        // `pause` ending and the `resume` after it each claim their own half.
+        OperationKind::Endpoint {
+            label: Some(label), ..
+        } => 2.0 * (label_width(label) + LABEL_PADDING),
+        _ => requested,
+    }
 }
 
 fn initial_wire_kind(circuit: &Circuit, scheduled: &[Scheduled<'_>], wire: usize) -> WireKind {
@@ -475,6 +570,36 @@ mod tests {
         );
         assert_eq!(scheduled[1].positions[2], 0);
         assert_eq!(final_positions, vec![1, 2, 0]);
+    }
+
+    #[test]
+    fn a_vertical_circuit_reads_downward_with_the_first_wire_on_the_left() {
+        // qpic reads a vertical circuit top to bottom. The quarter turn that
+        // sends time downward also swings the first wire to the right, so the
+        // rows are dealt out bottom-up to swing it back; both halves have to
+        // hold together or the diagram comes out mirrored.
+        let circuit = parse(
+            r#"
+                circuit vertical {
+                  layout { orientation: vertical }
+                  qubit a
+                  qubit b
+                  h a
+                }
+            "#,
+        )
+        .expect("valid vertical circuit");
+
+        assert_eq!(initial_rows(&circuit), vec![1, 0]);
+
+        let latex = render(&circuit, Target::Latex);
+        assert!(latex.contains("rotate=-90"));
+        // Wire `a` is one gap below wire `b`, which the turn reads as one gap
+        // to its left.
+        assert!(latex.contains("(0.000,-1.000) -- (3.000,-1.000)"));
+
+        let svg = render(&circuit, Target::Svg);
+        assert!(svg.contains("transform=\"rotate(90)\""));
     }
 
     #[test]

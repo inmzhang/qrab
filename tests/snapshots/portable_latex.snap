@@ -8,11 +8,11 @@ source: tests/snapshots.rs
 \begin{document}
 \begin{tikzpicture}[line cap=round,line join=round,font=\sffamily,scale=1.000]
 % circuit: portable
-  \draw (0.000,-0.000) -- (6.000,-0.000);
+  \draw (0.000,-0.000) -- (6.262,-0.000);
   \node[anchor=east] at (0,-0.000) {\texttt{q}};
   \node[inner sep=0pt,minimum width=40.000pt,minimum height=12.000pt] at (1.500,-0.000) {};
   \node[inner sep=2pt,text=blue,fill=yellow,opacity=0.500] at (4.500,-0.000) {\href{https://example.com/stage}{\texttt{stage}}};
-  \draw[color=red,opacity=0.250] (6.000,-0.130) -- (6.000,0.130);
-  \node[inner sep=2pt,text=red,opacity=0.250,anchor=west] at (6.000,-0.000) {\texttt{done}};
+  \draw[color=red,opacity=0.250] (6.262,-0.130) -- (6.262,0.130);
+  \node[inner sep=2pt,text=red,opacity=0.250,anchor=west] at (6.262,-0.000) {\texttt{done}};
 \end{tikzpicture}
 \end{document}

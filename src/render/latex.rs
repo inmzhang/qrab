@@ -33,7 +33,7 @@ pub(super) fn render_latex(circuit: &Circuit) -> String {
     append_raw(&mut output, &circuit.escapes.latex.preamble);
     output.push_str("\\begin{document}\n");
     let rotation = if circuit.layout.orientation == Orientation::Vertical {
-        ",rotate=90"
+        ",rotate=-90"
     } else {
         ""
     };
@@ -232,7 +232,10 @@ pub(super) fn render_latex(circuit: &Circuit) -> String {
                     emit!(
                         output,
                         "  \\node{} at ({x:.3},{y:.3}) {{{}}};",
-                        latex_label_options(operation.style),
+                        latex_label_options(&masked_style(
+                            operation.style,
+                            &circuit.layout.background
+                        )),
                         latex_linked_text(label, operation.style)
                     );
                 }
@@ -261,11 +264,17 @@ pub(super) fn render_latex(circuit: &Circuit) -> String {
                 if operation.style.width.is_some() || operation.style.height.is_some() {
                     for wire in expanded_wires(wires, circuit.wires.len()) {
                         let y = -(operation.positions[wire] as f32) * circuit.layout.wire_gap;
+                        let (width, height) = if circuit.layout.orientation == Orientation::Vertical
+                        {
+                            (operation.style.height, operation.style.width)
+                        } else {
+                            (operation.style.width, operation.style.height)
+                        };
                         emit!(
                             output,
                             "  \\node[inner sep=0pt,minimum width={:.3}pt,minimum height={:.3}pt] at ({x:.3},{y:.3}) {{}};",
-                            operation.style.width.unwrap_or(0.0),
-                            operation.style.height.unwrap_or(0.0)
+                            width.unwrap_or(0.0),
+                            height.unwrap_or(0.0)
                         );
                     }
                 }
@@ -294,7 +303,10 @@ pub(super) fn render_latex(circuit: &Circuit) -> String {
                     emit!(
                         output,
                         "  \\node{} at ({x:.3},{y:.3}) {{{}}};",
-                        latex_label_options(operation.style),
+                        latex_label_options(&masked_style(
+                            operation.style,
+                            &circuit.layout.background
+                        )),
                         latex_linked_text(label, operation.style)
                     );
                 }
@@ -323,25 +335,25 @@ pub(super) fn render_latex(circuit: &Circuit) -> String {
                     .map(|wire| operation.positions[*wire])
                     .collect::<Vec<_>>();
                 rows.sort_unstable();
-                let row = if *side == NoteSide::Above {
+                let above = note_is_above(circuit, *side);
+                let row = if above {
                     *rows.first().expect("circuit has a wire") as f32
                 } else {
                     *rows.last().expect("circuit has a wire") as f32
                 };
-                let y = -row * circuit.layout.wire_gap
-                    + if *side == NoteSide::Above {
-                        0.42
-                    } else {
-                        -0.42
-                    };
+                let y = -row * circuit.layout.wire_gap + if above { 0.42 } else { -0.42 };
+                // The note block stays axis-aligned under the canvas rotation,
+                // so a vertical circuit anchors it sideways to keep it clear of
+                // the wires it sits beside rather than above.
+                let anchor = match (circuit.layout.orientation == Orientation::Vertical, above) {
+                    (true, true) => "west",
+                    (true, false) => "east",
+                    (false, true) => "south",
+                    (false, false) => "north",
+                };
                 emit!(
                     output,
-                    "  \\node[anchor={},text width={:.3}pt,align=center] at ({x:.3},{:.3}) {{{}}};",
-                    if *side == NoteSide::Above {
-                        "south"
-                    } else {
-                        "north"
-                    },
+                    "  \\node[anchor={anchor},text width={:.3}pt,align=center] at ({x:.3},{:.3}) {{{}}};",
                     circuit.layout.comment_width,
                     y,
                     latex_text(text)
@@ -385,7 +397,7 @@ fn draw_latex_wire(
 ) {
     let initial_kind = initial_wire_kind(circuit, scheduled, wire_index);
     let mut kind = initial_kind;
-    let mut row = wire_index;
+    let mut row = initial_row(circuit, wire_index);
     let mut start_x = 0.0;
 
     for operation in scheduled {
@@ -431,7 +443,7 @@ fn draw_latex_wire(
     draw_wire_segment(output, kind, start_x, end_x, y, &wire.style);
     if initial_kind != WireKind::Hidden || wire.ellipsis {
         let input = wire.input.as_deref().unwrap_or(&wire.name);
-        let input_y = -(wire_index as f32) * circuit.layout.wire_gap;
+        let input_y = -(initial_row(circuit, wire_index) as f32) * circuit.layout.wire_gap;
         emit!(
             output,
             "  \\node[anchor=east] at (0,{input_y:.3}) {{{}}};",
@@ -463,10 +475,13 @@ fn draw_latex_brace(
 ) {
     let top = -(first as f32) * wire_gap + 0.34;
     let bottom = -(last as f32) * wire_gap - 0.34;
+    // The label is opaque, so a brace closer than half the label sits under it
+    // and loses the central tip that tells a brace apart from a parenthesis.
+    let reach = (label_width(label) / 2.0 + LABEL_PADDING).max(0.22);
     for (offset, mirror) in match side {
-        BraceSide::Left => [Some((-0.22, false)), None],
-        BraceSide::Right => [Some((0.22, true)), None],
-        BraceSide::Both => [Some((-0.22, false)), Some((0.22, true))],
+        BraceSide::Left => [Some((-reach, false)), None],
+        BraceSide::Right => [Some((reach, true)), None],
+        BraceSide::Both => [Some((-reach, false)), Some((reach, true))],
     }
     .into_iter()
     .flatten()
@@ -490,8 +505,7 @@ fn draw_latex_brace(
             x + offset
         );
     }
-    let mut label_style = style.clone();
-    label_style.fill.get_or_insert_with(|| background.into());
+    let label_style = masked_style(style, background);
     emit!(
         output,
         "  \\node{} at ({x:.3},{:.3}) {{{}}};",
@@ -535,20 +549,26 @@ fn draw_latex_gate(
         let first = *targets.iter().min().expect("gate has a target");
         let last = *targets.iter().max().expect("gate has a target");
         let midpoint = -((first + last) as f32) * wire_gap / 2.0;
-        let height = style.height.map_or_else(
-            || {
-                format!(
-                    "{:.3}cm",
-                    (last - first) as f32 * wire_gap + gate_size / POINTS_PER_CENTIMETER
-                )
-            },
-            |height| format!("{height:.3}pt"),
+        // A requested height is a floor, not a cap: qpic sizes a multi-wire box
+        // from its span and a gate that stops short of the wires it acts on
+        // says nothing.
+        let span = (last - first) as f32 * wire_gap + gate_size / POINTS_PER_CENTIMETER;
+        let height = format!(
+            "{:.3}cm",
+            span.max(style.height.unwrap_or(0.0) / POINTS_PER_CENTIMETER)
         );
         let width = format!("{gate_size:.3}pt");
+        let mut node_style = style.clone();
+        node_style.height = None;
         emit!(
             output,
             "  \\node{} at ({x:.3},{midpoint:.3}) {{{}}};",
-            latex_node_options(style, &width, &height),
+            latex_node_options(
+                &node_style,
+                &width,
+                &height,
+                layout.orientation == Orientation::Vertical
+            ),
             latex_linked_text(label, style)
         );
         return;
@@ -581,7 +601,12 @@ fn draw_latex_gate(
         emit!(
             output,
             "  \\node{} at ({x:.3},{y:.3}) {{{}}};",
-            latex_node_options(style, &size, &size),
+            latex_node_options(
+                style,
+                &size,
+                &size,
+                layout.orientation == Orientation::Vertical
+            ),
             latex_linked_text(label, style)
         );
     }
@@ -641,8 +666,13 @@ fn draw_latex_named_measurement(
     style: &Style,
     gate_size: f32,
 ) {
-    let width = style.width.unwrap_or(gate_size) / POINTS_PER_CENTIMETER;
     let height = style.height.unwrap_or(gate_size) / POINTS_PER_CENTIMETER;
+    // Both markers taper at one end, and the taper is room the label cannot
+    // use. Like a gate box, the marker grows to fit its label instead of
+    // clipping it the way qpic does, so the taper is added on top.
+    let nose = height / 2.0;
+    let width = (style.width.unwrap_or(gate_size) / POINTS_PER_CENTIMETER)
+        .max(label_width(label) + 2.0 * LABEL_PADDING + nose);
     let left = x - width / 2.0;
     let right = x + width / 2.0;
     let top = y + height / 2.0;
@@ -668,9 +698,15 @@ fn draw_latex_named_measurement(
             );
         }
     }
+    // The taper sits on the right of a D and on the left of a tag, so the label
+    // is centred in what is left rather than in the marker as a whole.
+    let text_x = match shape {
+        MeasurementShape::D => x - nose / 2.0,
+        MeasurementShape::Tag => x + nose / 2.0,
+    };
     emit!(
         output,
-        "  \\node at ({x:.3},{y:.3}) {{{}}};",
+        "  \\node at ({text_x:.3},{y:.3}) {{{}}};",
         latex_linked_text(label, style)
     );
 }
@@ -787,7 +823,27 @@ fn latex_circle_options(style: &Style, filled: bool) -> String {
     latex_options(options)
 }
 
-fn latex_node_options(style: &Style, default_width: &str, default_height: &str) -> String {
+/// Builds the options for a gate node.
+///
+/// TikZ leaves node shapes axis-aligned under a canvas `rotate`, which is what
+/// keeps their labels upright, so a vertical circuit has to swap the two
+/// dimensions itself or the box spans its column instead of its wires.
+fn latex_node_options(
+    style: &Style,
+    default_width: &str,
+    default_height: &str,
+    vertical: bool,
+) -> String {
+    let (requested_width, requested_height) = if vertical {
+        (style.height, style.width)
+    } else {
+        (style.width, style.height)
+    };
+    let (default_width, default_height) = if vertical {
+        (default_height, default_width)
+    } else {
+        (default_width, default_height)
+    };
     let mut options = match style.shape {
         Some(Shape::None) => vec!["draw=none".into(), "fill=none".into()],
         _ => vec![
@@ -808,15 +864,11 @@ fn latex_node_options(style: &Style, default_width: &str, default_height: &str) 
     }
     options.push(format!(
         "minimum width={}",
-        style
-            .width
-            .map_or_else(|| default_width.into(), |width| format!("{width:.3}pt"))
+        requested_width.map_or_else(|| default_width.into(), |width| format!("{width:.3}pt"))
     ));
     options.push(format!(
         "minimum height={}",
-        style
-            .height
-            .map_or_else(|| default_height.into(), |height| format!("{height:.3}pt"))
+        requested_height.map_or_else(|| default_height.into(), |height| format!("{height:.3}pt"))
     ));
     push_latex_common(&mut options, style);
     latex_options(options)
