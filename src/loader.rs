@@ -74,19 +74,28 @@ impl SourceCode for LoadedSource {
             .ok_or(MietteError::OutOfBounds)?;
         let local_span = (local_offset, span.len()).into();
         let mut lines_before = context_lines_before;
-        let contents = loop {
+        let mut lines_after = context_lines_after;
+        let (contents, context_offset) = loop {
             let contents = source
                 .text
-                .read_span(&local_span, lines_before, context_lines_after)?;
+                .read_span(&local_span, lines_before, lines_after)?;
             let prefix = local_offset - contents.span().offset();
-            if prefix <= span.offset() {
-                break contents;
+            if prefix > span.offset() {
+                lines_before = lines_before
+                    .checked_sub(1)
+                    .ok_or(MietteError::OutOfBounds)?;
+                continue;
             }
-            lines_before = lines_before
-                .checked_sub(1)
-                .ok_or(MietteError::OutOfBounds)?;
+            let context_offset = span.offset() - prefix;
+            if context_offset
+                .checked_add(contents.span().len())
+                .is_none_or(|end| end > self.text.len())
+            {
+                lines_after = lines_after.checked_sub(1).ok_or(MietteError::OutOfBounds)?;
+                continue;
+            }
+            break (contents, context_offset);
         };
-        let context_offset = span.offset() - (local_offset - contents.span().offset());
         let column = if contents.span().offset() == local_offset {
             source.text[source_line_start..local_offset].chars().count()
         } else {
@@ -312,6 +321,15 @@ mod tests {
                 .to_string()
                 .contains("imports must be at file scope")
         );
+
+        fs::write(directory.join("empty.qrab"), "").expect("write empty module");
+        fs::write(directory.join("context.qrab"), "x\nimport \"empty.qrab\"\n")
+            .expect("write context source");
+        let loaded = load_source(directory.join("context.qrab")).expect("load context source");
+        let contents = loaded
+            .read_span(&(0, 1).into(), 0, 2)
+            .expect("read bounded context");
+        assert!(contents.span().offset() + contents.span().len() <= loaded.as_str().len());
         fs::remove_dir_all(directory).expect("remove loader test directory");
     }
 }
