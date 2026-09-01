@@ -18,7 +18,7 @@ circuit bell_pair {
 
 ![The bell pair circuit rendered by qrab](docs/images/bell.svg)
 
-Try it in the browser: **[playground](https://inmzhang.github.io/qrab/)** —
+Try it in the browser: **[playground](https://inmzhang.com/qrab/)** —
 the compiler runs as WebAssembly, so nothing is uploaded and nothing is
 installed.
 

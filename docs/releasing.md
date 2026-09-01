@@ -11,7 +11,7 @@ Cargo-dist produces archives for Linux GNU on x86-64 and Arm64, Linux musl on x8
 
 ## Playground gate
 
-The playground is a separate deployment with its own switch. `.github/workflows/playground.yml` builds the WebAssembly module on every push to `main`, but publishes to GitHub Pages only when the repository variable `ENABLE_PLAYGROUND` is `true`. Enable Pages with the GitHub Actions source, then run `gh variable set ENABLE_PLAYGROUND --body true`. Building it unconditionally means a change that breaks the WebAssembly build fails CI whether or not the page is live.
+The playground is a separate deployment with its own switch. `.github/workflows/playground.yml` builds the WebAssembly module on every push to `main`, but publishes to GitHub Pages only when the repository variable `ENABLE_PLAYGROUND` is `true`. Pages is enabled with the GitHub Actions source and the gate is set, so a push to `main` publishes to <https://inmzhang.com/qrab/>. That page is public even while this repository is private. Building it unconditionally means a change that breaks the WebAssembly build fails CI whether or not the page is live.
 
 ## Publish gate
 
