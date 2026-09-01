@@ -9,8 +9,9 @@ cargo-dist-version = "0.32.0"
 ci = "github"
 # The installers to generate for each app
 installers = ["shell", "powershell", "npm", "homebrew"]
-# Publish the generated npm package after the GitHub release succeeds
-publish-jobs = ["npm"]
+# Publish the generated npm package through npm trusted publishing.
+publish-jobs = ["./publish-npm"]
+github-custom-job-permissions = { "publish-npm" = { contents = "read", id-token = "write" } }
 # npm rejects the bare name as too close to existing packages (lab, abab, ora,
 # raf, rax), so the package is published under a user scope.
 npm-scope = "@inmzhang"
