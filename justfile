@@ -39,4 +39,4 @@ example:
     typst compile examples/teleportation.typ target/teleportation-typst.pdf
 
 install-hooks:
-    git config core.hooksPath .githooks
+    pre-commit install --install-hooks

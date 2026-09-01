@@ -13,6 +13,20 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      # clippy is skipped here because the `check` job already runs it with a
+      # warm build cache; running it twice would just double CI time.
+      - uses: pre-commit/action@v3.0.1
+        env:
+          SKIP: cargo-clippy
+
   assets:
     runs-on: ubuntu-latest
     steps:
@@ -64,7 +78,6 @@ jobs:
       - run: |
           sudo apt-get update
           sudo apt-get install -y poppler-utils
-      - run: cargo fmt --all -- --check
       - run: cargo clippy --all-targets --all-features -- -D warnings
       - run: cargo test --all-targets
       - run: cargo test --doc
