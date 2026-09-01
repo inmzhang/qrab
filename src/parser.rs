@@ -339,7 +339,6 @@ fn is_style_property(name: &str) -> bool {
     )
 }
 
-#[derive(Clone)]
 struct Parser {
     tokens: Vec<Token>,
     position: usize,
@@ -356,6 +355,16 @@ struct Parser {
     groups: Vec<Group>,
     escapes: BackendEscapes,
     auto_wires: bool,
+    next_overlay: usize,
+}
+
+#[derive(Clone, Copy)]
+struct Checkpoint {
+    position: usize,
+    wires: usize,
+    operations: usize,
+    groups: usize,
+    operation_block_depth: usize,
     next_overlay: usize,
 }
 
@@ -406,11 +415,9 @@ impl Parser {
 
         let mut diagnostics = Vec::new();
         while !self.at(&TokenKind::RightBrace) && !self.at(&TokenKind::End) {
-            // ponytail: checkpoints clone small circuits; use transactional state if large
-            // inputs make recovery measurable.
-            let checkpoint = self.clone();
+            let checkpoint = self.checkpoint();
             if let Err(diagnostic) = self.parse_statement() {
-                self = checkpoint;
+                self.restore(checkpoint);
                 self.recover_statement();
                 diagnostics.push(diagnostic);
             }
@@ -450,6 +457,27 @@ impl Parser {
             groups: self.groups,
             escapes: self.escapes,
         })
+    }
+
+    fn checkpoint(&self) -> Checkpoint {
+        Checkpoint {
+            position: self.position,
+            wires: self.wires.len(),
+            operations: self.operations.len(),
+            groups: self.groups.len(),
+            operation_block_depth: self.operation_block_depth,
+            next_overlay: self.next_overlay,
+        }
+    }
+
+    fn restore(&mut self, checkpoint: Checkpoint) {
+        self.position = checkpoint.position;
+        self.wires.truncate(checkpoint.wires);
+        self.wire_indices.retain(|_, wire| *wire < checkpoint.wires);
+        self.operations.truncate(checkpoint.operations);
+        self.groups.truncate(checkpoint.groups);
+        self.operation_block_depth = checkpoint.operation_block_depth;
+        self.next_overlay = checkpoint.next_overlay;
     }
 
     fn resolve_active_defaults(&mut self) -> Result<(), Diagnostic> {
@@ -946,6 +974,7 @@ impl Parser {
     }
 
     fn parse_layout(&mut self) -> Result<(), Diagnostic> {
+        let mut layout = self.layout.clone();
         self.expect(TokenKind::LeftBrace, "`{`")?;
         self.skip_newlines();
         while !self.at(&TokenKind::RightBrace) {
@@ -955,7 +984,7 @@ impl Parser {
             match property.as_str() {
                 "orientation" => {
                     let value = self.take_identifier("`horizontal` or `vertical`")?;
-                    self.layout.orientation = match value.as_str() {
+                    layout.orientation = match value.as_str() {
                         "horizontal" => Orientation::Horizontal,
                         "vertical" => Orientation::Vertical,
                         _ => {
@@ -967,27 +996,27 @@ impl Parser {
                     };
                 }
                 "scale" => {
-                    self.layout.scale = self.take_positive_scalar("layout scale")?;
+                    layout.scale = self.take_positive_scalar("layout scale")?;
                 }
                 "column_gap" => {
-                    self.layout.column_gap = self.take_positive_scalar("column gap")?;
+                    layout.column_gap = self.take_positive_scalar("column gap")?;
                 }
                 "wire_gap" => {
-                    self.layout.wire_gap = self.take_positive_scalar("wire gap")?;
+                    layout.wire_gap = self.take_positive_scalar("wire gap")?;
                 }
                 "gate_size" => {
-                    self.layout.gate_size = self.take_positive_scalar("gate size")?;
+                    layout.gate_size = self.take_positive_scalar("gate size")?;
                 }
                 "corner_radius" => {
-                    self.layout.corner_radius = self.take_scalar("corner radius")?;
-                    if self.layout.corner_radius < 0.0 {
+                    layout.corner_radius = self.take_scalar("corner radius")?;
+                    if layout.corner_radius < 0.0 {
                         return Err(Diagnostic::new("corner radius cannot be negative", span));
                     }
                 }
                 "comment_width" => {
-                    self.layout.comment_width = self.take_positive_scalar("comment width")?;
+                    layout.comment_width = self.take_positive_scalar("comment width")?;
                 }
-                "background" => self.layout.background = self.take_color("background color")?,
+                "background" => layout.background = self.take_color("background color")?,
                 _ => {
                     return Err(Diagnostic::new(
                         format!("unknown layout property `{property}`"),
@@ -999,7 +1028,9 @@ impl Parser {
             self.skip_newlines();
         }
         self.advance();
-        self.expect_statement_end()
+        self.expect_statement_end()?;
+        self.layout = layout;
+        Ok(())
     }
 
     fn parse_backend(&mut self) -> Result<(), Diagnostic> {
@@ -1465,16 +1496,13 @@ impl Parser {
     fn parse_mark(&mut self, span: Span) -> Result<(), Diagnostic> {
         let name = self.take_identifier("mark name")?;
         self.expect_statement_end()?;
-        if self
-            .marks
-            .insert(name.clone(), self.operations.len())
-            .is_some()
-        {
+        if self.marks.contains_key(&name) {
             return Err(Diagnostic::new(
                 format!("mark `{name}` is already defined"),
                 span,
             ));
         }
+        self.marks.insert(name, self.operations.len());
         Ok(())
     }
 
@@ -2108,6 +2136,24 @@ mod tests {
         assert_eq!(error.related().len(), 2);
         assert!(error.related()[0].message.contains("`missing`"));
         assert!(error.related()[1].message.contains("`absent`"));
+    }
+
+    #[test]
+    fn recovery_checkpoints_scale_to_generated_circuits() {
+        let mut source = String::from("circuit generated {\nqubit q\n");
+        for _ in 0..5_000 {
+            source.push_str("h q\n");
+        }
+        source.push_str("}\n");
+
+        let started = std::time::Instant::now();
+        let circuit = parse(&source).expect("large generated circuit should parse");
+        assert_eq!(circuit.operations.len(), 5_000);
+        assert!(
+            started.elapsed() < std::time::Duration::from_secs(1),
+            "5,000 statements took {:?}",
+            started.elapsed()
+        );
     }
 
     #[test]
