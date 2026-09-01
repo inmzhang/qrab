@@ -4,8 +4,8 @@ mod parser;
 mod render;
 
 pub use ast::{
-    BraceSide, Circuit, Control, Group, Layout, NoteSide, Operation, OperationKind, Orientation,
-    Shape, Span, Style, Wire, WireKind,
+    BackendEscapes, BraceSide, Circuit, Control, EscapeBlock, Group, Layout, MeasurementShape,
+    NoteSide, Operation, OperationKind, Orientation, Shape, Span, Style, Wire, WireKind,
 };
 pub use loader::{LoadError, LoadedSource, load_source};
 pub use parser::{Diagnostic, parse};

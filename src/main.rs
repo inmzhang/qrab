@@ -20,7 +20,7 @@ fn main() -> ExitCode {
     match run(env::args().skip(1).collect()) {
         Ok(()) => ExitCode::SUCCESS,
         Err(error) => {
-            eprintln!("error: {error}\n\n{USAGE}");
+            eprintln!("error: {error}");
             ExitCode::FAILURE
         }
     }
@@ -28,7 +28,7 @@ fn main() -> ExitCode {
 
 fn run(arguments: Vec<String>) -> Result<(), String> {
     let Some(command) = arguments.first().map(String::as_str) else {
-        return Err("missing command".into());
+        return Err(usage_error("missing command"));
     };
     match command {
         "--help" | "-h" | "help" => {
@@ -41,15 +41,15 @@ fn run(arguments: Vec<String>) -> Result<(), String> {
         }
         "check" => check_command(&arguments[1..]),
         "compile" => compile_command(&arguments[1..]),
-        unknown => Err(format!("unknown command `{unknown}`")),
+        unknown => Err(usage_error(format!("unknown command `{unknown}`"))),
     }
 }
 
 fn check_command(arguments: &[String]) -> Result<(), String> {
     if arguments.len() != 1 {
-        return Err("check expects exactly one input file".into());
+        return Err(usage_error("check expects exactly one input file"));
     }
-    let source = read_source(Path::new(&arguments[0]))?;
+    let source = load_source(Path::new(&arguments[0])).map_err(|error| error.to_string())?;
     let circuit = parse(source.as_str()).map_err(|error| format_diagnostic(&source, &error))?;
     println!(
         "{}: {} wire(s), {} operation(s)",
@@ -72,35 +72,45 @@ fn compile_command(arguments: &[String]) -> Result<(), String> {
                 position += 1;
                 let value = arguments
                     .get(position)
-                    .ok_or("--target needs latex, typst, or all")?;
-                target = OutputTarget::parse(value)?;
+                    .ok_or_else(|| usage_error("--target needs latex, typst, or all"))?;
+                target = OutputTarget::parse(value).map_err(usage_error)?;
             }
             "--output" | "-o" => {
                 position += 1;
-                let value = arguments.get(position).ok_or("--output needs a path")?;
+                let value = arguments
+                    .get(position)
+                    .ok_or_else(|| usage_error("--output needs a path"))?;
                 output = Some(PathBuf::from(value));
             }
             option if option.starts_with('-') => {
-                return Err(format!("unknown option `{option}`"));
+                return Err(usage_error(format!("unknown option `{option}`")));
             }
             path if input.is_none() => input = Some(PathBuf::from(path)),
-            path => return Err(format!("unexpected second input `{path}`")),
+            path => return Err(usage_error(format!("unexpected second input `{path}`"))),
         }
         position += 1;
     }
 
-    let input = input.ok_or("compile needs an input file")?;
+    let input = input.ok_or_else(|| usage_error("compile needs an input file"))?;
     if target == OutputTarget::All && output.is_some() {
-        return Err("-o cannot be used with --target all".into());
+        return Err(usage_error("-o cannot be used with --target all"));
     }
-    let source = read_source(&input)?;
+    let source = load_source(&input).map_err(|error| error.to_string())?;
 
     match target {
         OutputTarget::Latex => {
-            write_compiled(&source, Target::Latex, output_path(&input, output, "tex"))?;
+            write_compiled(
+                &source,
+                Target::Latex,
+                output.unwrap_or_else(|| input.with_extension("tex")),
+            )?;
         }
         OutputTarget::Typst => {
-            write_compiled(&source, Target::Typst, output_path(&input, output, "typ"))?;
+            write_compiled(
+                &source,
+                Target::Typst,
+                output.unwrap_or_else(|| input.with_extension("typ")),
+            )?;
         }
         OutputTarget::All => {
             write_compiled(&source, Target::Latex, input.with_extension("tex"))?;
@@ -110,12 +120,8 @@ fn compile_command(arguments: &[String]) -> Result<(), String> {
     Ok(())
 }
 
-fn output_path(input: &Path, output: Option<PathBuf>, extension: &str) -> PathBuf {
-    output.unwrap_or_else(|| input.with_extension(extension))
-}
-
-fn read_source(path: &Path) -> Result<LoadedSource, String> {
-    load_source(path).map_err(|error| error.to_string())
+fn usage_error(message: impl std::fmt::Display) -> String {
+    format!("{message}\n\n{USAGE}")
 }
 
 fn write_compiled(source: &LoadedSource, target: Target, path: PathBuf) -> Result<(), String> {
@@ -160,5 +166,24 @@ impl OutputTarget {
             "all" => Ok(Self::All),
             _ => Err(format!("unknown target `{value}`")),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn usage_is_only_attached_to_argument_errors() {
+        assert!(
+            run(Vec::new())
+                .expect_err("missing command")
+                .contains(USAGE)
+        );
+        assert!(
+            !run(vec!["check".into(), "Cargo.toml".into()])
+                .expect_err("Cargo.toml is not qrab source")
+                .contains(USAGE)
+        );
     }
 }

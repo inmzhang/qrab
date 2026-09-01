@@ -34,7 +34,6 @@ pub struct Group {
     pub start: usize,
     pub end: usize,
     pub style: Style,
-    pub span: Span,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -208,160 +207,104 @@ pub struct Control {
 }
 
 impl OperationKind {
-    pub(crate) fn occupied_wires(&self, wire_count: usize) -> Vec<usize> {
+    pub(crate) fn wire_selection(&self) -> Option<&[usize]> {
+        match self {
+            Self::Barrier { wires }
+            | Self::WireChange { wires, .. }
+            | Self::Endpoint { wires, .. }
+            | Self::Label { wires, .. }
+            | Self::Permute { wires }
+            | Self::Phantom { wires }
+            | Self::Touch { wires }
+            | Self::WireLabels { wires, .. }
+            | Self::Brace { wires, .. }
+            | Self::Note { wires, .. }
+            | Self::Cut { wires, .. } => Some(wires),
+            Self::Gate { .. } | Self::Measure { .. } | Self::Swap { .. } | Self::Bundle { .. } => {
+                None
+            }
+        }
+    }
+
+    pub(crate) fn occupied_wires(&self, wire_count: usize) -> Cow<'_, [usize]> {
+        if let Some(wires) = self.wire_selection() {
+            return if wires.is_empty() {
+                Cow::Owned((0..wire_count).collect())
+            } else {
+                Cow::Borrowed(wires)
+            };
+        }
         match self {
             Self::Gate {
                 targets, controls, ..
-            } => targets
-                .iter()
-                .copied()
-                .chain(controls.iter().map(|control| control.wire))
-                .collect::<Vec<_>>(),
-            Self::Measure { targets, .. } => targets.clone(),
-            Self::Swap { left, right } => vec![*left, *right],
-            Self::Barrier { wires } if wires.is_empty() => (0..wire_count).collect(),
-            Self::Barrier { wires } => wires.clone(),
-            Self::WireChange { wires, .. }
-            | Self::Endpoint { wires, .. }
-            | Self::Label { wires, .. }
-            | Self::Permute { wires }
-            | Self::Phantom { wires }
-            | Self::Touch { wires }
-            | Self::WireLabels { wires, .. }
-            | Self::Brace { wires, .. }
-            | Self::Note { wires, .. }
-            | Self::Cut { wires, .. }
-                if wires.is_empty() =>
-            {
-                (0..wire_count).collect()
-            }
-            Self::WireChange { wires, .. }
-            | Self::Endpoint { wires, .. }
-            | Self::Label { wires, .. }
-            | Self::Permute { wires }
-            | Self::Phantom { wires }
-            | Self::Touch { wires }
-            | Self::WireLabels { wires, .. }
-            | Self::Brace { wires, .. }
-            | Self::Note { wires, .. }
-            | Self::Cut { wires, .. } => wires.clone(),
-            Self::Bundle { wire, .. } => vec![*wire],
+            } if controls.is_empty() => Cow::Borrowed(targets),
+            Self::Gate {
+                targets, controls, ..
+            } => Cow::Owned(
+                targets
+                    .iter()
+                    .copied()
+                    .chain(controls.iter().map(|control| control.wire))
+                    .collect(),
+            ),
+            Self::Measure { targets, .. } => Cow::Borrowed(targets),
+            Self::Swap { left, right } => Cow::Owned(vec![*left, *right]),
+            Self::Barrier { .. }
+            | Self::WireChange { .. }
+            | Self::Endpoint { .. }
+            | Self::Label { .. }
+            | Self::Permute { .. }
+            | Self::Phantom { .. }
+            | Self::Touch { .. }
+            | Self::WireLabels { .. }
+            | Self::Brace { .. }
+            | Self::Note { .. }
+            | Self::Cut { .. } => unreachable!("wire selections returned above"),
+            Self::Bundle { wire, .. } => Cow::Owned(vec![*wire]),
         }
     }
 
     pub(crate) fn remap_wires(&self, mapping: &[usize]) -> Self {
-        let wires = |items: &[usize]| items.iter().map(|wire| mapping[*wire]).collect();
-        let selected = |items: &[usize]| {
-            if items.is_empty() {
-                mapping.to_vec()
-            } else {
-                wires(items)
+        let remap = |wires: &mut Vec<usize>| {
+            for wire in wires {
+                *wire = mapping[*wire];
             }
         };
-        match self {
+        let remap_selection = |wires: &mut Vec<usize>| {
+            if wires.is_empty() {
+                *wires = mapping.to_vec();
+            } else {
+                remap(wires);
+            }
+        };
+        let mut operation = self.clone();
+        match &mut operation {
             Self::Gate {
-                label,
-                targets,
-                controls,
-            } => Self::Gate {
-                label: label.clone(),
-                targets: wires(targets),
-                controls: controls
-                    .iter()
-                    .map(|control| Control {
-                        wire: mapping[control.wire],
-                        positive: control.positive,
-                    })
-                    .collect(),
-            },
-            Self::Measure {
-                targets,
-                label,
-                shape,
-            } => Self::Measure {
-                targets: wires(targets),
-                label: label.clone(),
-                shape: *shape,
-            },
-            Self::Swap { left, right } => Self::Swap {
-                left: mapping[*left],
-                right: mapping[*right],
-            },
-            Self::Barrier { wires: targets } => Self::Barrier {
-                wires: selected(targets),
-            },
-            Self::WireChange {
-                wires: targets,
-                kind,
-                label,
-            } => Self::WireChange {
-                wires: wires(targets),
-                kind: *kind,
-                label: label.clone(),
-            },
-            Self::Endpoint {
-                wires: targets,
-                start,
-                label,
-            } => Self::Endpoint {
-                wires: selected(targets),
-                start: *start,
-                label: label.clone(),
-            },
-            Self::Label {
-                wires: targets,
-                label,
-                brace,
-            } => Self::Label {
-                wires: selected(targets),
-                label: label.clone(),
-                brace: *brace,
-            },
-            Self::Bundle { wire, label } => Self::Bundle {
-                wire: mapping[*wire],
-                label: label.clone(),
-            },
-            Self::Permute { wires: targets } => Self::Permute {
-                wires: wires(targets),
-            },
-            Self::Phantom { wires: targets } => Self::Phantom {
-                wires: selected(targets),
-            },
-            Self::Touch { wires: targets } => Self::Touch {
-                wires: selected(targets),
-            },
-            Self::WireLabels {
-                wires: targets,
-                labels,
-            } => Self::WireLabels {
-                wires: selected(targets),
-                labels: labels.clone(),
-            },
-            Self::Brace {
-                wires: targets,
-                label,
-                side,
-            } => Self::Brace {
-                wires: selected(targets),
-                label: label.clone(),
-                side: *side,
-            },
-            Self::Note {
-                wires: targets,
-                text,
-                side,
-            } => Self::Note {
-                wires: selected(targets),
-                text: text.clone(),
-                side: *side,
-            },
-            Self::Cut {
-                wires: targets,
-                label,
-            } => Self::Cut {
-                wires: selected(targets),
-                label: label.clone(),
-            },
+                targets, controls, ..
+            } => {
+                remap(targets);
+                for control in controls {
+                    control.wire = mapping[control.wire];
+                }
+            }
+            Self::Measure { targets, .. } => remap(targets),
+            Self::Swap { left, right } => {
+                *left = mapping[*left];
+                *right = mapping[*right];
+            }
+            Self::Barrier { wires }
+            | Self::Endpoint { wires, .. }
+            | Self::Label { wires, .. }
+            | Self::Phantom { wires }
+            | Self::Touch { wires }
+            | Self::WireLabels { wires, .. }
+            | Self::Brace { wires, .. }
+            | Self::Note { wires, .. }
+            | Self::Cut { wires, .. } => remap_selection(wires),
+            Self::WireChange { wires, .. } | Self::Permute { wires } => remap(wires),
+            Self::Bundle { wire, .. } => *wire = mapping[*wire],
         }
+        operation
     }
 }
+use std::borrow::Cow;

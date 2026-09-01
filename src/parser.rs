@@ -466,9 +466,27 @@ impl Parser {
                 }
                 _ => false,
             };
-            if defaulted && operation.kind.occupied_wires(wire_count).is_empty() {
+            if defaulted
+                && operation
+                    .kind
+                    .wire_selection()
+                    .is_some_and(<[usize]>::is_empty)
+            {
                 return Err(Diagnostic::new(
                     "the targetless statement has no applicable active wires",
+                    operation.span,
+                ));
+            }
+            if let OperationKind::WireLabels { wires, labels } = &operation.kind
+                && labels.len() != 1
+                && labels.len() != wires.len()
+            {
+                return Err(Diagnostic::new(
+                    format!(
+                        "labels needs one label or one per selected wire ({}), but got {}",
+                        wires.len(),
+                        labels.len()
+                    ),
                     operation.span,
                 ));
             }
@@ -779,6 +797,9 @@ impl Parser {
 
     fn parse_overlay(&mut self, span: Span) -> Result<(), Diagnostic> {
         let mut body = self.parse_operation_block("overlay")?;
+        if body.is_empty() {
+            return Ok(());
+        }
         if let Some(operation) = body.iter().find(|operation| {
             matches!(
                 operation.kind,
@@ -795,7 +816,12 @@ impl Parser {
             if matches!(operation.kind, OperationKind::Note { .. }) {
                 continue;
             }
-            for wire in operation.kind.occupied_wires(self.wires.len()) {
+            for wire in operation
+                .kind
+                .occupied_wires(self.wires.len())
+                .iter()
+                .copied()
+            {
                 if std::mem::replace(&mut occupied[wire], true) {
                     return Err(Diagnostic::new(
                         format!(
@@ -806,9 +832,6 @@ impl Parser {
                     ));
                 }
             }
-        }
-        if body.is_empty() {
-            return Ok(());
         }
         let overlay = self.next_overlay;
         self.next_overlay += 1;
@@ -837,6 +860,7 @@ impl Parser {
     fn parse_operation_block(&mut self, name: &str) -> Result<Vec<Operation>, Diagnostic> {
         self.expect(TokenKind::LeftBrace, "`{`")?;
         let start = self.operations.len();
+        // Inner parse errors abort parsing, so depth only needs restoring on success.
         self.operation_block_depth += 1;
         self.skip_newlines();
         while !self.at(&TokenKind::RightBrace) {
@@ -1281,20 +1305,6 @@ impl Parser {
         let style = self.parse_style()?;
         self.expect_statement_end()?;
         self.ensure_unique(&wires, span, "label wire")?;
-        let wire_count = if wires.is_empty() {
-            self.wires.len()
-        } else {
-            wires.len()
-        };
-        if labels.len() != 1 && labels.len() != wire_count {
-            return Err(Diagnostic::new(
-                format!(
-                    "labels needs one label or one per selected wire ({wire_count}), but got {}",
-                    labels.len()
-                ),
-                span,
-            ));
-        }
         self.operations.push(Operation {
             kind: OperationKind::WireLabels { wires, labels },
             span,
@@ -1439,7 +1449,6 @@ impl Parser {
             start,
             end,
             style,
-            span,
         });
         Ok(())
     }
@@ -1848,6 +1857,9 @@ impl Parser {
             let value = value
                 .parse()
                 .map_err(|_| self.error(format!("invalid {expected}")))?;
+            if !f32::is_finite(value) {
+                return Err(self.error(format!("invalid {expected}")));
+            }
             self.advance();
             Ok(value)
         } else {
@@ -1926,6 +1938,7 @@ impl Parser {
     }
 
     fn advance(&mut self) {
+        // The lexer always appends End, and every parse loop checks it before advancing.
         if self.position + 1 < self.tokens.len() {
             self.position += 1;
         }
@@ -2153,6 +2166,32 @@ mod tests {
             circuit.operations[5].kind,
             OperationKind::Barrier { ref wires } if wires == &[1]
         ));
+    }
+
+    #[test]
+    fn targetless_statements_require_an_active_wire() {
+        let error = parse("circuit inactive { qubit q[2]; end q[0]; end q[1]; barrier }")
+            .expect_err("a targetless statement cannot select ended wires");
+
+        assert!(error.message.contains("no applicable active wires"));
+    }
+
+    #[test]
+    fn wire_label_arity_is_checked_after_autowires_finish() {
+        let error = parse("circuit labels { autowires; h a; h b; labels \"p\", \"q\"; h c }")
+            .expect_err("late automatic wires must be included in label arity");
+
+        assert!(error.message.contains("selected wire (3)"));
+    }
+
+    #[test]
+    fn rejects_non_finite_scalars() {
+        let error = parse(
+            "circuit huge { layout { scale: 99999999999999999999999999999999999999999999999999 }; qubit q }",
+        )
+        .expect_err("an overflowing scalar must not render as infinity");
+
+        assert!(error.message.contains("invalid layout scale"));
     }
 
     #[test]

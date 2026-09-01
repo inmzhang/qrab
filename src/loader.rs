@@ -86,11 +86,17 @@ fn load_file(
     stack.push(path.clone());
     let mut depth = 0_usize;
     for (line_index, line) in source.lines().enumerate() {
-        if depth == 0
-            && let Some(import) = import_path(line).map_err(|message| {
-                LoadError::new(format!("{}:{}: {message}", path.display(), line_index + 1))
-            })?
-        {
+        let import = import_path(line).map_err(|message| {
+            LoadError::new(format!("{}:{}: {message}", path.display(), line_index + 1))
+        })?;
+        if let Some(import) = import {
+            if depth != 0 {
+                return Err(LoadError::new(format!(
+                    "{}:{}: imports must be at file scope",
+                    path.display(),
+                    line_index + 1
+                )));
+            }
             let import = path.parent().unwrap_or(Path::new(".")).join(import);
             load_file(&import, stack, visited, loaded)?;
             continue;
@@ -207,6 +213,17 @@ mod tests {
                 .expect_err("cycle must fail")
                 .to_string()
                 .contains("import cycle")
+        );
+        fs::write(
+            directory.join("nested.qrab"),
+            "circuit nested {\n  import \"gates.qrab\"\n  qubit q\n}\n",
+        )
+        .expect("write nested import");
+        assert!(
+            load_source(directory.join("nested.qrab"))
+                .expect_err("nested import must fail in the loader")
+                .to_string()
+                .contains("imports must be at file scope")
         );
         fs::remove_dir_all(directory).expect("remove loader test directory");
     }

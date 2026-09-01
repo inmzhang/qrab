@@ -93,13 +93,10 @@ fn schedule(circuit: &Circuit) -> (Vec<Scheduled<'_>>, Vec<usize>) {
             last,
         });
         if let OperationKind::Permute { wires } = &operation.kind {
-            let mut rows = wires
-                .iter()
-                .map(|wire| positions[*wire])
-                .collect::<Vec<_>>();
-            rows.sort_unstable();
-            for (row, wire) in rows.into_iter().zip(wires) {
-                order[row] = *wire;
+            let mapping = permutation_mapping(wires, &positions);
+            let previous_order = order.clone();
+            for (source, destination) in mapping.into_iter().enumerate() {
+                order[destination] = previous_order[source];
             }
             for (row, wire) in order.iter().enumerate() {
                 positions[*wire] = row;
@@ -765,15 +762,20 @@ fn draw_latex_wire(
 }
 
 fn permuted_row(wire: usize, wires: &[usize], positions: &[usize]) -> usize {
-    let mut rows = wires
+    permutation_mapping(wires, positions)[positions[wire]]
+}
+
+fn permutation_mapping(wires: &[usize], positions: &[usize]) -> Vec<usize> {
+    let mut destinations = wires
         .iter()
         .map(|wire| positions[*wire])
         .collect::<Vec<_>>();
-    rows.sort_unstable();
-    rows[wires
-        .iter()
-        .position(|candidate| *candidate == wire)
-        .expect("permutation contains the wire")]
+    destinations.sort_unstable();
+    let mut mapping = (0..positions.len()).collect::<Vec<_>>();
+    for (wire, destination) in wires.iter().zip(destinations) {
+        mapping[positions[*wire]] = destination;
+    }
+    mapping
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -1631,13 +1633,10 @@ fn render_typst(circuit: &Circuit) -> String {
                     row_wires[*row] = wire;
                 }
                 let span_wires = &row_wires[first..=last];
-                let mut mapping = (0..=last - first).collect::<Vec<_>>();
-                let mut sources = wires.clone();
-                sources.sort_by_key(|wire| operation.positions[*wire]);
-                for (source, destination) in sources.iter().zip(wires) {
-                    mapping[operation.positions[*source] - first] =
-                        operation.positions[*destination] - first;
-                }
+                let mapping = permutation_mapping(wires, &operation.positions)[first..=last]
+                    .iter()
+                    .map(|destination| destination - first)
+                    .collect::<Vec<_>>();
                 writeln!(
                     output,
                     "  quill.permute({}, x: {x}, y: {first}{}),",
@@ -2408,7 +2407,9 @@ mod tests {
 
         assert_eq!(scheduled[1].positions[2], 0);
         assert_eq!(final_positions, vec![1, 2, 0]);
-        assert!(render_typst(&circuit).contains("quill.gate(text(\"H\"), x: 2, y: 0)"));
+        let typst = render_typst(&circuit);
+        assert!(typst.contains("quill.permute(1, 2, 0,"));
+        assert!(typst.contains("quill.gate(text(\"H\"), x: 2, y: 0)"));
     }
 
     #[test]
