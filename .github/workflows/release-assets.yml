@@ -1,0 +1,43 @@
+# The man pages and the manual's title page carry the crate version, and
+# release-plz bumps the manifest without ever building the crate, so every
+# release PR arrives with those files a version behind and CI red. Regenerating
+# them by hand was a step easy to forget and easy to get wrong, so this does it.
+#
+# The push uses RELEASE_PLZ_TOKEN rather than GITHUB_TOKEN: a push made with the
+# built-in token does not start another workflow run, which would leave the PR
+# showing the failed checks from before the fix. Pushing as a real identity
+# re-runs CI against the corrected commit.
+name: Release assets
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  regenerate:
+    if: startsWith(github.head_ref, 'release-plz-')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.RELEASE_PLZ_TOKEN }}
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: typst-community/setup-typst@v5
+        with:
+          typst-version: 0.15.1
+      - run: cargo run --locked --quiet -p xtask
+      - run: typst compile --root . docs/manual.typ docs/manual.pdf
+      # A second run finds nothing to commit and stops there, so the push
+      # cannot chase its own tail.
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "chore: regenerate the versioned artefacts"
+          git push

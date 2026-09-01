@@ -3,10 +3,11 @@
 ## Automated flow
 
 1. Use conventional commit subjects and merge changes into `main`. Release-plz maintains a release PR containing the next version and changelog.
-2. On the release PR's branch, run `just manual` and commit the result. The man pages and the manual's title page both carry the crate version, so a bump leaves them stale; the asset drift check and `shipped_man_pages_carry_this_crate_version` fail until the pages are regenerated, and nothing at all catches a stale `manual.pdf`. Release-plz edits manifests rather than building the crate, so nothing does this for you.
-3. Run `just release-check`, review the release PR, and merge it with a clean CI run.
-4. Release-plz publishes the crate and pushes the matching `vX.Y.Z` tag. Cargo-dist reacts to that tag, verifies it matches the crate version, builds all configured targets and installers, and creates the GitHub release.
-5. After the GitHub release succeeds, cargo-dist publishes the generated npm package.
+2. Run `just release-check`, review the release PR, and merge it with a clean CI run.
+3. Release-plz publishes the crate and pushes the matching `vX.Y.Z` tag. Cargo-dist reacts to that tag, verifies it matches the crate version, builds all configured targets and installers, and creates the GitHub release.
+4. After the GitHub release succeeds, cargo-dist publishes the generated npm package.
+
+The man pages and the manual's title page carry the crate version, so release-plz's bump leaves them a version behind and CI red. `.github/workflows/release-assets.yml` regenerates and commits them on any `release-plz-*` branch, which is why nothing above asks you to run `just manual`. It pushes with `RELEASE_PLZ_TOKEN`, because a push made with the built-in token starts no further workflow run and would leave the PR displaying the checks that failed before the fix.
 
 `release_always` is true, so the release job publishes on any push to `main` whose manifest version is not yet on crates.io. Merging a release PR is the ordinary way that happens; a hand-edited bump publishes just the same. It has to be true because the first release could not come from a PR at all: release-plz opens one only when it has something to change, and the unpublished crate already sat at the version it would have released.
 
