@@ -1,6 +1,6 @@
 # `.qrab` language
 
-The design follows three rules: declarations read like declarations, operations read in execution order, and backend syntax never leaks into the common circuit model.
+The design follows three rules: declarations read like declarations, operations read in execution order, and backend syntax never leaks into the common circuit model. Every construct below renders in all three backends — LaTeX/TikZ, Typst/Quill, and SVG — except where a section says otherwise.
 
 Declaration-only modules can be imported before the circuit. Paths are relative to the importing file; duplicate imports load once and cycles are rejected:
 
@@ -155,7 +155,7 @@ backend typst {
 }
 ```
 
-Each block may repeat `preamble`, `before`, or `after`. These strings are emitted verbatim only for the named target and are the explicit replacement for qpic's preamble/TikZ hooks; they should be reserved for effects the common AST cannot express.
+Each block may repeat `preamble`, `before`, or `after`. These strings are emitted verbatim only for the named target and are the explicit replacement for qpic's preamble/TikZ hooks; they should be reserved for effects the common AST cannot express. The SVG backend has no escape block and ignores both of these.
 
 `layout` configures orientation, scale, abstract column/wire gaps, default `gate_size`, permutation `corner_radius`, note `comment_width`, and background. The three size properties use points. A trailing `with` clause accepts `stroke`, `fill`, `width`, `height`, `size`, `shape`, `dash`, `opacity`, and `link`. Shapes are `box`, `circle`, `ellipse`, or `none`; numeric dimensions are points and opacity ranges from 0 to 1. Colors are checked names understood by both backends or quoted six-digit values such as `"#336699"`. A link is a checked absolute HTTP(S) or mailto URL and wraps visible gate or label text in both outputs. Custom target operators use an ordinary gate label and shape, for example `gate "+" on target if control with shape: circle`.
 

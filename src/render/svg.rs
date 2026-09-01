@@ -10,6 +10,10 @@ use super::*;
 //
 // One pixel per TeX point keeps `style.width` / `style.height` — which the
 // language specifies in points — a one-to-one mapping.
+//
+// There is no `escape svg { … }` block, so `circuit.escapes` is ignored here:
+// raw snippets are backend-specific by construction, and SVG has no equivalent
+// of a LaTeX preamble or a Typst import.
 const PIXELS_PER_CENTIMETER: f32 = POINTS_PER_CENTIMETER;
 
 /// Stroke width in pixels. TikZ defaults to 0.4pt, which is legible in a

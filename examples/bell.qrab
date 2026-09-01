@@ -1,0 +1,7 @@
+circuit bell_pair {
+  qubit q[2]: "|0>" -> "bell"
+
+  h q[0]
+  x q[1] if q[0]
+  measure q[0], q[1]
+}

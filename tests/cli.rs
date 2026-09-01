@@ -57,6 +57,7 @@ fn clap_handles_help_errors_delimiters_and_conflicts() {
         .success();
     assert!(source.with_extension("tex").is_file());
     assert!(source.with_extension("typ").is_file());
+    assert!(source.with_extension("svg").is_file());
     fs::remove_dir_all(directory).expect("remove CLI test directory");
 
     let missing = std::env::temp_dir().join(format!(
