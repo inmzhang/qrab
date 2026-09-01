@@ -18,7 +18,9 @@ Before opening the gate:
 1. Make the repository public.
 2. Configure crates.io trusted publishing for `inmzhang/qrab` and `.github/workflows/release-plz.yml`.
 3. Add an npm publish access token as the GitHub Actions secret `NPM_TOKEN`.
-4. Set the gate with `gh variable set ENABLE_PUBLISHING --body true`, then merge the release-plz PR.
+4. Set the gate with `gh variable set ENABLE_PUBLISHING --body true`.
+
+For the first public release, no release PR exists because the unpublished crate is already at `0.1.0` with an up-to-date changelog. After opening the gate, run `gh workflow run release-plz.yml`; release-plz will publish and tag `0.1.0`, then cargo-dist takes over. Later releases use the normal release-PR merge flow above.
 
 No Homebrew tap is required: the generated formula is attached to each GitHub release and can be installed directly by URL. Add a tap and cargo-dist Homebrew publisher only if a shorter `brew install owner/tap/qrab` command becomes worthwhile.
 
