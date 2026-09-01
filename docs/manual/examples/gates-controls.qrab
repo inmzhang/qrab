@@ -1,0 +1,9 @@
+circuit controls {
+  qubit q[3]
+
+  x q[2] if q[0]
+  z q[2] if q[1]
+  x q[2] if q[0], q[1]
+  x q[2] if q[0], !q[1]
+  h q[2] if q[0]
+}

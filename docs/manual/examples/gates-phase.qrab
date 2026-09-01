@@ -1,0 +1,8 @@
+circuit phases {
+  qubit q[3]: "|x>" -> "QFT(x)"
+
+  h q[0]
+  phase "2" on q[0] if q[1]
+  phase "3" on q[0] if q[2]
+  phase "pi/8" on q[1] with size: 28
+}

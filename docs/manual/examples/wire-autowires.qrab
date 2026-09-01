@@ -1,0 +1,7 @@
+circuit sketch {
+  autowires
+
+  h alice
+  x bob if alice
+  measure alice, bob
+}

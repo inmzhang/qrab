@@ -1,0 +1,5 @@
+circuit bell_pair {
+  qubit q[2]
+
+  h q[0]
+}

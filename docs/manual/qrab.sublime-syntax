@@ -1,0 +1,48 @@
+%YAML 1.2
+---
+# Minimal Sublime syntax for the `.qrab` language, used only to give the manual
+# and any Sublime-compatible editor sensible highlighting. It recognises the
+# statement keywords the parser dispatches on; it is not a grammar.
+name: qrab
+file_extensions:
+  - qrab
+scope: source.qrab
+contexts:
+  main:
+    - match: '//'
+      scope: punctuation.definition.comment.qrab
+      push: comment
+    - match: '"'
+      scope: punctuation.definition.string.begin.qrab
+      push: string
+    - match: '\b(circuit|layout|backend|import|let|style|fn|autowires|mark|group)\b'
+      scope: keyword.declaration.qrab
+    - match: '\b(qubit|bit|hidden|ellipsis)\b'
+      scope: storage.type.qrab
+    - match: '\b(gate|phase|measure|swap|barrier|set|start|end|label|labels|equals|bundle|permute|space|touch|brace|note|cut)\b'
+      scope: keyword.control.qrab
+    - match: '\b(repeat|reverse|parallel|overlay)\b'
+      scope: keyword.control.flow.qrab
+    - match: '\b([hxyzst])\b'
+      scope: support.function.qrab
+    - match: '\b(on|if|with|as|to|from|braced|using|above|below|left|right|both|here|horizontal|vertical)\b'
+      scope: keyword.operator.word.qrab
+    - match: '\b(stroke|fill|width|height|size|shape|dash|opacity|link|orientation|scale|column_gap|wire_gap|gate_size|corner_radius|comment_width|background|preamble|before|after)\b'
+      scope: variable.parameter.qrab
+    - match: '\b(box|circle|ellipse|none|solid|dashed|dotted|quantum|classical|tag)\b'
+      scope: constant.language.qrab
+    - match: '\b\d+(\.\d+)?\b'
+      scope: constant.numeric.qrab
+    - match: '(->|!)'
+      scope: keyword.operator.qrab
+  comment:
+    - meta_scope: comment.line.double-slash.qrab
+    - match: '$\n?'
+      pop: true
+  string:
+    - meta_scope: string.quoted.double.qrab
+    - match: '\\.'
+      scope: constant.character.escape.qrab
+    - match: '"'
+      scope: punctuation.definition.string.end.qrab
+      pop: true

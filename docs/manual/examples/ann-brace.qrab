@@ -1,0 +1,9 @@
+circuit braces {
+  qubit q[4]: "|0>"
+
+  brace left "input" on q[0..4] with stroke: blue
+  h q[0]
+  brace both "register" on q[0..2] with stroke: teal
+  x q[3] if q[0]
+  brace right "output" on q[0..4] with stroke: purple
+}

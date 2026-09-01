@@ -1,0 +1,9 @@
+circuit bundles {
+  qubit register: "|x>" -> "|y>"
+  qubit single: "|0>"
+
+  bundle "n" on register
+  gate "U" on register
+  bundle "8" on register with stroke: blue
+  x single if register
+}

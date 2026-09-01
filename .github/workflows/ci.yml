@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo run --locked --quiet -p xtask
-      - run: git diff --exit-code -- assets docs/images
+      - run: git diff --exit-code -- assets docs/images docs/manual/images
 
   playground:
     runs-on: ubuntu-latest
@@ -94,3 +94,6 @@ jobs:
       - run: cargo test --workspace --all-targets
       - run: cargo test --doc
       - run: cargo test --test artifacts -- --ignored
+      # The manual reads every example source and every generated diagram, so
+      # compiling it proves both are present and that the document still builds.
+      - run: typst compile docs/manual.typ "${RUNNER_TEMP}/manual.pdf"

@@ -1,0 +1,11 @@
+circuit reordering {
+  qubit a: "a" -> "a"
+  qubit b: "b" -> "b"
+  qubit c: "c" -> "c"
+
+  h a
+  permute c, a, b with stroke: purple, width: 30
+  x a
+  y b
+  z c
+}

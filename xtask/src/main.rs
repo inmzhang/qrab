@@ -1,6 +1,6 @@
 //! Regenerates every file that is derived from the source tree but committed to
 //! it: the shell completions and man pages the release archives ship, and the
-//! diagrams the README embeds.
+//! diagrams the README and the manual embed.
 //!
 //! CI runs this and fails on any diff, so the generated files can never drift
 //! from the CLI definition or the renderer.
@@ -32,6 +32,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..");
     generate_cli_assets(&root.join("assets"))?;
     generate_diagrams(&root)?;
+    generate_manual_diagrams(&root)?;
     Ok(())
 }
 
@@ -70,6 +71,38 @@ fn generate_diagrams(root: &Path) -> Result<(), Box<dyn Error>> {
     for name in DIAGRAMS {
         let source = load_source(root.join(format!("examples/{name}.qrab")))?;
         let circuit = parse(source.as_str()).map_err(|error| error.to_string())?;
+        fs::write(
+            images.join(format!("{name}.svg")),
+            render(&circuit, Target::Svg),
+        )?;
+    }
+    Ok(())
+}
+
+/// Renders every manual example, so an example can be added by dropping a file
+/// into the directory rather than by editing a list here. The manual reads the
+/// same file for its listing, which is what keeps a snippet and its picture
+/// from ever drifting apart.
+fn generate_manual_diagrams(root: &Path) -> Result<(), Box<dyn Error>> {
+    let examples = root.join("docs/manual/examples");
+    let images = root.join("docs/manual/images");
+    recreate(&images)?;
+
+    let mut entries = fs::read_dir(&examples)?
+        .map(|entry| entry.map(|entry| entry.path()))
+        .collect::<Result<Vec<_>, _>>()?;
+    entries.sort();
+    for path in entries {
+        if path.extension().is_none_or(|extension| extension != "qrab") {
+            continue;
+        }
+        let name = path
+            .file_stem()
+            .expect("a `.qrab` path has a file stem")
+            .to_string_lossy()
+            .into_owned();
+        let source = load_source(&path)?;
+        let circuit = parse(source.as_str()).map_err(|error| format!("{name}: {error}"))?;
         fs::write(
             images.join(format!("{name}.svg")),
             render(&circuit, Target::Svg),

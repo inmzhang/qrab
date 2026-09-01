@@ -1,0 +1,18 @@
+fn entangle(control, target) {
+  h control
+  x target if control
+}
+
+fn ghz(a, b, c) {
+  entangle(a, b)
+  x c if b
+}
+
+circuit composed {
+  qubit q[3]: "|0>" -> "GHZ"
+
+  ghz(q[0], q[1], q[2])
+  barrier
+  entangle(q[0], q[2])
+  measure q[0..3]
+}

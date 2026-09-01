@@ -1,0 +1,16 @@
+circuit qft4 {
+  qubit q[4]: "|x>" -> "QFT(x)"
+
+  h q[0]
+  phase "2" on q[0] if q[1]
+  phase "3" on q[0] if q[2]
+  phase "4" on q[0] if q[3]
+  h q[1]
+  phase "2" on q[1] if q[2]
+  phase "3" on q[1] if q[3]
+  h q[2]
+  phase "2" on q[2] if q[3]
+  h q[3]
+  swap q[0], q[3]
+  swap q[1], q[2]
+}

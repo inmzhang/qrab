@@ -1,0 +1,9 @@
+circuit touch_alignment {
+  qubit q[3]: "|0>"
+
+  h q[0]
+  x q[1]
+  gate "deep" on q[2] with width: 40
+  touch with stroke: red, dash: dashed
+  measure q[0..3]
+}

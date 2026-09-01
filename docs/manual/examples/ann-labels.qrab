@@ -1,0 +1,9 @@
+circuit wire_labels {
+  qubit q[3]: "|0>" -> "out"
+
+  labels "data", "work", "flag" on q[0..3] with fill: yellow
+  h q[0]
+  label "mix" on q[0..3]
+  x q[2] if q[0]
+  labels "same" on q[0..3]
+}

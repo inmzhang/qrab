@@ -1,0 +1,9 @@
+circuit swaps_and_barriers {
+  qubit q[3]: "|0>"
+
+  h q[0]
+  swap q[0], q[2]
+  barrier
+  swap q[1], q[2] with stroke: red, width: 10
+  barrier q[0], q[1] with stroke: blue
+}

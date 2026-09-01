@@ -1,0 +1,10 @@
+circuit lifetimes {
+  qubit main: "|psi>" -> "|psi>"
+  qubit ancilla
+
+  start ancilla as "|0>"
+  x ancilla if main
+  h main
+  end ancilla as "discard"
+  h main
+}

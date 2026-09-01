@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="142.550" height="33.500" viewBox="-28.600 -16.000 142.550 33.500" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10">
+  <title>backend_hooks</title>
+  <rect x="-28.600" y="-16.000" width="142.550" height="33.500" fill="#FFFFFF"/>
+  <g>
+    <line x1="0.000" y1="0.000" x2="85.350" y2="0.000" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="3.500" text-anchor="middle" fill="#000000">|0&gt;</text>
+    <text x="98.650" y="3.500" text-anchor="middle" fill="#000000">|1&gt;</text>
+    <rect x="32.675" y="-10.000" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="42.675" y="3.500" text-anchor="middle" fill="#000000">H</text>
+  </g>
+</svg>

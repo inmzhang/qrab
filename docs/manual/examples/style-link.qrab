@@ -1,0 +1,6 @@
+circuit linked {
+  qubit q[2]: "|0>"
+
+  gate "docs" on q[0] with link: "https://example.com/gate", fill: yellow
+  label "spec" on q[0..2] with link: "https://example.com/spec", stroke: blue
+}

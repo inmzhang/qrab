@@ -1,0 +1,11 @@
+circuit vertical_reading {
+  layout { orientation: vertical }
+
+  qubit q[3]: "|x>" -> "|y>"
+
+  h q[0]
+  phase "2" on q[0] if q[1]
+  h q[1]
+  phase "2" on q[1] if q[2]
+  h q[2]
+}

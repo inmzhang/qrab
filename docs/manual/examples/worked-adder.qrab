@@ -1,0 +1,12 @@
+circuit vbe_carry {
+  qubit cin: "c_in" -> "c_in"
+  qubit a: "a" -> "a"
+  qubit b: "b" -> "a xor b"
+  qubit cout: "0" -> "c_out"
+
+  gate "CARRY" on cin, a, b, cout
+  equals
+  x cout if a, b
+  x b if a
+  x cout if cin, b
+}

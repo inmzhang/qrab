@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="328.425" height="118.850" viewBox="-28.600 -16.000 328.425 118.850" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10">
+  <title>braces</title>
+  <rect x="-28.600" y="-16.000" width="328.425" height="118.850" fill="#FFFFFF"/>
+  <g>
+    <line x1="0.000" y1="0.000" x2="293.825" y2="0.000" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="3.500" text-anchor="middle" fill="#000000">|0&gt;</text>
+    <line x1="0.000" y1="28.450" x2="293.825" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="31.950" text-anchor="middle" fill="#000000">|0&gt;</text>
+    <line x1="0.000" y1="56.900" x2="293.825" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="60.400" text-anchor="middle" fill="#000000">|0&gt;</text>
+    <line x1="0.000" y1="85.350" x2="293.825" y2="85.350" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="88.850" text-anchor="middle" fill="#000000">|0&gt;</text>
+    <path d="M 25.337 -9.673 Q 23.337 -9.673 23.337 16.501 T 21.337 42.675 Q 23.337 42.675 23.337 68.849 T 25.337 95.023" fill="none" stroke="#0000FF" stroke-width="1"/>
+    <rect x="27.337" y="38.975" width="35.000" height="11.000" fill="#FFFFFF"/>
+    <text x="44.837" y="46.175" text-anchor="middle" fill="#0000FF">input</text>
+    <rect x="79.675" y="-10.000" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="89.675" y="3.500" text-anchor="middle" fill="#000000">H</text>
+    <path d="M 115.012 -9.673 Q 113.012 -9.673 113.012 2.276 T 111.012 14.225 Q 113.012 14.225 113.012 26.174 T 115.012 38.123" fill="none" stroke="#008080" stroke-width="1"/>
+    <path d="M 172.613 -9.673 Q 174.613 -9.673 174.613 2.276 T 176.613 14.225 Q 174.613 14.225 174.613 26.174 T 172.613 38.123" fill="none" stroke="#008080" stroke-width="1"/>
+    <rect x="117.012" y="10.525" width="53.600" height="11.000" fill="#FFFFFF"/>
+    <text x="143.812" y="17.725" text-anchor="middle" fill="#008080">register</text>
+    <line x1="197.950" y1="0.000" x2="197.950" y2="85.350" fill="none" stroke="#000000" stroke-width="1"/>
+    <circle cx="197.950" cy="0.000" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <circle cx="197.950" cy="85.350" r="4.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <line x1="193.967" y1="85.350" x2="201.933" y2="85.350" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="197.950" y1="89.333" x2="197.950" y2="81.367" fill="none" stroke="#000000" stroke-width="1"/>
+    <path d="M 268.488 -9.673 Q 270.488 -9.673 270.488 16.501 T 272.488 42.675 Q 270.488 42.675 270.488 68.849 T 268.488 95.023" fill="none" stroke="#BF0040" stroke-width="1"/>
+    <rect x="225.288" y="38.975" width="41.200" height="11.000" fill="#FFFFFF"/>
+    <text x="245.888" y="46.175" text-anchor="middle" fill="#BF0040">output</text>
+  </g>
+</svg>

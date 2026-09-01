@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="270.575" height="64.226" viewBox="-28.600 -18.276 270.575 64.226" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10">
+  <title>bundles</title>
+  <rect x="-28.600" y="-18.276" width="270.575" height="64.226" fill="#FFFFFF"/>
+  <g>
+    <line x1="0.000" y1="0.000" x2="213.375" y2="0.000" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="3.500" text-anchor="middle" fill="#000000">|x&gt;</text>
+    <text x="226.675" y="3.500" text-anchor="middle" fill="#000000">|y&gt;</text>
+    <line x1="0.000" y1="28.450" x2="213.375" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="31.950" text-anchor="middle" fill="#000000">|0&gt;</text>
+    <line x1="39.830" y1="4.268" x2="45.520" y2="-4.268" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="48.051" y="-4.276" text-anchor="middle" fill="#000000">n</text>
+    <rect x="75.350" y="-10.000" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="85.350" y="3.500" text-anchor="middle" fill="#000000">U</text>
+    <line x1="125.180" y1="4.268" x2="130.870" y2="-4.268" fill="none" stroke="#0000FF" stroke-width="1"/>
+    <text x="133.401" y="-4.276" text-anchor="middle" fill="#000000">8</text>
+    <line x1="170.700" y1="0.000" x2="170.700" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <circle cx="170.700" cy="0.000" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <circle cx="170.700" cy="28.450" r="4.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <line x1="166.717" y1="28.450" x2="174.683" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="170.700" y1="32.433" x2="170.700" y2="24.467" fill="none" stroke="#000000" stroke-width="1"/>
+  </g>
+</svg>

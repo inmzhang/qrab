@@ -1,0 +1,15 @@
+circuit structured {
+  qubit q[3]: "|0>"
+
+  mark encode
+  h q[0]
+  x q[1] if q[0]
+  y q[2] if q[1]
+  mark encoded
+
+  repeat 3 {
+    z q[2] if q[0]
+  }
+
+  reverse from encode to encoded
+}

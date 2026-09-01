@@ -1,0 +1,8 @@
+circuit boxes {
+  qubit q[4]: "|0>"
+
+  gate "H" on q[0]
+  gate "U_f" on q[0..3]
+  gate "V" on q[0], q[1] if q[3]
+  gate "W" on q[2] with fill: yellow, width: 34
+}

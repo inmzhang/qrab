@@ -1,0 +1,15 @@
+let oracle_name = "U_f"
+let accent = "#DDEEFF"
+
+style oracle {
+  fill: accent
+  stroke: blue
+  shape: box
+}
+
+circuit named_values {
+  qubit q[3]: "|0>"
+
+  gate oracle_name on q[0..3] with oracle
+  gate oracle_name on q[0] with oracle, opacity: 0.5, shape: circle
+}

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="296.850" height="84.900" viewBox="-34.800 -10.500 296.850 84.900" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10">
+  <title>controls</title>
+  <rect x="-34.800" y="-10.500" width="296.850" height="84.900" fill="#FFFFFF"/>
+  <g>
+    <line x1="0.000" y1="0.000" x2="256.050" y2="0.000" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-16.400" y="3.500" text-anchor="middle" fill="#000000">q[0]</text>
+    <line x1="0.000" y1="28.450" x2="256.050" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-16.400" y="31.950" text-anchor="middle" fill="#000000">q[1]</text>
+    <line x1="0.000" y1="56.900" x2="256.050" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-16.400" y="60.400" text-anchor="middle" fill="#000000">q[2]</text>
+    <line x1="42.675" y1="0.000" x2="42.675" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
+    <circle cx="42.675" cy="0.000" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <circle cx="42.675" cy="56.900" r="4.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <line x1="38.692" y1="56.900" x2="46.658" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="42.675" y1="60.883" x2="42.675" y2="52.917" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="85.350" y1="28.450" x2="85.350" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
+    <circle cx="85.350" cy="28.450" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <circle cx="85.350" cy="56.900" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <line x1="128.025" y1="0.000" x2="128.025" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
+    <circle cx="128.025" cy="0.000" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <circle cx="128.025" cy="28.450" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <circle cx="128.025" cy="56.900" r="4.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <line x1="124.042" y1="56.900" x2="132.008" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="128.025" y1="60.883" x2="128.025" y2="52.917" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="170.700" y1="0.000" x2="170.700" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
+    <circle cx="170.700" cy="0.000" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <circle cx="170.700" cy="28.450" r="2.200" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <circle cx="170.700" cy="56.900" r="4.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <line x1="166.717" y1="56.900" x2="174.683" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="170.700" y1="60.883" x2="170.700" y2="52.917" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="213.375" y1="0.000" x2="213.375" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
+    <circle cx="213.375" cy="0.000" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <rect x="203.375" y="46.900" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="213.375" y="60.400" text-anchor="middle" fill="#000000">H</text>
+  </g>
+</svg>

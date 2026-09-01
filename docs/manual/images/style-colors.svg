@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="297.040" height="118.850" viewBox="-34.800 -16.000 297.040 118.850" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10">
+  <title>palette</title>
+  <rect x="-34.800" y="-16.000" width="297.040" height="118.850" fill="#FFFFFF"/>
+  <g>
+    <line x1="0.000" y1="0.000" x2="256.240" y2="0.000" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-16.400" y="3.500" text-anchor="middle" fill="#000000">q[0]</text>
+    <line x1="0.000" y1="28.450" x2="256.240" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-16.400" y="31.950" text-anchor="middle" fill="#000000">q[1]</text>
+    <line x1="0.000" y1="56.900" x2="256.240" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-16.400" y="60.400" text-anchor="middle" fill="#000000">q[2]</text>
+    <line x1="0.000" y1="85.350" x2="256.240" y2="85.350" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-16.400" y="88.850" text-anchor="middle" fill="#000000">q[3]</text>
+    <rect x="82.920" y="-10.000" width="39.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="102.420" y="3.500" text-anchor="middle" fill="#000000">black</text>
+    <rect x="86.020" y="18.450" width="32.800" height="20.000" fill="#FFFFFF" stroke="#808080" stroke-width="1"/>
+    <text x="102.420" y="31.950" text-anchor="middle" fill="#808080">gray</text>
+    <rect x="89.120" y="46.900" width="26.600" height="20.000" fill="#FFFFFF" stroke="#FF0000" stroke-width="1"/>
+    <text x="102.420" y="60.400" text-anchor="middle" fill="#FF0000">red</text>
+    <rect x="82.920" y="75.350" width="39.000" height="20.000" fill="#FFFFFF" stroke="#00FF00" stroke-width="1"/>
+    <text x="102.420" y="88.850" text-anchor="middle" fill="#00FF00">green</text>
+    <rect x="137.230" y="-10.000" width="32.800" height="20.000" fill="#FFFFFF" stroke="#0000FF" stroke-width="1"/>
+    <text x="153.630" y="3.500" text-anchor="middle" fill="#0000FF">blue</text>
+    <rect x="137.230" y="18.450" width="32.800" height="20.000" fill="#FFFFFF" stroke="#008080" stroke-width="1"/>
+    <text x="153.630" y="31.950" text-anchor="middle" fill="#008080">teal</text>
+    <rect x="131.030" y="46.900" width="45.200" height="20.000" fill="#FFFFFF" stroke="#BF0040" stroke-width="1"/>
+    <text x="153.630" y="60.400" text-anchor="middle" fill="#BF0040">purple</text>
+    <rect x="131.030" y="75.350" width="45.200" height="20.000" fill="#FFFFFF" stroke="#FF8000" stroke-width="1"/>
+    <text x="153.630" y="88.850" text-anchor="middle" fill="#FF8000">orange</text>
+    <rect x="182.335" y="-10.000" width="45.200" height="20.000" fill="#FFFF00" stroke="#000000" stroke-width="1"/>
+    <text x="204.935" y="3.500" text-anchor="middle" fill="#000000">yellow</text>
+    <rect x="185.435" y="18.450" width="39.000" height="20.000" fill="#FFFFFF" stroke="#808000" stroke-width="1"/>
+    <text x="204.935" y="31.950" text-anchor="middle" fill="#808000">olive</text>
+    <rect x="188.535" y="46.900" width="32.800" height="20.000" fill="#BFFF00" stroke="#000000" stroke-width="1"/>
+    <text x="204.935" y="60.400" text-anchor="middle" fill="#000000">lime</text>
+    <rect x="179.235" y="75.350" width="51.400" height="20.000" fill="#FFFFFF" stroke="#336699" stroke-width="1"/>
+    <text x="204.935" y="88.850" text-anchor="middle" fill="#336699">#336699</text>
+  </g>
+</svg>

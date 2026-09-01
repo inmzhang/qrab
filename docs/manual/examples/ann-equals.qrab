@@ -1,0 +1,10 @@
+circuit decomposition {
+  qubit a: "a" -> "a"
+  qubit b: "b" -> "b"
+  qubit sum: "0" -> "a xor b"
+
+  gate "SUM" on a, b, sum
+  equals
+  x sum if b
+  x sum if a
+}

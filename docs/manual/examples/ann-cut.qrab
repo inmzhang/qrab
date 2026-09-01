@@ -1,0 +1,9 @@
+circuit stages {
+  qubit q[3]: "|0>"
+
+  h q[0]
+  cut as "encode" with stroke: red
+  x q[1] if q[0]
+  cut on q[1..3] as "decode" with stroke: blue
+  measure q[0..3]
+}

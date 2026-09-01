@@ -1,0 +1,24 @@
+circuit palette {
+  layout { column_gap: 1.8 }
+
+  qubit q[4]
+
+  parallel {
+    gate "black" on q[0] with stroke: black
+    gate "gray" on q[1] with stroke: gray
+    gate "red" on q[2] with stroke: red
+    gate "green" on q[3] with stroke: green
+  }
+  parallel {
+    gate "blue" on q[0] with stroke: blue
+    gate "teal" on q[1] with stroke: teal
+    gate "purple" on q[2] with stroke: purple
+    gate "orange" on q[3] with stroke: orange
+  }
+  parallel {
+    gate "yellow" on q[0] with fill: yellow
+    gate "olive" on q[1] with stroke: olive
+    gate "lime" on q[2] with fill: lime
+    gate "#336699" on q[3] with stroke: "#336699"
+  }
+}

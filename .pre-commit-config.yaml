@@ -19,7 +19,9 @@ repos:
       - id: check-yaml
       - id: check-toml
       - id: check-added-large-files
-        args: [--maxkb=512]
+        # The typeset manual is the one large committed artifact; it is a
+        # generated file, but it is what a reader downloads without a toolchain.
+        args: [--maxkb=1024]
 
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v4.4.0

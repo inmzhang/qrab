@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="162.625" height="93.700" viewBox="-28.600 -19.300 162.625 93.700" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10">
+  <title>named_values</title>
+  <rect x="-28.600" y="-19.300" width="162.625" height="93.700" fill="#FFFFFF"/>
+  <g>
+    <line x1="0.000" y1="0.000" x2="128.025" y2="0.000" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="3.500" text-anchor="middle" fill="#000000">|0&gt;</text>
+    <line x1="0.000" y1="28.450" x2="128.025" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="31.950" text-anchor="middle" fill="#000000">|0&gt;</text>
+    <line x1="0.000" y1="56.900" x2="128.025" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="60.400" text-anchor="middle" fill="#000000">|0&gt;</text>
+    <rect x="29.375" y="-10.000" width="26.600" height="76.900" fill="#DDEEFF" stroke="#0000FF" stroke-width="1"/>
+    <text x="42.675" y="31.950" text-anchor="middle" fill="#0000FF">U_f</text>
+    <circle cx="85.350" cy="0.000" r="13.300" fill="#DDEEFF" stroke="#0000FF" stroke-width="1" opacity="0.500"/>
+    <text x="85.350" y="3.500" text-anchor="middle" fill="#0000FF" opacity="0.500">U_f</text>
+  </g>
+</svg>

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="538.175" height="121.248" viewBox="-28.600 -17.949 538.175 121.248" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10">
+  <title>shor_sketch</title>
+  <rect x="-28.600" y="-17.949" width="538.175" height="121.248" fill="#FFFFFF"/>
+  <g>
+    <line x1="0.000" y1="0.000" x2="289.373" y2="0.000" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="289.373" y1="0.996" x2="443.775" y2="0.996" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="289.373" y1="-0.996" x2="443.775" y2="-0.996" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="3.500" text-anchor="middle" fill="#000000">|0&gt;</text>
+    <text x="463.275" y="3.500" text-anchor="middle" fill="#000000">phase</text>
+    <text x="-13.300" y="31.950" text-anchor="middle" fill="#000000">...</text>
+    <text x="457.075" y="31.950" text-anchor="middle" fill="#000000">...</text>
+    <line x1="0.000" y1="56.900" x2="289.373" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="289.373" y1="57.896" x2="443.775" y2="57.896" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="289.373" y1="55.904" x2="443.775" y2="55.904" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="60.400" text-anchor="middle" fill="#000000">|0&gt;</text>
+    <text x="463.275" y="60.400" text-anchor="middle" fill="#000000">phase</text>
+    <line x1="0.000" y1="85.350" x2="443.775" y2="85.350" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="88.850" text-anchor="middle" fill="#000000">|1&gt;</text>
+    <text x="475.675" y="88.850" text-anchor="middle" fill="#000000">a^x mod N</text>
+    <line x1="39.830" y1="89.618" x2="45.520" y2="81.082" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="48.051" y="81.074" text-anchor="middle" fill="#000000">n</text>
+    <rect x="75.350" y="-10.000" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="85.350" y="3.500" text-anchor="middle" fill="#000000">H</text>
+    <rect x="75.350" y="46.900" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="85.350" y="60.400" text-anchor="middle" fill="#000000">H</text>
+    <line x1="138.588" y1="0.000" x2="138.588" y2="85.350" fill="none" stroke="#0000FF" stroke-width="1"/>
+    <circle cx="138.588" cy="0.000" r="2.200" fill="#DDEEFF" stroke="#0000FF" stroke-width="1"/>
+    <circle cx="138.588" cy="56.900" r="2.200" fill="#DDEEFF" stroke="#0000FF" stroke-width="1"/>
+    <rect x="106.688" y="75.350" width="63.800" height="20.000" fill="#DDEEFF" stroke="#0000FF" stroke-width="1"/>
+    <text x="138.588" y="88.850" text-anchor="middle" fill="#0000FF">a^x mod N</text>
+    <line x1="191.825" y1="-11.949" x2="191.825" y2="97.299" fill="none" stroke="#000000" stroke-width="1" stroke-dasharray="3 2"/>
+    <rect x="213.163" y="-10.000" width="45.200" height="76.900" fill="#FFFF00" stroke="#000000" stroke-width="1"/>
+    <text x="235.763" y="31.950" text-anchor="middle" fill="#000000">QFT^-1</text>
+    <path d="M 267.600 10.000 L 281.800 10.000 A 10.000 10.000 0 0 0 281.800 -10.000 L 267.600 -10.000 Z" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="274.700" y="3.500" text-anchor="middle" fill="#000000">y</text>
+    <path d="M 267.600 66.900 L 281.800 66.900 A 10.000 10.000 0 0 0 281.800 46.900 L 267.600 46.900 Z" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="274.700" y="60.400" text-anchor="middle" fill="#000000">y</text>
+    <path d="M 418.438 -9.673 Q 420.438 -9.673 420.438 9.388 T 422.438 28.450 Q 420.438 28.450 420.438 47.511 T 418.438 66.573" fill="none" stroke="#BF0040" stroke-width="1"/>
+    <rect x="307.038" y="24.750" width="109.400" height="11.000" fill="#FFFFFF"/>
+    <text x="361.738" y="31.950" text-anchor="middle" fill="#BF0040">counting register</text>
+  </g>
+</svg>

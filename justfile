@@ -30,6 +30,10 @@ release-check: ci
 gen-assets:
     cargo run --locked --quiet -p xtask
 
+# Regenerate the manual's diagrams and typeset it.
+manual: gen-assets
+    typst compile docs/manual.typ docs/manual.pdf
+
 # Build the WebAssembly module the playground loads.
 playground:
     wasm-pack build playground --target web --out-dir www/pkg --no-typescript

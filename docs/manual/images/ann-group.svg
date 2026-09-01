@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="270.575" height="113.040" viewBox="-28.600 -36.484 270.575 113.040" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10">
+  <title>regions</title>
+  <rect x="-28.600" y="-36.484" width="270.575" height="113.040" fill="#FFFFFF"/>
+  <g>
+    <rect x="70.556" y="-13.656" width="72.263" height="84.212" fill="#FFFF00" stroke="#000000" stroke-width="1" opacity="0.250"/>
+    <text x="89.156" y="-15.656" text-anchor="middle" fill="#000000">encode</text>
+    <rect x="27.881" y="-13.656" width="157.613" height="84.212" fill="none" stroke="#BF0040" stroke-width="1" stroke-dasharray="3 2"/>
+    <text x="58.881" y="-22.484" text-anchor="middle" fill="#000000">whole pass</text>
+    <line x1="0.000" y1="0.000" x2="180.373" y2="0.000" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="180.373" y1="0.996" x2="213.375" y2="0.996" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="180.373" y1="-0.996" x2="213.375" y2="-0.996" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="3.500" text-anchor="middle" fill="#000000">|0&gt;</text>
+    <text x="226.675" y="3.500" text-anchor="middle" fill="#000000">out</text>
+    <line x1="0.000" y1="28.450" x2="180.373" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="180.373" y1="29.446" x2="213.375" y2="29.446" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="180.373" y1="27.454" x2="213.375" y2="27.454" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="31.950" text-anchor="middle" fill="#000000">|0&gt;</text>
+    <text x="226.675" y="31.950" text-anchor="middle" fill="#000000">out</text>
+    <line x1="0.000" y1="56.900" x2="180.373" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="180.373" y1="57.896" x2="213.375" y2="57.896" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="180.373" y1="55.904" x2="213.375" y2="55.904" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="60.400" text-anchor="middle" fill="#000000">|0&gt;</text>
+    <text x="226.675" y="60.400" text-anchor="middle" fill="#000000">out</text>
+    <rect x="32.675" y="-10.000" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="42.675" y="3.500" text-anchor="middle" fill="#000000">H</text>
+    <line x1="85.350" y1="0.000" x2="85.350" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <circle cx="85.350" cy="0.000" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <circle cx="85.350" cy="28.450" r="4.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <line x1="81.367" y1="28.450" x2="89.333" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="85.350" y1="32.433" x2="85.350" y2="24.467" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="128.025" y1="28.450" x2="128.025" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
+    <circle cx="128.025" cy="28.450" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <circle cx="128.025" cy="56.900" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <rect x="160.700" y="-10.000" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <path d="M 164.441 2.845 A 6.259 6.259 0 0 1 176.959 2.845" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="170.700" y1="2.845" x2="175.537" y2="-3.414" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="175.537" y1="-3.414" x2="175.037" y2="-1.194" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="175.537" y1="-3.414" x2="173.514" y2="-2.371" fill="none" stroke="#000000" stroke-width="1"/>
+    <rect x="160.700" y="18.450" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <path d="M 164.441 31.295 A 6.259 6.259 0 0 1 176.959 31.295" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="170.700" y1="31.295" x2="175.537" y2="25.036" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="175.537" y1="25.036" x2="175.037" y2="27.256" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="175.537" y1="25.036" x2="173.514" y2="26.079" fill="none" stroke="#000000" stroke-width="1"/>
+    <rect x="160.700" y="46.900" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <path d="M 164.441 59.745 A 6.259 6.259 0 0 1 176.959 59.745" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="170.700" y1="59.745" x2="175.537" y2="53.486" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="175.537" y1="53.486" x2="175.037" y2="55.706" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="175.537" y1="53.486" x2="173.514" y2="54.529" fill="none" stroke="#000000" stroke-width="1"/>
+  </g>
+</svg>

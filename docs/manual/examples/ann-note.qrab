@@ -1,0 +1,11 @@
+circuit notes {
+  layout { comment_width: 90 }
+
+  qubit q[3]: "|0>"
+
+  h q[0]
+  note above "prepare the superposition" on q[0]
+  x q[1] if q[0]
+  note below "entangle the pair" on q[1]
+  measure q[0], q[1]
+}

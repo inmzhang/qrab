@@ -1,0 +1,14 @@
+circuit backend_hooks {
+  backend latex {
+    preamble: "\\newcommand{\\tag}{TikZ only}"
+    before: "\\node[anchor=south west] at (0,0.4) {\\tag};"
+  }
+
+  backend typst {
+    preamble: "#let tag = [Typst only]"
+    before: "#align(center)[#tag]"
+  }
+
+  qubit q: "|0>" -> "|1>"
+  h q
+}

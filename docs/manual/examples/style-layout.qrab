@@ -1,0 +1,15 @@
+circuit tuned_layout {
+  layout {
+    scale: 1.1
+    column_gap: 2.0
+    wire_gap: 1.3
+    gate_size: 26
+    background: "#F7F8FC"
+  }
+
+  qubit q[3]: "|0>" -> "out" with stroke: "#1F4E79"
+
+  h q[0]
+  x q[1] if q[0]
+  measure q[2]
+}

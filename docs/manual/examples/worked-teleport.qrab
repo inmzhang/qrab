@@ -1,0 +1,25 @@
+circuit annotated_teleportation {
+  layout { comment_width: 130 }
+
+  qubit message: "|psi>" -> "0"
+  qubit alice: "|0>" -> "0"
+  qubit bob: "|0>" -> "|psi>"
+
+  mark entangle
+  h alice
+  x bob if alice
+  mark entangled
+
+  x alice if message
+  h message
+  measure message, alice
+  note below "Alice sends two classical bits" on bob
+
+  cut as "channel" with stroke: red
+  mark correct
+  x bob if alice
+  z bob if message
+
+  group "Bell pair" from entangle to entangled on alice, bob with fill: green, opacity: 0.15
+  group "correct" from correct to here on message, alice with stroke: purple, dash: dashed
+}

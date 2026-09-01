@@ -1,0 +1,15 @@
+circuit regions {
+  qubit q[3]: "|0>" -> "out"
+
+  mark start
+  h q[0]
+  mark encode
+  x q[1] if q[0]
+  z q[2] if q[1]
+  mark encoded
+
+  group "encode" from encode to encoded on q[0..3] with fill: yellow, opacity: 0.25
+
+  measure q[0..3]
+  group "whole pass" from start to here on q[0..3] with stroke: purple, dash: dashed
+}

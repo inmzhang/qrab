@@ -1,0 +1,8 @@
+circuit reserved_space {
+  qubit q[2]: "|0>"
+
+  h q[0]
+  space q[0] with width: 80
+  h q[0]
+  x q[1] if q[0]
+}

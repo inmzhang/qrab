@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="350.025" height="61.950" viewBox="-41.000 -16.000 350.025 61.950" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10">
+  <title>lifetimes</title>
+  <rect x="-41.000" y="-16.000" width="350.025" height="61.950" fill="#FFFFFF"/>
+  <g>
+    <line x1="0.000" y1="0.000" x2="268.025" y2="0.000" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-19.500" y="3.500" text-anchor="middle" fill="#000000">|psi&gt;</text>
+    <text x="287.525" y="3.500" text-anchor="middle" fill="#000000">|psi&gt;</text>
+    <line x1="43.938" y1="28.450" x2="156.613" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="43.938" y1="32.149" x2="43.938" y2="24.752" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="30.638" y="31.950" text-anchor="middle" fill="#000000">|0&gt;</text>
+    <line x1="87.875" y1="0.000" x2="87.875" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <circle cx="87.875" cy="0.000" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <circle cx="87.875" cy="28.450" r="4.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <line x1="83.892" y1="28.450" x2="91.858" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="87.875" y1="32.433" x2="87.875" y2="24.467" fill="none" stroke="#000000" stroke-width="1"/>
+    <rect x="146.613" y="-10.000" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="156.613" y="3.500" text-anchor="middle" fill="#000000">H</text>
+    <line x1="156.613" y1="32.149" x2="156.613" y2="24.752" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="182.312" y="31.950" text-anchor="middle" fill="#000000">discard</text>
+    <rect x="215.350" y="-10.000" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="225.350" y="3.500" text-anchor="middle" fill="#000000">H</text>
+  </g>
+</svg>

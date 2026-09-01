@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="344.250" height="118.850" viewBox="-34.800 -16.000 344.250 118.850" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10">
+  <title>vbe_carry</title>
+  <rect x="-34.800" y="-16.000" width="344.250" height="118.850" fill="#FFFFFF"/>
+  <g>
+    <line x1="0.000" y1="0.000" x2="256.050" y2="0.000" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-16.400" y="3.500" text-anchor="middle" fill="#000000">c_in</text>
+    <text x="272.450" y="3.500" text-anchor="middle" fill="#000000">c_in</text>
+    <line x1="0.000" y1="28.450" x2="256.050" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-7.100" y="31.950" text-anchor="middle" fill="#000000">a</text>
+    <text x="263.150" y="31.950" text-anchor="middle" fill="#000000">a</text>
+    <line x1="0.000" y1="56.900" x2="256.050" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-7.100" y="60.400" text-anchor="middle" fill="#000000">b</text>
+    <text x="281.750" y="60.400" text-anchor="middle" fill="#000000">a xor b</text>
+    <line x1="0.000" y1="85.350" x2="256.050" y2="85.350" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-7.100" y="88.850" text-anchor="middle" fill="#000000">0</text>
+    <text x="275.550" y="88.850" text-anchor="middle" fill="#000000">c_out</text>
+    <rect x="23.175" y="-10.000" width="39.000" height="105.350" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="42.675" y="46.175" text-anchor="middle" fill="#000000">CARRY</text>
+    <rect x="80.250" y="38.975" width="10.200" height="11.000" fill="#FFFFFF"/>
+    <text x="85.350" y="46.175" text-anchor="middle" fill="#000000">=</text>
+    <line x1="128.025" y1="28.450" x2="128.025" y2="85.350" fill="none" stroke="#000000" stroke-width="1"/>
+    <circle cx="128.025" cy="28.450" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <circle cx="128.025" cy="56.900" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <circle cx="128.025" cy="85.350" r="4.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <line x1="124.042" y1="85.350" x2="132.008" y2="85.350" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="128.025" y1="89.333" x2="128.025" y2="81.367" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="170.700" y1="28.450" x2="170.700" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
+    <circle cx="170.700" cy="28.450" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <circle cx="170.700" cy="56.900" r="4.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <line x1="166.717" y1="56.900" x2="174.683" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="170.700" y1="60.883" x2="170.700" y2="52.917" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="213.375" y1="0.000" x2="213.375" y2="85.350" fill="none" stroke="#000000" stroke-width="1"/>
+    <circle cx="213.375" cy="0.000" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <circle cx="213.375" cy="56.900" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <circle cx="213.375" cy="85.350" r="4.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <line x1="209.392" y1="85.350" x2="217.358" y2="85.350" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="213.375" y1="89.333" x2="213.375" y2="81.367" fill="none" stroke="#000000" stroke-width="1"/>
+  </g>
+</svg>

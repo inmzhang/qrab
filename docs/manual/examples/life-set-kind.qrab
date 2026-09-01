@@ -1,0 +1,10 @@
+circuit wire_kinds_change {
+  qubit q[3]: "|0>" -> "out"
+
+  h q[0]
+  set q[0] to classical
+  set q[1] to hidden as "0"
+  space q[1] with width: 30
+  set q[1] to quantum as "1"
+  set q[2] to classical
+}

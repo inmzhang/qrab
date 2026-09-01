@@ -1,0 +1,11 @@
+circuit wire_kinds {
+  qubit data: "|psi>" -> "|psi'>"
+  bit result: "0" -> "m"
+  hidden scratch
+  ellipsis omitted
+  qubit last: "|x_n>" -> "|y_n>"
+
+  h data
+  measure data as "Z"
+  x last
+}

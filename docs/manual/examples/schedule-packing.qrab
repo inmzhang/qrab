@@ -1,0 +1,9 @@
+circuit packing {
+  qubit q[4]: "|0>"
+
+  h q[0]
+  h q[1]
+  h q[2]
+  x q[3] if q[0]
+  h q[1]
+}

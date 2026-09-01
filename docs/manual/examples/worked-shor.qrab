@@ -1,0 +1,17 @@
+circuit shor_sketch {
+  qubit first: "|0>" -> "phase"
+  ellipsis omitted
+  qubit last: "|0>" -> "phase"
+  qubit work: "|1>" -> "a^x mod N"
+
+  bundle "n" on work
+  parallel {
+    h first
+    h last
+  }
+  gate "a^x mod N" on work if first, last with fill: "#DDEEFF", stroke: blue
+  barrier
+  gate "QFT^-1" on first, last with fill: yellow
+  measure first, last as "y"
+  brace right "counting register" on first, last with stroke: purple
+}

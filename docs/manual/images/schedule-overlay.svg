@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="162.625" height="118.850" viewBox="-28.600 -16.000 162.625 118.850" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10">
+  <title>overlaid_column</title>
+  <rect x="-28.600" y="-16.000" width="162.625" height="118.850" fill="#FFFFFF"/>
+  <g>
+    <line x1="0.000" y1="0.000" x2="128.025" y2="0.000" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="3.500" text-anchor="middle" fill="#000000">|0&gt;</text>
+    <line x1="0.000" y1="28.450" x2="128.025" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="31.950" text-anchor="middle" fill="#000000">|0&gt;</text>
+    <line x1="0.000" y1="56.900" x2="128.025" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="60.400" text-anchor="middle" fill="#000000">|0&gt;</text>
+    <line x1="0.000" y1="85.350" x2="128.025" y2="85.350" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="88.850" text-anchor="middle" fill="#000000">|0&gt;</text>
+    <line x1="42.675" y1="0.000" x2="42.675" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <circle cx="42.675" cy="0.000" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <circle cx="42.675" cy="28.450" r="4.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <line x1="38.692" y1="28.450" x2="46.658" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="42.675" y1="32.433" x2="42.675" y2="24.467" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="42.675" y1="56.900" x2="42.675" y2="85.350" fill="none" stroke="#000000" stroke-width="1"/>
+    <circle cx="42.675" cy="56.900" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <circle cx="42.675" cy="85.350" r="4.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <line x1="38.692" y1="85.350" x2="46.658" y2="85.350" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="42.675" y1="89.333" x2="42.675" y2="81.367" fill="none" stroke="#000000" stroke-width="1"/>
+    <rect x="75.350" y="-10.000" width="20.000" height="105.350" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="85.350" y="46.175" text-anchor="middle" fill="#000000">U</text>
+  </g>
+</svg>

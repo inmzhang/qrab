@@ -1,0 +1,8 @@
+circuit measurements {
+  qubit q[4]: "|0>"
+
+  measure q[0]
+  measure q[1] as "Z"
+  measure q[2] as "X" using tag
+  measure q[3] as "M" with fill: yellow, stroke: red
+}

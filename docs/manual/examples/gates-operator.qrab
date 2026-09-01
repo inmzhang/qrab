@@ -1,0 +1,8 @@
+circuit custom_operators {
+  qubit q[3]
+
+  gate "+" on q[1] if q[0] with shape: circle
+  gate "*" on q[2] if q[0] with shape: circle, fill: yellow
+  gate "/" on q[2] if q[1] with shape: box
+  gate "&" on q[0] if q[2] with shape: none
+}

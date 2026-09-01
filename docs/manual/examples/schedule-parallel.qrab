@@ -1,0 +1,11 @@
+circuit parallel_layer {
+  qubit q[4]: "|0>"
+
+  h q[0]
+  parallel {
+    x q[1]
+    y q[2]
+    z q[3]
+  }
+  gate "U" on q[0..4]
+}
