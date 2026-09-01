@@ -1,5 +1,5 @@
 use std::error::Error;
-use std::fs::{self, File};
+use std::fs;
 use std::path::PathBuf;
 
 use clap::CommandFactory;
@@ -24,6 +24,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     ] {
         generate_to(shell, &mut command, "qrab", &assets)?;
     }
-    clap_mangen::Man::new(cli::Cli::command()).render(&mut File::create(assets.join("qrab.1"))?)?;
+    command.build();
+    clap_mangen::Man::new(command.clone()).generate_to(&assets)?;
+    for subcommand in command.get_subcommands() {
+        let name = format!("qrab-{}", subcommand.get_name());
+        let invocation = format!("qrab {}", subcommand.get_name());
+        clap_mangen::Man::new(subcommand.clone().bin_name(invocation).display_name(name))
+            .generate_to(&assets)?;
+    }
     Ok(())
 }
