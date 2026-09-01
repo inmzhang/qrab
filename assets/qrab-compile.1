@@ -2,11 +2,11 @@
 .el .ds Aq '
 .TH qrab-compile 1  "compile 0.0.0" 
 .SH NAME
-qrab\-compile \- Compile a circuit to LaTeX, Typst, or both
+qrab\-compile \- Compile a circuit to LaTeX, Typst, SVG, or all of them
 .SH SYNOPSIS
 \fBqrab compile\fR [\fB\-t\fR|\fB\-\-target\fR] [\fB\-o\fR|\fB\-\-output\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] <\fIINPUT\fR> 
 .SH DESCRIPTION
-Compile a circuit to LaTeX, Typst, or both
+Compile a circuit to LaTeX, Typst, SVG, or all of them
 .SH OPTIONS
 .TP
 \fB\-t\fR, \fB\-\-target\fR \fI<TARGET>\fR [default: all]
@@ -20,6 +20,8 @@ Output backend
 latex
 .IP \(bu 2
 typst
+.IP \(bu 2
+svg
 .IP \(bu 2
 all
 .RE

@@ -76,11 +76,11 @@ _qrab() {
             fi
             case "${prev}" in
                 --target)
-                    COMPREPLY=($(compgen -W "latex typst all" -- "${cur}"))
+                    COMPREPLY=($(compgen -W "latex typst svg all" -- "${cur}"))
                     return 0
                     ;;
                 -t)
-                    COMPREPLY=($(compgen -W "latex typst all" -- "${cur}"))
+                    COMPREPLY=($(compgen -W "latex typst svg all" -- "${cur}"))
                     return 0
                     ;;
                 --output)

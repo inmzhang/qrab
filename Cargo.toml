@@ -53,6 +53,7 @@ lto = "thin"
 assert_cmd = "2.2.2"
 insta = "1.48.0"
 predicates = "3.1.4"
+quick-xml = "0.42.0"
 
 [workspace]
 members = ["xtask"]

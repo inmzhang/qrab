@@ -22,7 +22,7 @@ pub(crate) enum Command {
         /// Input `.qrab` file.
         input: PathBuf,
     },
-    /// Compile a circuit to LaTeX, Typst, or both.
+    /// Compile a circuit to LaTeX, Typst, SVG, or all of them.
     Compile(CompileArgs),
 }
 
@@ -44,5 +44,6 @@ pub(crate) enum OutputTarget {
     Latex,
     #[value(alias = "quill")]
     Typst,
+    Svg,
     All,
 }

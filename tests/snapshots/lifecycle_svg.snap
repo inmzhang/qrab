@@ -1,0 +1,44 @@
+---
+source: tests/snapshots.rs
+---
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="441.275" height="92.676" viewBox="-28.600 -18.276 441.275 92.676" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10">
+  <title>lifecycle</title>
+  <rect x="-28.600" y="-18.276" width="441.275" height="92.676" fill="#FFFFFF"/>
+  <g>
+    <line x1="0.000" y1="0.000" x2="213.375" y2="0.000" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="213.375" y1="0.996" x2="241.050" y2="0.996" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="213.375" y1="-0.996" x2="241.050" y2="-0.996" fill="none" stroke="#000000" stroke-width="1"/>
+    <path d="M 241.050 0.996 C 248.550 0.996 263.550 29.446 271.050 29.446" fill="none" stroke="#BF0040" stroke-width="1"/>
+    <path d="M 241.050 -0.996 C 248.550 -0.996 263.550 27.454 271.050 27.454" fill="none" stroke="#BF0040" stroke-width="1"/>
+    <line x1="271.050" y1="29.446" x2="384.075" y2="29.446" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="271.050" y1="27.454" x2="384.075" y2="27.454" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="3.500" text-anchor="middle" fill="#000000">|0&gt;</text>
+    <text x="397.375" y="31.950" text-anchor="middle" fill="#000000">out</text>
+    <line x1="0.000" y1="28.450" x2="42.675" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="128.025" y1="28.450" x2="241.050" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <path d="M 241.050 28.450 C 248.550 28.450 263.550 56.900 271.050 56.900" fill="none" stroke="#BF0040" stroke-width="1"/>
+    <line x1="271.050" y1="56.900" x2="384.075" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="31.950" text-anchor="middle" fill="#000000">|0&gt;</text>
+    <text x="397.375" y="60.400" text-anchor="middle" fill="#000000">out</text>
+    <line x1="128.025" y1="56.900" x2="241.050" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
+    <path d="M 241.050 56.900 C 248.550 56.900 263.550 -0.000 271.050 -0.000" fill="none" stroke="#BF0040" stroke-width="1"/>
+    <line x1="271.050" y1="0.000" x2="341.400" y2="0.000" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="128.025" y1="60.599" x2="128.025" y2="53.201" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="108.525" y="60.400" text-anchor="middle" fill="#000000">|aux&gt;</text>
+    <rect x="33.675" y="-9.000" width="18.000" height="18.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="42.675" y="3.500" text-anchor="middle" fill="#000000">H</text>
+    <rect x="35.847" y="23.614" width="13.656" height="9.673" fill="#F3F3F3" stroke="none"/>
+    <line x1="35.847" y1="33.286" x2="35.847" y2="23.614" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="42.675" y="31.950" text-anchor="middle" fill="#000000">0</text>
+    <rect x="121.197" y="23.614" width="13.656" height="9.673" fill="#FFFFFF" stroke="none"/>
+    <line x1="134.853" y1="33.286" x2="134.853" y2="23.614" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="128.025" y="31.950" text-anchor="middle" fill="#000000">1</text>
+    <line x1="82.505" y1="4.268" x2="88.195" y2="-4.268" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="90.726" y="-4.276" text-anchor="middle" fill="#000000">3</text>
+    <rect x="159.400" y="24.750" width="22.600" height="11.000" fill="#FFFF00"/>
+    <text x="170.700" y="31.950" text-anchor="middle" fill="#000000">mix</text>
+    <line x1="298.725" y1="-9.958" x2="298.725" y2="38.408" fill="none" stroke="#FF0000" stroke-width="1" stroke-dasharray="3 2"/>
+    <line x1="341.400" y1="3.698" x2="341.400" y2="-3.698" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="357.800" y="3.500" text-anchor="middle" fill="#000000">done</text>
+  </g>
+</svg>

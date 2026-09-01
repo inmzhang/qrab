@@ -1,0 +1,32 @@
+---
+source: tests/snapshots.rs
+---
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="234.100" height="61.950" viewBox="-28.600 -16.000 234.100 61.950" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10">
+  <title>bell</title>
+  <rect x="-28.600" y="-16.000" width="234.100" height="61.950" fill="#FFFFFF"/>
+  <g>
+    <line x1="0.000" y1="0.000" x2="137.698" y2="0.000" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="137.698" y1="0.996" x2="170.700" y2="0.996" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="137.698" y1="-0.996" x2="170.700" y2="-0.996" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="3.500" text-anchor="middle" fill="#000000">|0&gt;</text>
+    <text x="187.100" y="3.500" text-anchor="middle" fill="#000000">bell</text>
+    <line x1="0.000" y1="28.450" x2="137.698" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="137.698" y1="29.446" x2="170.700" y2="29.446" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="137.698" y1="27.454" x2="170.700" y2="27.454" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="31.950" text-anchor="middle" fill="#000000">|0&gt;</text>
+    <text x="187.100" y="31.950" text-anchor="middle" fill="#000000">bell</text>
+    <rect x="32.675" y="-10.000" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="42.675" y="3.500" text-anchor="middle" fill="#000000">H</text>
+    <line x1="85.350" y1="0.000" x2="85.350" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <circle cx="85.350" cy="0.000" r="2.200" fill="#000000" stroke="#000000" stroke-width="1"/>
+    <circle cx="85.350" cy="28.450" r="4.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <line x1="81.367" y1="28.450" x2="89.333" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="85.350" y1="32.433" x2="85.350" y2="24.467" fill="none" stroke="#000000" stroke-width="1"/>
+    <rect x="118.025" y="-10.000" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <path d="M 121.766 -2.845 A 6.259 6.259 0 0 1 134.284 -2.845" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="128.025" y1="-2.845" x2="132.862" y2="3.414" fill="none" stroke="#000000" stroke-width="1"/>
+    <rect x="118.025" y="18.450" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <path d="M 121.766 25.605 A 6.259 6.259 0 0 1 134.284 25.605" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="128.025" y1="25.605" x2="132.862" y2="31.864" fill="none" stroke="#000000" stroke-width="1"/>
+  </g>
+</svg>

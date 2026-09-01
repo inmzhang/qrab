@@ -14,6 +14,7 @@ macro_rules! emit {
 }
 
 mod latex;
+mod svg;
 mod typst;
 
 /// Output format produced by [`render`].
@@ -23,6 +24,13 @@ pub enum Target {
     Latex,
     /// A standalone Typst document using Quill.
     Typst,
+    /// A standalone SVG image.
+    ///
+    /// Unlike the other two targets this one needs no external toolchain, so it
+    /// is what the WebAssembly playground renders. It reuses the LaTeX
+    /// backend's geometry but approximates text metrics, which SVG cannot
+    /// measure; see the module documentation for the resulting differences.
+    Svg,
 }
 
 /// Renders a parsed circuit as a standalone document for `target`.
@@ -30,6 +38,7 @@ pub fn render(circuit: &Circuit, target: Target) -> String {
     match target {
         Target::Latex => latex::render_latex(circuit),
         Target::Typst => typst::render_typst(circuit),
+        Target::Svg => svg::render_svg(circuit),
     }
 }
 

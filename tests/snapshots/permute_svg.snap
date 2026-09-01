@@ -1,0 +1,57 @@
+---
+source: tests/snapshots.rs
+---
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="270.575" height="147.300" viewBox="-28.600 -16.000 270.575 147.300" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10">
+  <title>permutation_test</title>
+  <rect x="-28.600" y="-16.000" width="270.575" height="147.300" fill="#FFFFFF"/>
+  <g>
+    <line x1="0.000" y1="0.000" x2="67.350" y2="0.000" fill="none" stroke="#000000" stroke-width="1"/>
+    <path d="M 67.350 -0.000 C 85.350 -0.000 85.350 28.450 103.350 28.450" fill="none" stroke="#BF0040" stroke-width="1"/>
+    <line x1="103.350" y1="28.450" x2="156.700" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <path d="M 156.700 28.450 C 170.700 28.450 170.700 -0.000 184.700 -0.000" fill="none" stroke="#008080" stroke-width="1"/>
+    <line x1="184.700" y1="0.000" x2="213.375" y2="0.000" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-10.200" y="3.500" text-anchor="middle" fill="#000000">in</text>
+    <text x="226.675" y="3.500" text-anchor="middle" fill="#000000">out</text>
+    <line x1="0.000" y1="28.450" x2="67.350" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <path d="M 67.350 28.450 C 85.350 28.450 85.350 113.800 103.350 113.800" fill="none" stroke="#BF0040" stroke-width="1"/>
+    <line x1="103.350" y1="113.800" x2="156.700" y2="113.800" fill="none" stroke="#000000" stroke-width="1"/>
+    <path d="M 156.700 113.800 C 170.700 113.800 170.700 28.450 184.700 28.450" fill="none" stroke="#008080" stroke-width="1"/>
+    <line x1="184.700" y1="28.450" x2="213.375" y2="28.450" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-10.200" y="31.950" text-anchor="middle" fill="#000000">in</text>
+    <text x="226.675" y="31.950" text-anchor="middle" fill="#000000">out</text>
+    <line x1="0.000" y1="56.900" x2="67.350" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
+    <path d="M 67.350 56.900 C 85.350 56.900 85.350 85.350 103.350 85.350" fill="none" stroke="#BF0040" stroke-width="1"/>
+    <line x1="103.350" y1="85.350" x2="156.700" y2="85.350" fill="none" stroke="#000000" stroke-width="1"/>
+    <path d="M 156.700 85.350 C 170.700 85.350 170.700 56.900 184.700 56.900" fill="none" stroke="#008080" stroke-width="1"/>
+    <line x1="184.700" y1="56.900" x2="213.375" y2="56.900" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-10.200" y="60.400" text-anchor="middle" fill="#000000">in</text>
+    <text x="226.675" y="60.400" text-anchor="middle" fill="#000000">out</text>
+    <line x1="0.000" y1="85.350" x2="67.350" y2="85.350" fill="none" stroke="#000000" stroke-width="1"/>
+    <path d="M 67.350 85.350 C 85.350 85.350 85.350 -0.000 103.350 -0.000" fill="none" stroke="#BF0040" stroke-width="1"/>
+    <line x1="103.350" y1="0.000" x2="156.700" y2="0.000" fill="none" stroke="#000000" stroke-width="1"/>
+    <path d="M 156.700 -0.000 C 170.700 -0.000 170.700 85.350 184.700 85.350" fill="none" stroke="#008080" stroke-width="1"/>
+    <line x1="184.700" y1="85.350" x2="213.375" y2="85.350" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-10.200" y="88.850" text-anchor="middle" fill="#000000">in</text>
+    <text x="226.675" y="88.850" text-anchor="middle" fill="#000000">out</text>
+    <line x1="0.000" y1="114.796" x2="67.350" y2="114.796" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="0.000" y1="112.804" x2="67.350" y2="112.804" fill="none" stroke="#000000" stroke-width="1"/>
+    <path d="M 67.350 114.796 C 85.350 114.796 85.350 57.896 103.350 57.896" fill="none" stroke="#BF0040" stroke-width="1"/>
+    <path d="M 67.350 112.804 C 85.350 112.804 85.350 55.904 103.350 55.904" fill="none" stroke="#BF0040" stroke-width="1"/>
+    <line x1="103.350" y1="57.896" x2="156.700" y2="57.896" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="103.350" y1="55.904" x2="156.700" y2="55.904" fill="none" stroke="#000000" stroke-width="1"/>
+    <path d="M 156.700 57.896 C 170.700 57.896 170.700 114.796 184.700 114.796" fill="none" stroke="#008080" stroke-width="1"/>
+    <path d="M 156.700 55.904 C 170.700 55.904 170.700 112.804 184.700 112.804" fill="none" stroke="#008080" stroke-width="1"/>
+    <line x1="184.700" y1="114.796" x2="213.375" y2="114.796" fill="none" stroke="#000000" stroke-width="1"/>
+    <line x1="184.700" y1="112.804" x2="213.375" y2="112.804" fill="none" stroke="#000000" stroke-width="1"/>
+    <text x="-13.300" y="117.300" text-anchor="middle" fill="#000000">bit</text>
+    <text x="226.675" y="117.300" text-anchor="middle" fill="#000000">bit</text>
+    <rect x="32.675" y="-10.000" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="42.675" y="3.500" text-anchor="middle" fill="#000000">H</text>
+    <rect x="118.025" y="-10.000" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="128.025" y="3.500" text-anchor="middle" fill="#000000">X</text>
+    <rect x="118.025" y="18.450" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="128.025" y="31.950" text-anchor="middle" fill="#000000">Y</text>
+    <rect x="118.025" y="103.800" width="20.000" height="20.000" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+    <text x="128.025" y="117.300" text-anchor="middle" fill="#000000">Z</text>
+  </g>
+</svg>

@@ -53,5 +53,6 @@ fn assert_outputs(name: &str, source: &str) {
     }, {
         insta::assert_snapshot!(format!("{name}_latex"), render(&circuit, Target::Latex));
         insta::assert_snapshot!(format!("{name}_typst"), render(&circuit, Target::Typst));
+        insta::assert_snapshot!(format!("{name}_svg"), render(&circuit, Target::Svg));
     });
 }
