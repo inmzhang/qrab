@@ -3,7 +3,7 @@
 ## Automated flow
 
 1. Use conventional commit subjects and merge changes into `main`. Release-plz maintains a release PR containing the next version and changelog.
-2. On the release PR's branch, run `just gen-assets` and commit the result. The man pages carry the crate version, so a bump leaves them stale, and both the asset drift check and `shipped_man_pages_carry_this_crate_version` fail until they are regenerated. Release-plz edits manifests rather than building the crate, so nothing does this for you.
+2. On the release PR's branch, run `just manual` and commit the result. The man pages and the manual's title page both carry the crate version, so a bump leaves them stale; the asset drift check and `shipped_man_pages_carry_this_crate_version` fail until the pages are regenerated, and nothing at all catches a stale `manual.pdf`. Release-plz edits manifests rather than building the crate, so nothing does this for you.
 3. Run `just release-check`, review the release PR, and merge it with a clean CI run.
 4. Release-plz publishes the crate and pushes the matching `vX.Y.Z` tag. Cargo-dist reacts to that tag, verifies it matches the crate version, builds all configured targets and installers, and creates the GitHub release.
 
