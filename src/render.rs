@@ -2289,7 +2289,7 @@ fn latex_url(value: &str) -> String {
 }
 
 fn latex_comment(value: &str) -> String {
-    // `render` also accepts manually constructed Circuits, bypassing parser identifiers.
+    // Callers may replace the parsed circuit's public name before rendering.
     value.replace(['\n', '\r'], " ").replace('%', "")
 }
 

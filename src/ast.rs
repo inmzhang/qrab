@@ -1,6 +1,8 @@
 use std::borrow::Cow;
 
 /// A one-based location in expanded `.qrab` source.
+///
+/// Spans are produced by the parser and are not constructed by downstream code.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct Span {

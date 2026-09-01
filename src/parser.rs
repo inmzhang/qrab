@@ -8,6 +8,9 @@ use crate::ast::{
 };
 
 /// A source-located lexer, parser, or semantic diagnostic.
+///
+/// Diagnostics are produced by [`parse`](crate::parse) and are not constructed
+/// by downstream code.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct Diagnostic {
