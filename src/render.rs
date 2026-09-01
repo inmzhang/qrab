@@ -262,14 +262,53 @@ fn wire_transitions(
     circuit: &Circuit,
     scheduled: &[Scheduled<'_>],
     wire: usize,
+    positions: &[f32],
 ) -> (WireKind, Vec<(f32, WireKind)>) {
     let initial = initial_wire_kind(circuit, scheduled, wire);
     let mut transitions = scheduled
         .iter()
-        .filter_map(|operation| wire_transition(circuit, operation, wire))
+        .filter_map(|operation| wire_transition(circuit, operation, wire, positions))
         .collect::<Vec<_>>();
     transitions.sort_by(|left, right| left.0.total_cmp(&right.0));
     (initial, transitions)
+}
+
+/// Horizontal centre of every scheduled column, in centimetres, with one extra
+/// entry past the last column for the right-hand edge of the diagram.
+///
+/// Columns are spaced evenly by `layout.column_gap`, which is what the abstract
+/// gap means, until an operation asks for more room than that. `space` is the
+/// only way to ask: the Typst backend hands its width straight to Quill, whose
+/// grid sizes columns to their contents, so the coordinate-based backends have
+/// to widen the same column themselves or the statement means nothing to them.
+///
+/// The extra width is split around the column that asked for it and shifts
+/// everything after it, so a `space` inserts room rather than overlapping its
+/// neighbours.
+fn column_positions(circuit: &Circuit, scheduled: &[Scheduled<'_>]) -> Vec<f32> {
+    let gap = circuit.layout.column_gap;
+    let last = scheduled
+        .iter()
+        .map(|operation| operation.column)
+        .max()
+        .unwrap_or(0);
+
+    let mut extra = vec![0.0_f32; last + 1];
+    for operation in scheduled {
+        if matches!(operation.kind, OperationKind::Phantom { .. }) {
+            let width = operation.style.width.unwrap_or(0.0) / POINTS_PER_CENTIMETER;
+            extra[operation.column] = extra[operation.column].max(width - gap);
+        }
+    }
+
+    let mut positions = Vec::with_capacity(last + 2);
+    let mut shift = 0.0;
+    for (column, extra) in extra.iter().enumerate() {
+        positions.push((column + 1) as f32 * gap + shift + extra / 2.0);
+        shift += extra;
+    }
+    positions.push((last + 2) as f32 * gap + shift);
+    positions
 }
 
 fn initial_wire_kind(circuit: &Circuit, scheduled: &[Scheduled<'_>], wire: usize) -> WireKind {
@@ -318,9 +357,10 @@ fn wire_transition(
     circuit: &Circuit,
     operation: &Scheduled<'_>,
     wire: usize,
+    positions: &[f32],
 ) -> Option<(f32, WireKind)> {
     let kind = wire_kind_transition(circuit, operation.kind, wire)?;
-    let x = (operation.column + 1) as f32 * circuit.layout.column_gap;
+    let x = positions[operation.column];
     Some((
         if matches!(operation.kind, OperationKind::Measure { .. }) {
             x + circuit.layout.column_gap.min(0.34)
@@ -435,6 +475,47 @@ mod tests {
         );
         assert_eq!(scheduled[1].positions[2], 0);
         assert_eq!(final_positions, vec![1, 2, 0]);
+    }
+
+    #[test]
+    fn a_wide_space_inserts_room_and_shifts_the_columns_after_it() {
+        // No fixture in the corpus asks for more than the default 1.5cm gap,
+        // so this is the only thing standing between `space` and being a
+        // silent no-op in the two coordinate-based backends again.
+        let source = |width: u32| {
+            format!(
+                r#"
+                circuit spaced {{
+                  qubit q[2]
+                  h q[0]
+                  space q[0] with width: {width}
+                  h q[0]
+                }}
+            "#
+            )
+        };
+
+        let narrow = parse(&source(20)).expect("valid narrow space");
+        let (scheduled, _) = schedule(&narrow);
+        let columns = column_positions(&narrow, &scheduled);
+        // 20pt is less than the 1.5cm gap the column already provides, so the
+        // grid stays uniform: the abstract gap is a floor, not a target.
+        assert_eq!(columns, vec![1.5, 3.0, 4.5, 6.0]);
+
+        let wide = parse(&source(200)).expect("valid wide space");
+        let (scheduled, _) = schedule(&wide);
+        let columns = column_positions(&wide, &scheduled);
+        let extra = 200.0 / POINTS_PER_CENTIMETER - 1.5;
+        assert_eq!(columns[0], 1.5);
+        assert_eq!(columns[1], 3.0 + extra / 2.0);
+        assert_eq!(columns[2], 4.5 + extra);
+        assert_eq!(columns[3], 6.0 + extra);
+
+        // The rendered documents have to move with it, not just the model.
+        let latex = render(&wide, Target::Latex);
+        let svg = render(&wide, Target::Svg);
+        assert!(latex.contains(&format!("({:.3},", columns[2])));
+        assert!(svg.contains(&format!("\"{:.3}\"", columns[2] * POINTS_PER_CENTIMETER)));
     }
 
     #[test]

@@ -61,8 +61,12 @@ pub(super) fn render_typst(circuit: &Circuit) -> String {
         );
     }
 
+    // Quill lays out its own grid, so this backend only reads the wire kinds
+    // out of the transitions; the coordinates it passes in go unused.
+    let columns = column_positions(circuit, &scheduled);
     for (wire_index, wire) in circuit.wires.iter().enumerate() {
-        let (initial_kind, transitions) = wire_transitions(circuit, &scheduled, wire_index);
+        let (initial_kind, transitions) =
+            wire_transitions(circuit, &scheduled, wire_index, &columns);
         if initial_kind != WireKind::Hidden || wire.ellipsis {
             let input = wire.input.as_deref().unwrap_or(&wire.name);
             emit!(

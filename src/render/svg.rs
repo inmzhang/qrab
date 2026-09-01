@@ -39,17 +39,33 @@ pub(super) fn render_svg(circuit: &Circuit) -> String {
         .map(|operation| operation.column)
         .max()
         .unwrap_or(0);
-    let end_x = (last_column + 2) as f32 * circuit.layout.column_gap;
+    let columns = column_positions(circuit, &scheduled);
+    let end_x = columns[last_column + 1];
 
     let mut canvas = Canvas::default();
     for (group_index, group) in circuit.groups.iter().enumerate() {
-        draw_group(&mut canvas, circuit, &scheduled, group_index, group);
+        draw_group(
+            &mut canvas,
+            circuit,
+            &scheduled,
+            group_index,
+            group,
+            &columns,
+        );
     }
     for (wire_index, wire) in circuit.wires.iter().enumerate() {
-        draw_wire(&mut canvas, circuit, &scheduled, wire_index, wire, end_x);
+        draw_wire(
+            &mut canvas,
+            circuit,
+            &scheduled,
+            wire_index,
+            wire,
+            &columns,
+            end_x,
+        );
     }
     for operation in &scheduled {
-        draw_operation(&mut canvas, circuit, operation);
+        draw_operation(&mut canvas, circuit, operation, &columns);
     }
 
     assemble(circuit, canvas)
@@ -301,11 +317,14 @@ fn draw_group(
     scheduled: &[Scheduled<'_>],
     group_index: usize,
     group: &Group,
+    columns: &[f32],
 ) {
     let (first_column, last_column, first_row, last_row) =
         group_bounds(group, scheduled, circuit.wires.len());
-    let left = first_column as f32 * circuit.layout.column_gap - 0.52;
-    let right = last_column as f32 * circuit.layout.column_gap + 0.52;
+    // `group_bounds` reports columns one-based, the way the Typst grid numbers
+    // them; `columns` is indexed by the scheduler's own numbering.
+    let left = columns[first_column - 1] - 0.52;
+    let right = columns[last_column - 1] + 0.52;
     let top = -(first_row as f32) * circuit.layout.wire_gap + 0.48;
     let bottom = -(last_row as f32) * circuit.layout.wire_gap - 0.48;
 
@@ -346,6 +365,7 @@ fn draw_wire(
     scheduled: &[Scheduled<'_>],
     wire_index: usize,
     wire: &Wire,
+    columns: &[f32],
     end_x: f32,
 ) {
     let initial_kind = initial_wire_kind(circuit, scheduled, wire_index);
@@ -354,7 +374,7 @@ fn draw_wire(
     let mut start_x = 0.0;
 
     for operation in scheduled {
-        let x = (operation.column + 1) as f32 * circuit.layout.column_gap;
+        let x = columns[operation.column];
         if let OperationKind::Permute { wires } = operation.kind
             && wires.contains(&wire_index)
         {
@@ -382,7 +402,9 @@ fn draw_wire(
             start_x = x + half_width;
         }
 
-        if let Some((transition_x, next_kind)) = wire_transition(circuit, operation, wire_index) {
+        if let Some((transition_x, next_kind)) =
+            wire_transition(circuit, operation, wire_index, columns)
+        {
             let y = -(row as f32) * circuit.layout.wire_gap;
             draw_wire_run(canvas, kind, start_x, transition_x, y, &wire.style);
             kind = next_kind;
@@ -473,10 +495,15 @@ fn draw_permutation_curve(
     }
 }
 
-fn draw_operation(canvas: &mut Canvas, circuit: &Circuit, operation: &Scheduled<'_>) {
+fn draw_operation(
+    canvas: &mut Canvas,
+    circuit: &Circuit,
+    operation: &Scheduled<'_>,
+    columns: &[f32],
+) {
     let layout = &circuit.layout;
     let wire_gap = layout.wire_gap;
-    let x = (operation.column + 1) as f32 * layout.column_gap;
+    let x = columns[operation.column];
     match operation.kind {
         OperationKind::Gate {
             label,
