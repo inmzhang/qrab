@@ -2,7 +2,7 @@ use std::fmt::Write;
 
 use crate::ast::{Circuit, Control, OperationKind, ParityBasis, Shape, Style};
 
-use super::{LabelSpan, label_spans, label_text};
+use super::{LabelSpan, label_spans, label_text, schedule};
 
 const QUIRK_URL: &str = "https://algassert.com/quirk#circuit=";
 const MAX_WIRES: usize = 16;
@@ -19,12 +19,17 @@ pub(super) fn render_quirk(circuit: &Circuit) -> String {
     let mut columns = Vec::new();
     let mut custom_gates = Vec::new();
 
-    // A qrab operation is sequential unless the renderer packs it with an
-    // independent one. Keeping one operation per Quirk column avoids Quirk's
-    // column-wide controls accidentally controlling an unrelated packed gate.
-    for operation in &circuit.operations {
+    let (mut scheduled, _) = schedule(circuit);
+    scheduled.sort_by_key(|operation| operation.column);
+    let mut layer = None;
+    let mut packed = None;
+    for operation in scheduled {
+        if layer != Some(operation.column) {
+            layer = Some(operation.column);
+            packed = None;
+        }
         let mut column = vec![None; wire_count];
-        match &operation.kind {
+        match operation.kind {
             OperationKind::Gate {
                 label,
                 targets,
@@ -34,7 +39,7 @@ pub(super) fn render_quirk(circuit: &Circuit) -> String {
                 && controls.iter().all(|control| control.wire < wire_count) =>
             {
                 let label = quirk_label(label);
-                let gate = native_gate(&label, &operation.style)
+                let gate = native_gate(&label, operation.style)
                     .map_or_else(|| custom_gate(&mut custom_gates, &label, 1), str::to_owned);
                 column[targets[0]] = Some(gate);
                 for control in controls {
@@ -81,8 +86,37 @@ pub(super) fn render_quirk(circuit: &Circuit) -> String {
             }
             _ => {}
         }
-        if column.iter().any(Option::is_some) {
+        if !column.iter().any(Option::is_some) {
+            continue;
+        }
+
+        // Quirk's controls and swaps apply to the whole column. Keep those and
+        // spanning gates isolated, but pack independent unary gates.
+        let isolated = match operation.kind {
+            OperationKind::Gate {
+                targets, controls, ..
+            } => targets.len() != 1 || !controls.is_empty(),
+            OperationKind::Swap { .. } => true,
+            _ => false,
+        };
+        if isolated {
             columns.push(column);
+            continue;
+        }
+
+        let index = if let Some(index) = packed {
+            index
+        } else {
+            columns.push(vec![None; wire_count]);
+            let index = columns.len() - 1;
+            packed = Some(index);
+            index
+        };
+        for (target, gate) in columns[index].iter_mut().zip(column) {
+            if gate.is_some() {
+                debug_assert!(target.is_none());
+                *target = gate;
+            }
         }
     }
 
@@ -346,7 +380,7 @@ mod tests {
             ),
             concat!(
                 "https://algassert.com/quirk#circuit=",
-                r#"{"cols":[["Z^½"],["◦","Z^¼"],[1,1,"Z^⅛"],["Swap",1,"Swap"]],"init":[1,"+","-i"]}"#,
+                r#"{"cols":[["Z^½",1,"Z^⅛"],["◦","Z^¼"],["Swap",1,"Swap"]],"init":[1,"+","-i"]}"#,
             )
         );
     }
@@ -370,6 +404,40 @@ mod tests {
             concat!(
                 "https://algassert.com/quirk#circuit=",
                 r#"{"cols":[["Z^½","•","•"],["Z^½","zpar","zpar"],["Z^½","xpar","xpar"],["Z^½","ypar","ypar"]]}"#,
+            )
+        );
+    }
+
+    #[test]
+    fn parallel_gates_share_columns_without_combining_controlled_gates() {
+        assert_eq!(
+            render(
+                r#"
+                    circuit layers {
+                      qubit q[5]
+                      parallel {
+                        h q[0]
+                        h q[1]
+                        h q[2]
+                        h q[3]
+                      }
+                      parallel {
+                        x q[1] if q[0]
+                        x q[4] if q[3]
+                      }
+                      parallel {
+                        x q[0]
+                        x q[1]
+                        x q[2]
+                        x q[3]
+                        x q[4]
+                      }
+                    }
+                "#,
+            ),
+            concat!(
+                "https://algassert.com/quirk#circuit=",
+                r#"{"cols":[["H","H","H","H"],["•","X"],[1,1,1,"•","X"],["X","X","X","X","X"]]}"#,
             )
         );
     }
