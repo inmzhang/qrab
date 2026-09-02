@@ -121,6 +121,39 @@ fn installs_agent_skill_without_overwriting_changes() {
     fs::remove_dir_all(directory).expect("remove skill test directory");
 }
 
+#[test]
+fn imports_quirk_to_stdout_or_a_file() {
+    let url = r#"https://algassert.com/quirk#circuit={"cols":[["H"],["•","X"]]}"#;
+    cargo_bin_cmd!("qrab")
+        .args(["import-quirk", url])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("x q[1] if q[0]"));
+
+    let directory =
+        std::env::temp_dir().join(format!("qrab-quirk-{}-{}", std::process::id(), line!()));
+    fs::create_dir(&directory).expect("create Quirk import test directory");
+    let output = directory.join("imported.qrab");
+    cargo_bin_cmd!("qrab")
+        .args(["import-quirk", url, "-o"])
+        .arg(&output)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("wrote"));
+    assert!(
+        fs::read_to_string(&output)
+            .expect("read imported qrab")
+            .contains("h q[0]")
+    );
+    cargo_bin_cmd!("qrab")
+        .args(["compile", "-t", "typst"])
+        .arg(&output)
+        .assert()
+        .success();
+    assert!(output.with_extension("typ").is_file());
+    fs::remove_dir_all(directory).expect("remove Quirk import test directory");
+}
+
 /// The man pages ship in every release archive, and their version comes from
 /// whichever crate compiled `cli.rs`. That is `xtask`, not this one, so the
 /// override in `xtask` is the only thing keeping them from advertising a
@@ -132,6 +165,7 @@ fn shipped_man_pages_carry_this_crate_version() {
         "qrab.1",
         "qrab-check.1",
         "qrab-compile.1",
+        "qrab-import-quirk.1",
         "qrab-install-skill.1",
     ] {
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/");

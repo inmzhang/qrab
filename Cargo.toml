@@ -28,6 +28,7 @@ ratex-layout = "0.1.14"
 ratex-parser = "0.1.14"
 ratex-svg = { version = "0.1.14", features = ["embed-fonts"] }
 ratex-types = "0.1.14"
+serde_json = "1.0.151"
 thiserror = "2.0.20"
 
 [lints]

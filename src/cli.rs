@@ -24,6 +24,14 @@ pub(crate) enum Command {
     },
     /// Compile a circuit to LaTeX, Typst, SVG, Quirk, or all of them.
     Compile(CompileArgs),
+    /// Convert a Quirk URL to qrab source.
+    ImportQuirk {
+        /// Escaped or unescaped Quirk circuit URL.
+        url: String,
+        /// Output `.qrab` file; writes to stdout when omitted.
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+    },
     /// Install the qrab agent skill in the current project.
     InstallSkill,
 }

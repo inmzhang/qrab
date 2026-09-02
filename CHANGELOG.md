@@ -3,6 +3,12 @@
 All notable changes are documented here. This project follows Semantic Versioning.
 
 ## [Unreleased]
+
+### Added
+
+- Import Quirk URLs from the library, CLI, and playground; omit read-only
+  displays and reject unsupported state changes
+
 ## [0.1.4] - 2026-09-02
 
 ### Added

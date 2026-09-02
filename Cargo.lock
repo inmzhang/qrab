@@ -828,6 +828,7 @@ dependencies = [
  "ratex-parser",
  "ratex-svg",
  "ratex-types",
+ "serde_json",
  "thiserror 2.0.20",
 ]
 

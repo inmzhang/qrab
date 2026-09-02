@@ -5,7 +5,7 @@
 //! uses `import` cannot be resolved here and is reported as an ordinary
 //! diagnostic.
 
-use qrab::{Target, parse, render};
+use qrab::{Target, from_quirk_url, parse, render};
 use wasm_bindgen::prelude::*;
 
 // Generated from `examples/` and the curated qpic ports; see `build.rs`.
@@ -83,6 +83,12 @@ pub fn compile(source: &str, target: &str) -> Compiled {
     }
 }
 
+/// Converts an escaped or unescaped Quirk URL into qrab source.
+#[wasm_bindgen]
+pub fn import_quirk(url: &str) -> Result<String, JsError> {
+    from_quirk_url(url).map_err(|error| JsError::new(&error.to_string()))
+}
+
 /// Bundled examples in menu order, each as `"group/name"`.
 ///
 /// The two halves are joined rather than returned separately so the caller
@@ -152,5 +158,14 @@ mod tests {
         let compiled = compile(include_str!("../../examples/math-labels.qrab"), "svg");
         assert!(compiled.message.is_empty(), "{}", compiled.message);
         assert!(compiled.output.contains("<path"));
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    #[wasm_bindgen_test::wasm_bindgen_test]
+    fn quirk_import_errors_cross_the_wasm_boundary() {
+        assert!(
+            import_quirk(r#"https://algassert.com/quirk#circuit={"cols":[["ZDetector"]]}"#)
+                .is_err()
+        );
     }
 }

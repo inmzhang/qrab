@@ -2,13 +2,15 @@
 
 //! Compiler library for the human-readable `.qrab` quantum-circuit language.
 //!
-//! Use [`compile`] for in-memory source, or [`load_source`] before [`compile`]
-//! when the source may contain relative imports. [`parse`] and [`render`] expose
-//! the two compiler stages separately.
+//! Use [`compile`] for in-memory source, [`from_quirk_url`] to import a Quirk
+//! link, or [`load_source`] before [`compile`] when the source may contain
+//! relative imports. [`parse`] and [`render`] expose the two compiler stages
+//! separately.
 
 mod ast;
 mod loader;
 mod parser;
+mod quirk;
 mod render;
 
 pub use ast::{
@@ -18,6 +20,7 @@ pub use ast::{
 };
 pub use loader::{LoadError, LoadedSource, load_source};
 pub use parser::{Diagnostic, parse};
+pub use quirk::{QuirkImportError, from_quirk_url};
 pub use render::{Target, render};
 
 /// Version of this crate, as reported by `qrab --version`.

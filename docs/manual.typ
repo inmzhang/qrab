@@ -251,7 +251,7 @@ already present; it refuses to overwrite a changed file.
 
 = The command line
 
-The circuit workflow uses two subcommands.
+The circuit workflow uses three subcommands.
 
 == Checking
 
@@ -281,6 +281,21 @@ qrab compile circuit.qrab -t typst -o -      # write to stdout
 `quirk`, or `all`, and defaults to `all`. `--output` (`-o`) names a single
 output file and therefore requires a single backend; without it, each output
 is written next to the input with the matching extension.
+
+== Importing from Quirk
+
+```sh
+qrab import-quirk 'https://algassert.com/quirk#circuit=...' -o circuit.qrab
+qrab compile circuit.qrab -t typst
+```
+
+`import-quirk` accepts both the percent-escaped link from Quirk's export menu
+and a link containing raw JSON. Without `-o`, it prints qrab source to stdout.
+Gates, controls, input states, measurements, swaps, and custom-gate names are
+retained. Other operators become labeled boxes. Read-only displays are omitted;
+unsupported state-changing detectors are rejected.
+
+The playground provides the same conversion through *Import Quirk*.
 
 == From source to PDF
 
@@ -946,7 +961,7 @@ A `hidden`-to-`quantum` transition brings the ancillas in with a known value,
 The crate exposes the same pipeline the binary uses.
 
 ```rust
-use qrab::{Target, compile, load_source, parse, render};
+use qrab::{Target, compile, from_quirk_url, load_source, parse, render};
 
 // Shortest path, for source already in memory.
 let svg = compile("circuit c { qubit q\n h q }", Target::Svg)?;
@@ -956,6 +971,9 @@ let source = load_source("circuit.qrab")?;
 let circuit = parse(source.as_str())?;
 let latex = render(&circuit, Target::Latex);
 let typst = render(&circuit, Target::Typst);
+
+// From an escaped or raw Quirk URL.
+let source = from_quirk_url(quirk_url)?;
 ```
 
 `compile` is `parse` followed by `render`. `load_source` expands `import`

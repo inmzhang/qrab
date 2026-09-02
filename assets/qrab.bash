@@ -25,6 +25,9 @@ _qrab() {
             qrab,help)
                 cmd="qrab__subcmd__help"
                 ;;
+            qrab,import-quirk)
+                cmd="qrab__subcmd__import__subcmd__quirk"
+                ;;
             qrab,install-skill)
                 cmd="qrab__subcmd__install__subcmd__skill"
                 ;;
@@ -37,6 +40,9 @@ _qrab() {
             qrab__subcmd__help,help)
                 cmd="qrab__subcmd__help__subcmd__help"
                 ;;
+            qrab__subcmd__help,import-quirk)
+                cmd="qrab__subcmd__help__subcmd__import__subcmd__quirk"
+                ;;
             qrab__subcmd__help,install-skill)
                 cmd="qrab__subcmd__help__subcmd__install__subcmd__skill"
                 ;;
@@ -47,7 +53,7 @@ _qrab() {
 
     case "${cmd}" in
         qrab)
-            opts="-h -V --help --version check compile install-skill help"
+            opts="-h -V --help --version check compile import-quirk install-skill help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 1 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -105,7 +111,7 @@ _qrab() {
             return 0
             ;;
         qrab__subcmd__help)
-            opts="check compile install-skill help"
+            opts="check compile import-quirk install-skill help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -160,6 +166,20 @@ _qrab() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
+        qrab__subcmd__help__subcmd__import__subcmd__quirk)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
         qrab__subcmd__help__subcmd__install__subcmd__skill)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
@@ -167,6 +187,28 @@ _qrab() {
                 return 0
             fi
             case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        qrab__subcmd__import__subcmd__quirk)
+            opts="-o -h -V --output --help --version"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                --output)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                -o)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
                 *)
                     COMPREPLY=()
                     ;;

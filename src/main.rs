@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 use clap::{CommandFactory, Parser, error::ErrorKind};
 use miette::{IntoDiagnostic, Report, Result, WrapErr};
-use qrab::{Circuit, Target, load_source, parse, render};
+use qrab::{Circuit, Target, from_quirk_url, load_source, parse, render};
 
 mod cli;
 
@@ -27,8 +27,22 @@ fn run(command: Command) -> Result<()> {
     match command {
         Command::Check { input } => check_command(&input),
         Command::Compile(arguments) => compile_command(arguments),
+        Command::ImportQuirk { url, output } => import_quirk(&url, output),
         Command::InstallSkill => install_skill(),
     }
+}
+
+fn import_quirk(url: &str, output: Option<PathBuf>) -> Result<()> {
+    let source = from_quirk_url(url).into_diagnostic()?;
+    let Some(path) = output else {
+        print!("{source}");
+        return Ok(());
+    };
+    fs::write(&path, source)
+        .into_diagnostic()
+        .wrap_err_with(|| format!("cannot write {}", path.display()))?;
+    println!("wrote {}", path.display());
+    Ok(())
 }
 
 fn install_skill() -> Result<()> {

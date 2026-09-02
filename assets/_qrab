@@ -50,6 +50,17 @@ _arguments "${_arguments_options[@]}" : \
 ':input -- Input `.qrab` file:_files' \
 && ret=0
 ;;
+(import-quirk)
+_arguments "${_arguments_options[@]}" : \
+'-o+[Output \`.qrab\` file; writes to stdout when omitted]:OUTPUT:_files' \
+'--output=[Output \`.qrab\` file; writes to stdout when omitted]:OUTPUT:_files' \
+'-h[Print help]' \
+'--help[Print help]' \
+'-V[Print version]' \
+'--version[Print version]' \
+':url -- Escaped or unescaped Quirk circuit URL:_default' \
+&& ret=0
+;;
 (install-skill)
 _arguments "${_arguments_options[@]}" : \
 '-h[Print help]' \
@@ -78,6 +89,10 @@ _arguments "${_arguments_options[@]}" : \
 _arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
+(import-quirk)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
 (install-skill)
 _arguments "${_arguments_options[@]}" : \
 && ret=0
@@ -100,6 +115,7 @@ _qrab_commands() {
     local commands; commands=(
 'check:Check a circuit without rendering it' \
 'compile:Compile a circuit to LaTeX, Typst, SVG, Quirk, or all of them' \
+'import-quirk:Convert a Quirk URL to qrab source' \
 'install-skill:Install the qrab agent skill in the current project' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
@@ -120,6 +136,7 @@ _qrab__subcmd__help_commands() {
     local commands; commands=(
 'check:Check a circuit without rendering it' \
 'compile:Compile a circuit to LaTeX, Typst, SVG, Quirk, or all of them' \
+'import-quirk:Convert a Quirk URL to qrab source' \
 'install-skill:Install the qrab agent skill in the current project' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
@@ -140,10 +157,20 @@ _qrab__subcmd__help__subcmd__help_commands() {
     local commands; commands=()
     _describe -t commands 'qrab help help commands' commands "$@"
 }
+(( $+functions[_qrab__subcmd__help__subcmd__import-quirk_commands] )) ||
+_qrab__subcmd__help__subcmd__import-quirk_commands() {
+    local commands; commands=()
+    _describe -t commands 'qrab help import-quirk commands' commands "$@"
+}
 (( $+functions[_qrab__subcmd__help__subcmd__install-skill_commands] )) ||
 _qrab__subcmd__help__subcmd__install-skill_commands() {
     local commands; commands=()
     _describe -t commands 'qrab help install-skill commands' commands "$@"
+}
+(( $+functions[_qrab__subcmd__import-quirk_commands] )) ||
+_qrab__subcmd__import-quirk_commands() {
+    local commands; commands=()
+    _describe -t commands 'qrab import-quirk commands' commands "$@"
 }
 (( $+functions[_qrab__subcmd__install-skill_commands] )) ||
 _qrab__subcmd__install-skill_commands() {

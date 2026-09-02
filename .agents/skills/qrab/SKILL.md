@@ -58,7 +58,18 @@ qrab compile circuit.qrab -t quirk -o circuit.url
 qrab compile circuit.qrab                 # latex, typst, svg, and quirk
 ```
 
-Without `-o`, qrab writes beside the input as `.tex`, `.typ`, `.svg`, or `.url`. `--target all` cannot be combined with `--output`.
+To import a Quirk URL, then render it with a document backend:
+
+```sh
+qrab import-quirk 'https://algassert.com/quirk#circuit=...' -o circuit.qrab
+qrab compile circuit.qrab -t typst
+```
+
+The importer omits read-only displays and rejects unsupported state-changing
+detectors. The playground exposes the same conversion through **Import Quirk**.
+
+For `compile`, without `-o`, qrab writes beside the input as `.tex`, `.typ`,
+`.svg`, or `.url`. `--target all` cannot be combined with `--output`.
 
 Choose the backend by the requested deliverable:
 

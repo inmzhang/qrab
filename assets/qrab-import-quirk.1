@@ -1,0 +1,24 @@
+.ie \n(.g .ds Aq \(aq
+.el .ds Aq '
+.TH qrab-import-quirk 1  "import-quirk 0.1.4" 
+.SH NAME
+qrab\-import\-quirk \- Convert a Quirk URL to qrab source
+.SH SYNOPSIS
+\fBqrab import\-quirk\fR [\fB\-o\fR|\fB\-\-output\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] <\fIURL\fR> 
+.SH DESCRIPTION
+Convert a Quirk URL to qrab source
+.SH OPTIONS
+.TP
+\fB\-o\fR, \fB\-\-output\fR \fI<OUTPUT>\fR
+Output `.qrab` file; writes to stdout when omitted
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Print help
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+Print version
+.TP
+<\fIURL\fR>
+Escaped or unescaped Quirk circuit URL
+.SH VERSION
+v0.1.4

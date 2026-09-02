@@ -2,7 +2,7 @@
 // same Rust code the CLI uses, built to WebAssembly, so the page only has to
 // move text in and pictures out.
 
-import init, { compile, example_names, example_source } from "./pkg/qrab_playground.js";
+import init, { compile, example_names, example_source, import_quirk } from "./pkg/qrab_playground.js";
 
 const source = document.getElementById("source");
 const gutter = document.getElementById("gutter");
@@ -12,6 +12,7 @@ const examples = document.getElementById("examples");
 const target = document.getElementById("target");
 const outputTitle = document.getElementById("output-title");
 const openQuirk = document.getElementById("open-quirk");
+const importQuirk = document.getElementById("import-quirk");
 
 const EXTENSIONS = { svg: "svg", latex: "tex", typst: "typ" };
 const TITLES = { svg: "Diagram", latex: "LaTeX / TikZ", typst: "Typst / Quill" };
@@ -160,6 +161,20 @@ source.addEventListener("keydown", (event) => {
 });
 
 // Toolbar ---------------------------------------------------------------
+
+importQuirk.addEventListener("click", () => {
+  const url = window.prompt("Paste a Quirk circuit URL");
+  if (!url) return;
+  try {
+    source.value = import_quirk(url.trim());
+    history.replaceState(null, "", location.pathname);
+    render();
+    source.focus();
+  } catch (error) {
+    status.classList.add("failed");
+    status.textContent = `Quirk import: ${error instanceof Error ? error.message : error}`;
+  }
+});
 
 openQuirk.addEventListener("click", () => {
   const result = compile(source.value, "quirk");

@@ -95,6 +95,7 @@ qrab compile circuit.qrab                    # also writes circuit.url
 qrab compile circuit.qrab --target svg       # writes circuit.svg
 qrab compile circuit.qrab --target quirk     # writes an interactive URL to circuit.url
 qrab compile circuit.qrab -t latex -o out.tex
+qrab import-quirk 'https://algassert.com/quirk#circuit=...' -o circuit.qrab
 qrab install-skill                            # writes .agents/skills/qrab/SKILL.md
 ```
 
@@ -106,6 +107,12 @@ finished output. The other two are sources, so hand them to their own compiler:
 tectonic circuit.tex --outdir build
 typst compile circuit.typ build/circuit.pdf
 ```
+
+`import-quirk` accepts both Quirk's percent-escaped links and raw JSON links.
+It writes qrab source to stdout unless `-o` is given. Other Quirk operators
+become labeled boxes; read-only displays are omitted, while unsupported
+state-changing detectors are rejected. The playground provides the same
+conversion through **Import Quirk**.
 
 Tectonic and Typst are only needed to turn those sources into PDFs; neither is
 required for `qrab check`, for source generation, or for SVG. Typst 0.15.1
