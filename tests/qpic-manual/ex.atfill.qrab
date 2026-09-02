@@ -1,7 +1,0 @@
-circuit manual_filled_region {
-  qubit q[3]
-  mark start
-  h q[0]
-  gate "U" on q[1], q[2]
-  group "filled" from start to here with fill: red, opacity: 0.2
-}

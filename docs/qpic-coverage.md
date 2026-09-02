@@ -1,8 +1,8 @@
-# qpic parity ledger
+# qpic compatibility
 
-Reference: qpic commit `a1f052c4a8d995b80605a6aef06243a4242494f3` (44 golden test circuits and 64 manual examples). Typst output targets Quill `0.8.0`.
+Reference: qpic commit `a1f052c4a8d995b80605a6aef06243a4242494f3`. Typst output targets Quill `0.8.0`.
 
-Legend: **done** is implemented in both backends and exercised by a runnable test; **partial** has a portable implementation but still lacks a qpic behavior; **next** is designed but not yet complete.
+Legend: **done** is implemented and tested; **partial** still lacks a qpic behavior.
 
 | qpic capability | `.qrab` model | Status |
 | --- | --- | --- |
@@ -39,4 +39,5 @@ Legend: **done** is implemented in both backends and exercised by a runnable tes
 | PREAMBLE/PRETIKZ/POSTTIKZ/HEADER/HYPERTARGET | isolated `backend latex|typst` escape blocks | done |
 | AUTOWIRES | explicit `autowires` opt-in; checked declarations remain the default | done |
 
-`tests/qpic/` contains a checked `.qrab` translation for every one of qpic's 44 golden-test stems, and `tests/qpic-manual/` contains all 64 documented example stems. `tests/artifacts.rs` requires both exact lists and compiles them plus 11 focused qrab examples through both backends: 119 source fixtures and 238 PDFs per artifact run. Fourteen tolerant PDF page-geometry baselines cover representative dense, vertical, annotated, overlaid, imported, lifecycle, and colored-background layouts; generated TikZ text is not compared byte-for-byte because qrab has a different frontend and renderer.
+Four representative qpic ports remain under `tests/qpic/`; snapshots and PDF
+geometry checks cover them alongside the maintained qrab examples.

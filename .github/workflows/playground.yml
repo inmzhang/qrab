@@ -29,6 +29,7 @@ jobs:
       - uses: taiki-e/install-action@v2
         with:
           tool: wasm-pack
+      - run: wasm-pack test --node playground
       - run: wasm-pack build playground --target web --out-dir www/pkg --no-typescript
       # No `configure-pages` step: the page uses only relative paths, and that
       # action fails outright while Pages is still disabled on the repository.

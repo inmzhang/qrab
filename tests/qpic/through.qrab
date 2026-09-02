@@ -1,7 +1,0 @@
-circuit pass_through_gate {
-  qubit q[6]: "in" -> "out"
-
-  gate "sparse multi-gate" on q[0], q[5] if q[1], !q[2] with fill: "#DDEEFF", stroke: blue, width: 100
-  gate "through" on q[0], q[2], q[4] with fill: yellow
-  x q[4] if q[1], q[3]
-}

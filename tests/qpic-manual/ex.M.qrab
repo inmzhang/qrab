@@ -1,6 +1,0 @@
-circuit manual_measurement {
-  qubit q[3]
-  measure q[0]
-  measure q[1] as "Z"
-  measure q[2] as "X" using tag
-}

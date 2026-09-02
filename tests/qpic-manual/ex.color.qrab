@@ -1,6 +1,0 @@
-circuit manual_colors {
-  qubit q[3] with stroke: "#336699"
-  h q[0] with stroke: red
-  x q[1] if q[0] with stroke: green
-  gate "U" on q[2] with stroke: purple, fill: "#DDEEFF"
-}

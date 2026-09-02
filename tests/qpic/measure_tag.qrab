@@ -1,7 +1,0 @@
-circuit measurement_tags {
-  qubit q[3]
-
-  measure q[0] as "X" using tag
-  measure q[1] as "Y" using tag with fill: yellow
-  measure q[2] as "custom" using tag with stroke: red, width: 32
-}

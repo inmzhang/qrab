@@ -13,6 +13,9 @@ pub(super) fn render_latex(circuit: &Circuit) -> String {
     let end_x = columns[last_column + 1];
     let mut output = String::new();
     output.push_str("\\documentclass[tikz,border=6pt]{standalone}\n");
+    if circuit_has_math(circuit) {
+        output.push_str("\\usepackage{amsmath}\n");
+    }
     output.push_str("\\usepackage{tikz}\n");
     if circuit
         .operations
@@ -74,7 +77,7 @@ pub(super) fn render_latex(circuit: &Circuit) -> String {
             output,
             "  \\node[anchor=south west] at ({left:.3},{:.3}) {{{}}};",
             top + group_index as f32 * 0.24,
-            latex_text(&group.label)
+            latex_label(&group.label)
         );
     }
 
@@ -106,7 +109,7 @@ pub(super) fn render_latex(circuit: &Circuit) -> String {
                     .iter()
                     .map(|control| Control {
                         wire: operation.positions[control.wire],
-                        positive: control.positive,
+                        ..*control
                     })
                     .collect::<Vec<_>>();
                 draw_latex_gate(
@@ -256,7 +259,7 @@ pub(super) fn render_latex(circuit: &Circuit) -> String {
                     "  \\node[anchor=south west,font=\\scriptsize] at ({:.3},{:.3}) {{{}}};",
                     x + 0.08,
                     y + 0.08,
-                    latex_text(label)
+                    latex_label(label)
                 );
             }
             OperationKind::Permute { .. } => {}
@@ -356,7 +359,7 @@ pub(super) fn render_latex(circuit: &Circuit) -> String {
                     "  \\node[anchor={anchor},text width={:.3}pt,align=center] at ({x:.3},{:.3}) {{{}}};",
                     circuit.layout.comment_width,
                     y,
-                    latex_text(text)
+                    latex_label(text)
                 );
             }
             OperationKind::Cut { label, .. } => {
@@ -373,7 +376,7 @@ pub(super) fn render_latex(circuit: &Circuit) -> String {
                     emit!(
                         output,
                         "  \\node[anchor=south] at ({x:.3},{top:.3}) {{{}}};",
-                        latex_text(label)
+                        latex_label(label)
                     );
                 }
             }
@@ -447,7 +450,7 @@ fn draw_latex_wire(
         emit!(
             output,
             "  \\node[anchor=east] at (0,{input_y:.3}) {{{}}};",
-            latex_text(input)
+            latex_label(input)
         );
     }
     if (kind != WireKind::Hidden || wire.ellipsis)
@@ -456,7 +459,7 @@ fn draw_latex_wire(
         emit!(
             output,
             "  \\node[anchor=west] at ({end_x:.3},{y:.3}) {{{}}};",
-            latex_text(label)
+            latex_label(label)
         );
     }
 }
@@ -537,11 +540,27 @@ fn draw_latex_gate(
         );
         for control in controls {
             let y = -(control.wire as f32) * wire_gap;
-            emit!(
-                output,
-                "  \\draw{} ({x:.3},{y:.3}) circle[radius=2.2pt];",
-                latex_circle_options(style, control.positive)
-            );
+            if let Some(parity) = control.parity {
+                let mut marker_style = style.clone();
+                marker_style.shape = Some(Shape::Box);
+                emit!(
+                    output,
+                    "  \\node{} at ({x:.3},{y:.3}) {{\\shortstack{{\\texttt{{{}}}\\\\[-2pt]\\textcolor{{red}}{{\\scriptsize\\texttt{{par}}}}}}}};",
+                    latex_node_options(
+                        &marker_style,
+                        "15pt",
+                        "18pt",
+                        layout.orientation == Orientation::Vertical
+                    ),
+                    parity.label()
+                );
+            } else {
+                emit!(
+                    output,
+                    "  \\draw{} ({x:.3},{y:.3}) circle[radius=2.2pt];",
+                    latex_circle_options(style, control.positive)
+                );
+            }
         }
     }
 
@@ -957,8 +976,18 @@ fn latex_text(value: &str) -> String {
     escaped
 }
 
+fn latex_label(value: &str) -> String {
+    label_spans(value)
+        .into_iter()
+        .map(|span| match span {
+            LabelSpan::Text(text) => latex_text(&label_text(text)),
+            LabelSpan::Math(math) => format!("\\({math}\\)"),
+        })
+        .collect()
+}
+
 fn latex_linked_text(value: &str, style: &Style) -> String {
-    let text = latex_text(value);
+    let text = latex_label(value);
     match &style.link {
         Some(link) => format!("\\href{{{}}}{{{text}}}", latex_url(link)),
         None => text,

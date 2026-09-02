@@ -1,5 +1,7 @@
 use std::fmt::Write as _;
 
+use ratex_svg::{SvgOptions, render_to_svg};
+
 use super::*;
 
 // The TikZ backend already lays every element out in absolute centimetres, so
@@ -20,10 +22,9 @@ const PIXELS_PER_CENTIMETER: f32 = POINTS_PER_CENTIMETER;
 /// high-resolution PDF but nearly invisible on a screen at 1x, so the preview
 /// backend draws slightly heavier lines.
 const STROKE_WIDTH: f32 = 1.0;
-const FONT_SIZE: f32 = 10.0;
-/// Advance width of one character as a fraction of the font size. SVG has no
-/// text metrics, so gate boxes and the drawing bounds are sized from this
-/// estimate; it is deliberately generous so labels never overflow their box.
+/// Advance width of one character as a fraction of the font size. Plain SVG
+/// text has no metrics, so gate boxes and drawing bounds use this deliberately
+/// generous estimate; math spans use RaTeX's measured layout.
 const CHARACTER_ADVANCE: f32 = 0.62;
 /// Pixel equivalent of the TikZ `inner sep` that pads node text.
 const TEXT_PADDING: f32 = 4.0;
@@ -239,29 +240,124 @@ impl Canvas {
 
     #[allow(clippy::too_many_arguments)]
     fn text(&mut self, x: f32, y: f32, value: &str, anchor: Anchor, style: &Style, boxed: bool) {
+        if !label_has_math(value) {
+            self.text_sized(x, y, &label_text(value), anchor, style, boxed, FONT_SIZE);
+            return;
+        }
         let (anchor_x, anchor_y) = self.point(x, y);
-        let width = text_width(value);
-        let (offset_x, offset_y) = anchor.offset(width);
+        let dimensions = label_dimensions(value);
+        let width = dimensions.width * PIXELS_PER_CENTIMETER;
+        let height = dimensions.height * PIXELS_PER_CENTIMETER;
+        let (offset_x, baseline_offset) = anchor.offset(width, FONT_SIZE);
+        let (center_x, center_y) = (
+            anchor_x + offset_x,
+            anchor_y + baseline_offset - FONT_SIZE * 0.35,
+        );
+
+        if self.rotated {
+            let (cx, cy) = (
+                anchor_x + center_y - anchor_y,
+                anchor_y - (center_x - anchor_x),
+            );
+            self.cover(cx - height / 2.0, cy - width / 2.0);
+            self.cover(cx + height / 2.0, cy + width / 2.0);
+        } else {
+            self.cover(center_x - width / 2.0, center_y - height / 2.0);
+            self.cover(center_x + width / 2.0, center_y + height / 2.0);
+        }
+
+        let mut fragment = String::new();
+        if boxed && let Some(fill) = &style.fill {
+            let mut attributes = format!(" fill=\"{}\"", svg_color(fill));
+            push_opacity(&mut attributes, style);
+            emit!(
+                fragment,
+                "      <rect x=\"{:.3}\" y=\"{:.3}\" width=\"{:.3}\" height=\"{:.3}\"{attributes}/>",
+                center_x - width / 2.0 - TEXT_PADDING / 2.0,
+                center_y - height / 2.0 - TEXT_PADDING / 2.0,
+                width + TEXT_PADDING,
+                height + TEXT_PADDING
+            );
+        }
+
+        let mut cursor = center_x - width / 2.0;
+        for span in label_spans(value) {
+            let text = match span {
+                LabelSpan::Text(text) => label_text(text),
+                LabelSpan::Math(math) => {
+                    if let Some(rendered) = render_math(math, style) {
+                        emit!(
+                            fragment,
+                            "      <g transform=\"translate({cursor:.3} {:.3})\">{}</g>",
+                            center_y - rendered.height / 2.0,
+                            rendered.body
+                        );
+                        cursor += rendered.width;
+                        continue;
+                    }
+                    math.into()
+                }
+            };
+            let span_width = text_width_at(&text, FONT_SIZE);
+            let mut attributes = format!(
+                " text-anchor=\"middle\" fill=\"{}\"",
+                svg_color(style.stroke.as_deref().unwrap_or("black"))
+            );
+            push_opacity(&mut attributes, style);
+            emit!(
+                fragment,
+                "      <text x=\"{:.3}\" y=\"{:.3}\"{attributes}>{}</text>",
+                cursor + span_width / 2.0,
+                center_y + FONT_SIZE * 0.35,
+                escape_text(&text)
+            );
+            cursor += span_width;
+        }
+
+        if let Some(link) = &style.link {
+            fragment = format!(
+                "      <a xlink:href=\"{0}\" href=\"{0}\">\n{fragment}      </a>\n",
+                escape_text(link)
+            );
+        }
+        if self.rotated {
+            emit!(
+                self.body,
+                "    <g transform=\"rotate(-90 {anchor_x:.3} {anchor_y:.3})\">\n{fragment}    </g>"
+            );
+        } else {
+            self.body.push_str(&fragment);
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn text_sized(
+        &mut self,
+        x: f32,
+        y: f32,
+        value: &str,
+        anchor: Anchor,
+        style: &Style,
+        boxed: bool,
+        font_size: f32,
+    ) {
+        let (anchor_x, anchor_y) = self.point(x, y);
+        let width = text_width_at(value, font_size);
+        let (offset_x, offset_y) = anchor.offset(width, font_size);
         let (px, py) = (anchor_x + offset_x, anchor_y + offset_y);
 
-        // A vertical circuit rotates its whole body, which would lay the text
-        // on its side. Turning each run back the other way about the point it
-        // is placed at cancels the group rotation exactly, leaving a pure
-        // translation, so the offsets above stay in on-screen terms.
         let turn = if self.rotated {
             format!(" transform=\"rotate(-90 {anchor_x:.3} {anchor_y:.3})\"")
         } else {
             String::new()
         };
         if self.rotated {
-            // The run reaches across the page after the group rotation, so in
-            // the body's own coordinates its extent is the other way round.
             let (cx, cy) = (anchor_x + offset_y, anchor_y - offset_x);
-            self.cover(cx - FONT_SIZE * 0.8, cy - width / 2.0);
-            self.cover(cx + FONT_SIZE * 0.8, cy + width / 2.0);
+            self.cover(cx - font_size * 0.8, cy - width / 2.0);
+            self.cover(cx + font_size * 0.8, cy + width / 2.0);
         } else {
-            self.cover(px - width / 2.0, py - FONT_SIZE * 0.8);
-            self.cover(px + width / 2.0, py + FONT_SIZE * 0.8);
+            self.cover(px - width / 2.0, py - font_size * 0.8);
+            self.cover(px + width / 2.0, py + font_size * 0.8);
         }
 
         if boxed && let Some(fill) = &style.fill {
@@ -271,9 +367,9 @@ impl Canvas {
                 self.body,
                 "    <rect x=\"{:.3}\" y=\"{:.3}\" width=\"{:.3}\" height=\"{:.3}\"{attributes}{turn}/>",
                 px - width / 2.0 - TEXT_PADDING / 2.0,
-                py - FONT_SIZE * 0.72,
+                py - font_size * 0.72,
                 width + TEXT_PADDING,
-                FONT_SIZE * 1.1
+                font_size * 1.1
             );
         }
 
@@ -281,6 +377,9 @@ impl Canvas {
             " text-anchor=\"middle\" fill=\"{}\"",
             svg_color(style.stroke.as_deref().unwrap_or("black"))
         );
+        if font_size != FONT_SIZE {
+            emit!(attributes, " font-size=\"{font_size:.3}\"");
+        }
         push_opacity(&mut attributes, style);
         let body = escape_text(value);
         let body = match &style.link {
@@ -295,6 +394,36 @@ impl Canvas {
             "    <text x=\"{px:.3}\" y=\"{py:.3}\"{attributes}{turn}>{body}</text>"
         );
     }
+}
+
+struct RenderedMath {
+    body: String,
+    width: f32,
+    height: f32,
+}
+
+fn render_math(math: &str, style: &Style) -> Option<RenderedMath> {
+    let mut color = Color::parse(style.stroke.as_deref().unwrap_or("black"))?;
+    color.a *= style.opacity.unwrap_or(1.0);
+    let display = math_display_list(math, color)?;
+    let width = display.width as f32 * FONT_SIZE;
+    let height = display.total_height() as f32 * FONT_SIZE;
+    let svg = render_to_svg(
+        &display,
+        &SvgOptions {
+            font_size: FONT_SIZE.into(),
+            padding: 0.0,
+            stroke_width: STROKE_WIDTH.into(),
+            embed_glyphs: true,
+            font_dir: String::new(),
+        },
+    );
+    let body = svg.split_once('>')?.1.strip_suffix("</svg>")?.to_owned();
+    Some(RenderedMath {
+        body,
+        width,
+        height,
+    })
 }
 
 /// Where a text node sits relative to its anchor point, mirroring the TikZ
@@ -313,21 +442,21 @@ impl Anchor {
     /// Offsets the baseline point so the estimated glyph box lands on the
     /// requested side. SVG's `dominant-baseline` is unevenly supported outside
     /// browsers, so vertical placement uses explicit baseline arithmetic.
-    fn offset(self, width: f32) -> (f32, f32) {
-        let middle = FONT_SIZE * 0.35;
+    fn offset(self, width: f32, font_size: f32) -> (f32, f32) {
+        let middle = font_size * 0.35;
         match self {
             Anchor::Center => (0.0, middle),
             Anchor::East => (-width / 2.0 - TEXT_PADDING, middle),
             Anchor::West => (width / 2.0 + TEXT_PADDING, middle),
             Anchor::South => (0.0, -TEXT_PADDING * 0.5),
-            Anchor::North => (0.0, FONT_SIZE * 0.85),
+            Anchor::North => (0.0, font_size * 0.85),
             Anchor::SouthWest => (width / 2.0, -TEXT_PADDING * 0.5),
         }
     }
 }
 
-fn text_width(value: &str) -> f32 {
-    value.chars().count() as f32 * CHARACTER_ADVANCE * FONT_SIZE
+fn text_width_at(value: &str, font_size: f32) -> f32 {
+    value.chars().count() as f32 * CHARACTER_ADVANCE * font_size
 }
 
 // ==============================================================================
@@ -541,7 +670,7 @@ fn draw_operation(
                 .iter()
                 .map(|control| Control {
                     wire: operation.positions[control.wire],
-                    positive: control.positive,
+                    ..*control
                 })
                 .collect::<Vec<_>>();
             draw_gate(
@@ -783,7 +912,19 @@ fn draw_gate(
         );
         for control in controls {
             let y = -(control.wire as f32) * wire_gap;
-            canvas.circle(x, y, 2.2, &marker_attributes(style, control.positive));
+            if let Some(parity) = control.parity {
+                draw_parity_control(
+                    canvas,
+                    x,
+                    y,
+                    gate_size,
+                    parity,
+                    style,
+                    layout.orientation == Orientation::Vertical,
+                );
+            } else {
+                canvas.circle(x, y, 2.2, &marker_attributes(style, control.positive));
+            }
         }
     }
 
@@ -817,6 +958,60 @@ fn draw_gate(
     }
 }
 
+fn draw_parity_control(
+    canvas: &mut Canvas,
+    x: f32,
+    y: f32,
+    gate_size: f32,
+    parity: ParityBasis,
+    style: &Style,
+    vertical: bool,
+) {
+    let width = style.width.unwrap_or(gate_size * 0.75).max(15.0);
+    let height = style.height.unwrap_or(gate_size * 0.9).max(18.0);
+    let (draw_width, draw_height) = if vertical {
+        (height, width)
+    } else {
+        (width, height)
+    };
+    canvas.rectangle(
+        x - draw_width / (2.0 * PIXELS_PER_CENTIMETER),
+        y + draw_height / (2.0 * PIXELS_PER_CENTIMETER),
+        x + draw_width / (2.0 * PIXELS_PER_CENTIMETER),
+        y - draw_height / (2.0 * PIXELS_PER_CENTIMETER),
+        0.0,
+        &node_attributes(style),
+    );
+
+    let mut label_style = style.clone();
+    label_style.fill = None;
+    label_style.link = None;
+    let (axis_x, axis_y, suffix_x, suffix_y) = if vertical {
+        (x - 0.10, y, x + 0.11, y)
+    } else {
+        (x, y + 0.10, x, y - 0.11)
+    };
+    canvas.text_sized(
+        axis_x,
+        axis_y,
+        parity.label(),
+        Anchor::Center,
+        &label_style,
+        false,
+        8.0,
+    );
+    label_style.stroke = Some("red".into());
+    canvas.text_sized(
+        suffix_x,
+        suffix_y,
+        "par",
+        Anchor::Center,
+        &label_style,
+        false,
+        6.0,
+    );
+}
+
 /// Draws a labelled box, circle, or ellipse sized like a TikZ node: at least
 /// the requested minimum, but grown to fit the label.
 fn draw_node(
@@ -828,11 +1023,15 @@ fn draw_node(
     minimum_height: f32,
     style: &Style,
 ) {
+    let label_size = label_dimensions(label);
     let width = style
         .width
         .unwrap_or(minimum_width)
-        .max(text_width(label) + 2.0 * TEXT_PADDING);
-    let height = style.height.unwrap_or(minimum_height);
+        .max(label_size.width * PIXELS_PER_CENTIMETER + 2.0 * TEXT_PADDING);
+    let height = style
+        .height
+        .unwrap_or(minimum_height)
+        .max(label_size.height * PIXELS_PER_CENTIMETER + 2.0 * TEXT_PADDING);
     if style.shape != Some(Shape::None) {
         let attributes = node_attributes(style);
         match style.shape {
@@ -872,13 +1071,15 @@ fn draw_measurement(
     style: &Style,
 ) {
     let y = -(target as f32) * layout.wire_gap;
-    let height = style.height.unwrap_or(layout.gate_size) / PIXELS_PER_CENTIMETER;
+    let label_size = label.map(label_dimensions);
+    let height = (style.height.unwrap_or(layout.gate_size) / PIXELS_PER_CENTIMETER)
+        .max(label_size.map_or(0.0, |size| size.height + 2.0 * LABEL_PADDING));
     // Both markers taper at one end, and the taper is room the label cannot
     // use. Like a gate box, the marker grows to fit its label instead of
     // clipping it the way qpic does, so the taper is added on top.
     let nose = height / 2.0;
     let width = (style.width.unwrap_or(layout.gate_size) / PIXELS_PER_CENTIMETER)
-        .max(label.map_or(0.0, |label| label_width(label) + 2.0 * LABEL_PADDING + nose));
+        .max(label_size.map_or(0.0, |size| size.width + 2.0 * LABEL_PADDING + nose));
     let (left, right) = (x - width / 2.0, x + width / 2.0);
     let (top, bottom) = (y + height / 2.0, y - height / 2.0);
 
@@ -1004,12 +1205,15 @@ fn draw_value_transition(
     style: &Style,
     background: &str,
 ) {
+    let label_size = label_has_math(label).then(|| label_dimensions(label));
     let width = style
         .width
-        .map_or(0.48, |width| width / PIXELS_PER_CENTIMETER);
+        .map_or(0.48, |width| width / PIXELS_PER_CENTIMETER)
+        .max(label_size.map_or(0.0, |size| size.width + 2.0 * LABEL_PADDING));
     let height = style
         .height
-        .map_or(0.34, |height| height / PIXELS_PER_CENTIMETER);
+        .map_or(0.34, |height| height / PIXELS_PER_CENTIMETER)
+        .max(label_size.map_or(0.0, |size| size.height + 2.0 * LABEL_PADDING));
     let (left, right) = (x - width / 2.0, x + width / 2.0);
     let (top, bottom) = (y + height / 2.0, y - height / 2.0);
 

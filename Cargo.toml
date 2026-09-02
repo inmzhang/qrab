@@ -11,14 +11,6 @@ homepage = "https://github.com/inmzhang/qrab"
 rust-version = "1.95"
 keywords = ["quantum", "circuit", "typst", "compiler", "quirk"]
 categories = ["command-line-utilities", "science", "visualization"]
-exclude = [
-    "tests/qpic/**",
-    "!tests/qpic/permute.qrab",
-    "!tests/qpic/QFT4vert.qrab",
-    "!tests/qpic/start_and_end.qrab",
-    "!tests/qpic/ShorNutshell.qrab",
-    "tests/qpic-manual/**",
-]
 
 [package.metadata.binstall]
 pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target }{ archive-suffix }"
@@ -32,6 +24,10 @@ pkg-fmt = "zip"
 clap = { version = "4.6.6", features = ["derive"] }
 logos = "0.16.1"
 miette = { version = "7.6.0", features = ["fancy"] }
+ratex-layout = "0.1.14"
+ratex-parser = "0.1.14"
+ratex-svg = { version = "0.1.14", features = ["embed-fonts"] }
+ratex-types = "0.1.14"
 thiserror = "2.0.20"
 
 [lints]

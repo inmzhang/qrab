@@ -10,8 +10,23 @@ pub(super) fn render_typst(circuit: &Circuit) -> String {
         .max()
         .unwrap_or(0);
     let end_column = last_column + 2;
+    let mitex = if circuit_has_math(circuit) {
+        let vertical = circuit.layout.orientation == Orientation::Vertical;
+        let body = if vertical {
+            // Undo the outer text rule inside MiTeX, then rotate the whole formula.
+            "rotate(-90deg, reflow: true, [#show text: it => rotate(90deg, reflow: true, it)\n#mi(body)])"
+        } else {
+            "mi(body)"
+        };
+        let spans = if vertical { "parts.rev()" } else { "parts" };
+        format!(
+            "#import \"@preview/mitex:0.2.7\": mi\n#let qrab-math(body) = {body}\n#let qrab-label(parts) = {spans}.join()\n"
+        )
+    } else {
+        String::new()
+    };
     let mut output = format!(
-        "#set page(width: auto, height: auto, margin: 6pt, fill: {})\n#import \"@preview/quill:0.8.0\" as quill\n\n",
+        "#set page(width: auto, height: auto, margin: 6pt, fill: {})\n#import \"@preview/quill:0.8.0\" as quill\n{mitex}\n",
         typst_color(&circuit.layout.background, None)
     );
     append_raw(&mut output, &circuit.escapes.typst.preamble);
@@ -52,10 +67,10 @@ pub(super) fn render_typst(circuit: &Circuit) -> String {
             group_bounds(group, &scheduled, circuit.wires.len());
         emit!(
             output,
-            "  quill.gategroup({}, {}, x: {first_column}, y: {first_row}, label: (content: text(\"{}\"), pos: top, dy: -{}pt){}),",
+            "  quill.gategroup({}, {}, x: {first_column}, y: {first_row}, label: (content: {}, pos: top, dy: -{}pt){}),",
             last_row - first_row + 1,
             last_column - first_column + 1,
-            typst_string(&group.label),
+            typst_label(&group.label),
             (group_index + 1) * 12,
             typst_group_style(&group.style)
         );
@@ -71,8 +86,8 @@ pub(super) fn render_typst(circuit: &Circuit) -> String {
             let input = wire.input.as_deref().unwrap_or(&wire.name);
             emit!(
                 output,
-                "  quill.lstick(text(\"{}\"), x: 0, y: {wire_index}),",
-                typst_string(input)
+                "  quill.lstick({}, x: 0, y: {wire_index}),",
+                typst_label(input)
             );
         }
         let final_kind = transitions
@@ -83,8 +98,8 @@ pub(super) fn render_typst(circuit: &Circuit) -> String {
         {
             emit!(
                 output,
-                "  quill.rstick(text(\"{}\"), x: {end_column}, y: {}),",
-                typst_string(label),
+                "  quill.rstick({}, x: {end_column}, y: {}),",
+                typst_label(label),
                 final_positions[wire_index]
             );
         }
@@ -110,10 +125,18 @@ pub(super) fn render_typst(circuit: &Circuit) -> String {
                     .iter()
                     .map(|control| Control {
                         wire: operation.positions[control.wire],
-                        positive: control.positive,
+                        ..*control
                     })
                     .collect::<Vec<_>>();
-                draw_typst_gate(&mut output, x, label, &targets, &controls, &style);
+                draw_typst_gate(
+                    &mut output,
+                    x,
+                    label,
+                    &targets,
+                    &controls,
+                    &style,
+                    circuit.layout.orientation,
+                );
             }
             OperationKind::Measure {
                 targets,
@@ -230,8 +253,8 @@ pub(super) fn render_typst(circuit: &Circuit) -> String {
             OperationKind::Bundle { wire, label } => {
                 emit!(
                     output,
-                    "  quill.nwire(text(\"{}\"), x: {x}, y: {}),",
-                    typst_string(label),
+                    "  quill.nwire({}, x: {x}, y: {}),",
+                    typst_label(label),
                     operation.positions[*wire]
                 );
             }
@@ -353,15 +376,15 @@ pub(super) fn render_typst(circuit: &Circuit) -> String {
                 .expect("circuit has a wire");
                 emit!(
                     output,
-                    "  quill.gategroup(1, 1, x: {x}, y: {row}, padding: 0pt, stroke: none, label: (content: block(width: {:.3}pt, align(center, text(\"{}\"))), pos: {})),",
+                    "  quill.gategroup(1, 1, x: {x}, y: {row}, padding: 0pt, stroke: none, label: (content: block(width: {:.3}pt, align(center, {})), pos: {})),",
                     circuit.layout.comment_width,
-                    typst_string(text),
+                    typst_label(text),
                     if above { "top" } else { "bottom" },
                 );
             }
             OperationKind::Cut { label, .. } => {
                 let label = label.as_ref().map_or_else(String::new, |label| {
-                    format!(", label: text(\"{}\")", typst_string(label))
+                    format!(", label: {}", typst_label(label))
                 });
                 emit!(
                     output,
@@ -478,6 +501,7 @@ fn draw_typst_gate(
     targets: &[usize],
     controls: &[Control],
     style: &Style,
+    orientation: Orientation,
 ) {
     if !controls.is_empty() {
         let (first, last) = occupied_bounds(targets, controls);
@@ -498,13 +522,32 @@ fn draw_typst_gate(
             } else {
                 0
             };
-            emit!(
-                output,
-                "  quill.ctrl({distance}, open: {}, x: {x}, y: {}{}),",
-                !control.positive,
-                control.wire,
-                typst_control_style(style)
-            );
+            if let Some(parity) = control.parity {
+                let body = typst_parity_body(parity, style, orientation);
+                if distance == 0 {
+                    emit!(
+                        output,
+                        "  quill.gate({body}, x: {x}, y: {}{}),",
+                        control.wire,
+                        typst_parity_style(style, false)
+                    );
+                } else {
+                    emit!(
+                        output,
+                        "  quill.mqgate({body}, target: {distance}, x: {x}, y: {}{}),",
+                        control.wire,
+                        typst_parity_style(style, true)
+                    );
+                }
+            } else {
+                emit!(
+                    output,
+                    "  quill.ctrl({distance}, open: {}, x: {x}, y: {}{}),",
+                    !control.positive,
+                    control.wire,
+                    typst_control_style(style)
+                );
+            }
         }
     }
 
@@ -551,6 +594,30 @@ fn draw_typst_gate(
             typst_gate_style(style)
         );
     }
+}
+
+fn typst_parity_body(parity: ParityBasis, style: &Style, orientation: Orientation) -> String {
+    format!(
+        "stack(dir: {}, spacing: -2pt, text(size: 8pt, fill: {}, \"{}\"), text(size: 6pt, fill: {}, \"par\"))",
+        if orientation == Orientation::Vertical {
+            "ltr"
+        } else {
+            "ttb"
+        },
+        typst_color(style.stroke.as_deref().unwrap_or("black"), style.opacity),
+        parity.label(),
+        typst_color("red", style.opacity),
+    )
+}
+
+fn typst_parity_style(style: &Style, connected: bool) -> String {
+    let mut marker_style = style.clone();
+    marker_style.shape = Some(Shape::Box);
+    let mut arguments = typst_gate_style(&marker_style);
+    if connected && let Some(stroke) = typst_stroke(style) {
+        let _ = write!(arguments, ", wire-stroke: {stroke}");
+    }
+    arguments
 }
 
 fn draw_typst_measurement(
@@ -634,10 +701,15 @@ fn typst_value_transition_body(
     let edge = if kind == WireKind::Hidden { 0.0 } else { width };
     let fill = typst_color(style.fill.as_deref().unwrap_or(background), style.opacity);
     let stroke = typst_stroke(style).unwrap_or_else(|| "black".into());
-    let text_color = typst_color(style.stroke.as_deref().unwrap_or("black"), style.opacity);
     format!(
-        "box(width: {width:.3}pt, height: {height:.3}pt, inset: 0pt, fill: {fill}, [#place(line(start: ({edge:.3}pt, 0pt), end: ({edge:.3}pt, {height:.3}pt), stroke: {stroke})) #align(center + horizon, text(fill: {text_color}, \"{}\"))])",
-        typst_string(label)
+        "box(width: {width:.3}pt, height: {height:.3}pt, inset: 0pt, fill: {fill}, [#place(line(start: ({edge:.3}pt, 0pt), end: ({edge:.3}pt, {height:.3}pt), stroke: {stroke})) #align(center + horizon, {})])",
+        typst_colored_label(
+            label,
+            Some(&typst_color(
+                style.stroke.as_deref().unwrap_or("black"),
+                style.opacity,
+            )),
+        )
     )
 }
 
@@ -732,15 +804,15 @@ fn typst_label_style(style: &Style) -> String {
 }
 
 fn typst_label_body(label: &str, style: &Style) -> String {
-    let text = if style.stroke.is_some() || style.opacity.is_some() {
-        format!(
-            "text(fill: {}, \"{}\")",
-            typst_color(style.stroke.as_deref().unwrap_or("black"), style.opacity),
-            typst_string(label)
-        )
+    let fill = if style.stroke.is_some() || style.opacity.is_some() {
+        Some(typst_color(
+            style.stroke.as_deref().unwrap_or("black"),
+            style.opacity,
+        ))
     } else {
-        format!("text(\"{}\")", typst_string(label))
+        None
     };
+    let text = typst_colored_label(label, fill.as_deref());
     match &style.link {
         Some(link) => format!("link(\"{}\", {text})", typst_string(link)),
         None => text,
@@ -874,12 +946,41 @@ fn typst_string(value: &str) -> String {
 }
 
 fn typst_linked_text(value: &str, style: &Style) -> String {
-    let text = format!("text(\"{}\")", typst_string(value));
+    let text = typst_label(value);
     match &style.link {
         Some(link) => format!("link(\"{}\", {text})", typst_string(link)),
         None => text,
     }
 }
+
+fn typst_label(value: &str) -> String {
+    typst_colored_label(value, None)
+}
+
+fn typst_colored_label(value: &str, fill: Option<&str>) -> String {
+    let parts = label_spans(value)
+        .into_iter()
+        .map(|span| {
+            let is_text = matches!(span, LabelSpan::Text(_));
+            let content = match span {
+                LabelSpan::Text(text) => format!("\"{}\"", typst_string(&label_text(text))),
+                LabelSpan::Math(math) => {
+                    format!("qrab-math(raw(\"{}\"))", typst_string(math))
+                }
+            };
+            match fill {
+                Some(fill) => format!("text(fill: {fill}, {content})"),
+                None if is_text => format!("text({content})"),
+                None => content,
+            }
+        })
+        .collect::<Vec<_>>();
+    match parts.as_slice() {
+        [part] => part.clone(),
+        _ => format!("qrab-label(({},))", parts.join(", ")),
+    }
+}
+
 const TYPST_ROW_POINTS_PER_UNIT: f32 = 12.0;
 const TYPST_COLUMN_POINTS_PER_UNIT: f32 = 8.0;
 const FULLY_ROUNDED_RADIUS: &str = "999pt";

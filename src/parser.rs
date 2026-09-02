@@ -7,7 +7,8 @@ use thiserror::Error;
 
 use crate::ast::{
     BackendEscapes, BraceSide, Circuit, Control, EscapeBlock, Group, Layout, MeasurementShape,
-    NoteSide, Operation, OperationKind, Orientation, Shape, Span, Style, Wire, WireKind,
+    NoteSide, Operation, OperationKind, Orientation, ParityBasis, Shape, Span, Style, Wire,
+    WireKind,
 };
 
 /// A source-located lexer, parser, or semantic diagnostic.
@@ -211,12 +212,12 @@ fn decode_string(
         let (offset, escaped) = characters
             .next()
             .expect("the string token ends after a complete escape");
-        value.push(match escaped {
-            'n' => '\n',
-            'r' => '\r',
-            't' => '\t',
-            '"' => '"',
-            '\\' => '\\',
+        match escaped {
+            'n' => value.push('\n'),
+            'r' => value.push('\r'),
+            't' => value.push('\t'),
+            '"' | '\\' => value.push(escaped),
+            '$' => value.push_str(r"\$"),
             _ => {
                 let start = range.start + 1 + offset;
                 return Err(Diagnostic::new(
@@ -224,7 +225,7 @@ fn decode_string(
                     source_span(source, line_starts, start..start + escaped.len_utf8()),
                 ));
             }
-        });
+        }
     }
     Ok(value)
 }
@@ -1677,12 +1678,36 @@ impl Parser {
         }
         let mut controls = Vec::new();
         loop {
-            let positive = !self.consume(&TokenKind::Bang);
-            controls.extend(
-                self.parse_wire_selection(true)?
-                    .into_iter()
-                    .map(|wire| Control { wire, positive }),
-            );
+            let parity = match (&self.current().kind, self.tokens.get(self.position + 1)) {
+                (
+                    TokenKind::Identifier(name),
+                    Some(Token {
+                        kind: TokenKind::LeftParen,
+                        ..
+                    }),
+                ) => match name.as_str() {
+                    "parity_x" => Some(ParityBasis::X),
+                    "parity_y" => Some(ParityBasis::Y),
+                    "parity" | "parity_z" => Some(ParityBasis::Z),
+                    _ => None,
+                },
+                _ => None,
+            };
+            let (wires, positive) = if parity.is_some() {
+                self.advance();
+                self.expect(TokenKind::LeftParen, "`(` after the parity control")?;
+                let wires = self.parse_wire_list()?;
+                self.expect(TokenKind::RightParen, "`)`")?;
+                (wires, true)
+            } else {
+                let positive = !self.consume(&TokenKind::Bang);
+                (self.parse_wire_selection(true)?, positive)
+            };
+            controls.extend(wires.into_iter().map(|wire| Control {
+                wire,
+                positive,
+                parity,
+            }));
             if !self.consume(&TokenKind::Comma) {
                 break;
             }
@@ -2108,8 +2133,48 @@ mod tests {
                 ref label,
                 ref targets,
                 ref controls,
-            } if label == "X" && targets == &[1] && controls == &[Control { wire: 0, positive: true }]
+            } if label == "X"
+                && targets == &[1]
+                && controls == &[Control { wire: 0, positive: true, parity: None }]
         ));
+    }
+
+    #[test]
+    fn parses_xyz_parity_controls() {
+        let circuit = parse(
+            r#"
+                circuit parity_controls {
+                  qubit top
+                  qubit middle
+                  qubit bottom
+                  s top if middle, bottom
+                  s top if parity(middle, bottom)
+                  s top if parity_x(middle, bottom)
+                  s top if parity_y(middle, bottom)
+                  s top if parity_z(middle, bottom)
+                }
+            "#,
+        )
+        .expect("valid parity controls");
+
+        let controls = circuit
+            .operations
+            .iter()
+            .map(|operation| match &operation.kind {
+                OperationKind::Gate { controls, .. } => (controls.len(), controls[0].parity),
+                _ => unreachable!("fixture contains only gates"),
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            controls,
+            [
+                (2, None),
+                (2, Some(ParityBasis::Z)),
+                (2, Some(ParityBasis::X)),
+                (2, Some(ParityBasis::Y)),
+                (2, Some(ParityBasis::Z)),
+            ]
+        );
     }
 
     #[test]
@@ -2480,7 +2545,7 @@ mod tests {
                 ref controls,
             } if label == "X"
                 && targets == &[0]
-                && controls == &[Control { wire: 2, positive: true }]
+                && controls == &[Control { wire: 2, positive: true, parity: None }]
         ));
         assert!(matches!(
             circuit.operations[2].kind,

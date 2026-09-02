@@ -1,5 +1,0 @@
-circuit manual_hyperlink {
-  qubit q[2]
-  gate "docs" on q[0] with link: "https://example.com/docs"
-  gate "source" on q[1] with link: "https://example.com/source?id=1"
-}

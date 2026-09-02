@@ -1,8 +1,0 @@
-circuit manual_touch {
-  qubit q[3]
-  h q[0]
-  h q[0]
-  h q[2]
-  touch q[1], q[2]
-  x q[1]
-}

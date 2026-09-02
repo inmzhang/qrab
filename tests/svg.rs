@@ -42,9 +42,7 @@ fn an_empty_circuit_still_renders() {
 
 fn collect_fixtures(root: &Path) -> Vec<PathBuf> {
     let mut fixtures = Vec::new();
-    for directory in ["examples", "tests/qpic", "tests/qpic-manual"] {
-        // `Cargo.toml` excludes most of the qpic corpus from the published
-        // crate, so a missing directory is expected there, not a failure.
+    for directory in ["examples", "tests/qpic"] {
         let Ok(entries) = fs::read_dir(root.join(directory)) else {
             continue;
         };

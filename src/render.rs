@@ -1,27 +1,150 @@
 use std::{borrow::Cow, collections::HashMap};
 
+use ratex_layout::{LayoutOptions, layout as layout_math, to_display_list};
+use ratex_parser::parse as parse_math;
+use ratex_types::{color::Color, display_item::DisplayList, math_style::MathStyle};
+
 use crate::ast::{
     BraceSide, Circuit, Control, Group, Layout, MeasurementShape, NoteSide, OperationKind,
-    Orientation, Shape, Style, Wire, WireKind,
+    Orientation, ParityBasis, Shape, Style, Wire, WireKind,
 };
 
 const POINTS_PER_CENTIMETER: f32 = 28.45;
+const FONT_SIZE: f32 = 10.0;
 
-/// Advance of one monospaced character, in centimetres.
-///
-/// Neither coordinate backend can measure text, so both estimate a label's
-/// width from its character count at the 10pt monospace advance the SVG canvas
-/// assumes. The estimate is deliberately generous: too wide only spreads a
-/// diagram out, while too narrow lets neighbouring shapes overlap.
-const CHARACTER_WIDTH: f32 = 0.62 * 10.0 / POINTS_PER_CENTIMETER;
+/// Generous 10pt monospace advance estimate; math uses measured RaTeX layout.
+const CHARACTER_WIDTH: f32 = 0.62 * FONT_SIZE / POINTS_PER_CENTIMETER;
 
 /// Room left between a label and the edge of the shape around it, in
 /// centimetres. Matches the SVG canvas padding and TikZ's default `inner sep`.
 const LABEL_PADDING: f32 = 4.0 / POINTS_PER_CENTIMETER;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum LabelSpan<'a> {
+    Text(&'a str),
+    Math(&'a str),
+}
+
+#[derive(Debug, Clone, Copy)]
+struct LabelDimensions {
+    width: f32,
+    height: f32,
+}
+
+/// Splits a label on paired `$`; unmatched dollars stay literal.
+fn label_spans(label: &str) -> Vec<LabelSpan<'_>> {
+    let mut delimiters = Vec::new();
+    let mut backslashes = 0;
+    for (offset, character) in label.char_indices() {
+        if character == '$' && backslashes % 2 == 0 {
+            delimiters.push(offset);
+        }
+        backslashes = if character == '\\' {
+            backslashes + 1
+        } else {
+            0
+        };
+    }
+
+    let paired = delimiters.len() / 2 * 2;
+    let mut spans = Vec::with_capacity(paired + 1);
+    let mut cursor = 0;
+    for pair in delimiters[..paired].as_chunks::<2>().0 {
+        if cursor < pair[0] {
+            spans.push(LabelSpan::Text(&label[cursor..pair[0]]));
+        }
+        spans.push(LabelSpan::Math(&label[pair[0] + 1..pair[1]]));
+        cursor = pair[1] + 1;
+    }
+    if cursor < label.len() {
+        spans.push(LabelSpan::Text(&label[cursor..]));
+    }
+    if spans.is_empty() {
+        spans.push(LabelSpan::Text(label));
+    }
+    spans
+}
+
+fn label_text(text: &str) -> Cow<'_, str> {
+    if text.contains("\\$") {
+        Cow::Owned(text.replace("\\$", "$"))
+    } else {
+        Cow::Borrowed(text)
+    }
+}
+
+fn label_has_math(label: &str) -> bool {
+    label_spans(label)
+        .iter()
+        .any(|span| matches!(span, LabelSpan::Math(_)))
+}
+
+fn circuit_has_math(circuit: &Circuit) -> bool {
+    circuit.wires.iter().any(|wire| {
+        wire.input.as_deref().is_some_and(label_has_math)
+            || wire.output.as_deref().is_some_and(label_has_math)
+    }) || circuit
+        .groups
+        .iter()
+        .any(|group| label_has_math(&group.label))
+        || circuit
+            .operations
+            .iter()
+            .any(|operation| match &operation.kind {
+                OperationKind::Gate { label, .. }
+                | OperationKind::Label { label, .. }
+                | OperationKind::Bundle { label, .. }
+                | OperationKind::Brace { label, .. } => label_has_math(label),
+                OperationKind::Measure { label, .. }
+                | OperationKind::WireChange { label, .. }
+                | OperationKind::Endpoint { label, .. }
+                | OperationKind::Cut { label, .. } => label.as_deref().is_some_and(label_has_math),
+                OperationKind::WireLabels { labels, .. } => {
+                    labels.iter().any(|label| label_has_math(label))
+                }
+                OperationKind::Note { text, .. } => label_has_math(text),
+                _ => false,
+            })
+}
+
+fn math_display_list(math: &str, color: Color) -> Option<DisplayList> {
+    let parsed = parse_math(math).ok()?;
+    let options = LayoutOptions {
+        style: MathStyle::Text,
+        color,
+        ..LayoutOptions::default()
+    };
+    Some(to_display_list(&layout_math(&parsed, &options)))
+}
+
+/// Estimated dimensions of `label` when drawn, in centimetres.
+fn label_dimensions(label: &str) -> LabelDimensions {
+    let mut dimensions = LabelDimensions {
+        width: 0.0,
+        height: FONT_SIZE / POINTS_PER_CENTIMETER,
+    };
+    for span in label_spans(label) {
+        match span {
+            LabelSpan::Text(text) => {
+                dimensions.width += label_text(text).chars().count() as f32 * CHARACTER_WIDTH;
+            }
+            LabelSpan::Math(math) => match math_display_list(math, Color::BLACK) {
+                Some(display) => {
+                    dimensions.width += display.width as f32 * FONT_SIZE / POINTS_PER_CENTIMETER;
+                    dimensions.height = dimensions
+                        .height
+                        .max(display.total_height() as f32 * FONT_SIZE / POINTS_PER_CENTIMETER);
+                }
+                None => dimensions.width += math.chars().count() as f32 * CHARACTER_WIDTH,
+            },
+        }
+    }
+    dimensions
+}
+
 /// Estimated width of `label` when drawn, in centimetres.
 fn label_width(label: &str) -> f32 {
-    label.chars().count() as f32 * CHARACTER_WIDTH
+    label_dimensions(label).width
 }
 
 macro_rules! emit {
@@ -783,5 +906,44 @@ mod tests {
                 .message
                 .contains("cannot share wire")
         );
+    }
+
+    #[test]
+    fn renders_parity_markers() {
+        let circuit = parse(include_str!("../docs/manual/examples/gates-controls.qrab"))
+            .expect("valid parity fixture");
+        for target in [Target::Latex, Target::Typst, Target::Svg] {
+            assert!(render(&circuit, target).contains("par"), "{target:?}");
+        }
+    }
+
+    #[test]
+    fn renders_math_labels() {
+        let circuit =
+            parse(include_str!("../examples/math-labels.qrab")).expect("valid math-label fixture");
+        let [latex, typst, svg, quirk] = [Target::Latex, Target::Typst, Target::Svg, Target::Quirk]
+            .map(|target| render(&circuit, target));
+        assert!(
+            latex.contains(r"\texttt{input }\(\lvert\psi\rangle\)") && latex.contains(r"\(U_f\)")
+        );
+        assert!(
+            typst.contains("@preview/mitex:0.2.7") && typst.contains(r#"qrab-math(raw("U_f"))"#)
+        );
+        assert!(svg.contains("<g transform=\"translate(") && svg.contains("<path"));
+        assert!(quirk.contains("U_f") && !quirk.contains("$U_f$"));
+
+        let mut vertical = circuit.clone();
+        vertical.layout.orientation = Orientation::Vertical;
+        let typst = render(&vertical, Target::Typst);
+        assert!(typst.contains("qrab-math(body) = rotate(-90deg"));
+        assert!(typst.contains("parts.rev().join()"));
+
+        let dollars = parse(r#"circuit dollars { qubit q; label "cost \$5" on q }"#)
+            .expect("valid escaped dollar");
+        assert!(render(&dollars, Target::Svg).contains(">cost $5</text>"));
+
+        let empty = parse(r#"circuit empty { qubit q; label "a$$b" on q }"#)
+            .expect("valid empty math span");
+        assert!(render(&empty, Target::Typst).contains("qrab-math(raw(\"\"))"));
     }
 }

@@ -13,7 +13,8 @@ mod render;
 
 pub use ast::{
     BackendEscapes, BraceSide, Circuit, Control, EscapeBlock, Group, Layout, MeasurementShape,
-    NoteSide, Operation, OperationKind, Orientation, Shape, Span, Style, Wire, WireKind,
+    NoteSide, Operation, OperationKind, Orientation, ParityBasis, Shape, Span, Style, Wire,
+    WireKind,
 };
 pub use loader::{LoadError, LoadedSource, load_source};
 pub use parser::{Diagnostic, parse};

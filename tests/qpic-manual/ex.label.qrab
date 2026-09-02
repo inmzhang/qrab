@@ -1,6 +1,0 @@
-circuit manual_labels {
-  qubit q[4]
-  labels "a", "b", "c", "d" on q[0..4]
-  labels "..." on q[0..4]
-  label "center" on q[0..4]
-}

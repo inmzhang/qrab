@@ -40,6 +40,9 @@ installed.
 - **Portable styling.** Twelve named colors plus hex, sizes in points, shapes,
   opacity, and hyperlinks — all of which mean the same thing in every document
   backend.
+- **Portable mathematical text.** Every visible string accepts literal text
+  with inline `$...$` LaTeX math, rendered consistently in LaTeX, Typst, and
+  SVG.
 - **Diagnostics that point at your source.** Errors carry a line, a column, a
   labelled span, and a suggestion, and one run reports more than one error.
 - **Escape hatches.** `backend latex { … }` and `backend typst { … }` inject
@@ -106,13 +109,22 @@ typst compile circuit.typ build/circuit.pdf
 
 Tectonic and Typst are only needed to turn those sources into PDFs; neither is
 required for `qrab check`, for source generation, or for SVG. Typst 0.15.1
-downloads Quill 0.8.0 on its first build.
+downloads Quill 0.8.0 on its first build and MiTeX 0.2.7 when a diagram uses
+mathematical text.
+
+All visible strings use the same convention: text outside `$...$` is literal,
+and text inside is LaTeX math. This applies to wire endpoints, gates,
+measurements, labels, notes, braces, cuts, bundles, and groups; write `\$`
+inside a quoted qrab string for a literal dollar sign. The LaTeX backend emits
+the math directly, Typst uses MiTeX, and SVG renders it as paths.
 
 The Quirk target maps H, X, Y, Z, S, T, indexed phase gates, controls,
 measurements, swaps, and recognized input states. Arbitrary named boxes become
 labeled no-op custom gates because qrab does not define their unitary. Quirk is
 limited to 16 qubits; regions, styling, wire labels, and other drawing-only
 annotations without a Quirk equivalent are omitted.
+Quirk has no math typesetter, so it removes the `$` delimiters and uses the
+remaining TeX source as the closest deterministic label.
 
 ## Examples
 
@@ -225,23 +237,23 @@ top-to-bottom on a tinted background with per-gate colors and shapes;
 [`programming.qrab`](examples/programming.qrab) uses `repeat` and `reverse`;
 [`measurements.qrab`](examples/measurements.qrab) covers the measurement
 shapes; [`ellipsis.qrab`](examples/ellipsis.qrab) omits register rows;
+[`math-labels.qrab`](examples/math-labels.qrab) uses inline LaTeX math
+throughout one diagram;
 [`escapes.qrab`](examples/escapes.qrab) reaches into one backend; and
 [`imports.qrab`](examples/imports.qrab) pulls declarations from another file.
 
 ## Documentation
 
-**[The qrab Manual](docs/manual.pdf)** is the place to start: 42 pages covering
+**[The qrab Manual](docs/manual.pdf)** is the place to start: 43 pages covering
 the language, the compiler, and the rendering model, with a worked, rendered
 example for every construct. It is typeset from
 [docs/manual.typ](docs/manual.typ), and every snippet in it is a real file under
 [docs/manual/examples](docs/manual/examples) that `qrab` itself renders, so the
 code and the picture beside it can never drift apart.
 
-The library API is documented on [docs.rs](https://docs.rs/qrab). Parity with
-qpic and its evidence are tracked in
-[docs/qpic-coverage.md](docs/qpic-coverage.md); building, testing, and adding an
-example are covered by [CONTRIBUTING.md](CONTRIBUTING.md), and maintainers can
-follow [docs/releasing.md](docs/releasing.md).
+The library API is documented on [docs.rs](https://docs.rs/qrab). See the
+[qpic compatibility notes](docs/qpic-coverage.md), [contributor guide](CONTRIBUTING.md),
+and [release guide](docs/releasing.md) for maintenance details.
 
 ## License
 

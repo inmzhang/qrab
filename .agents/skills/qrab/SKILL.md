@@ -32,10 +32,13 @@ Use the language's existing constructs instead of encoding layout manually:
 - Declare `qubit`, `bit`, or `hidden` wires; arrays are fixed-size and ranges are end-exclusive (`q[1..4]` selects indices 1, 2, and 3).
 - Use `h`, `x`, `y`, `z`, `s`, and `t` for built-ins; `gate "U" on ...` for named boxes; `phase`, `measure`, `swap`, and `barrier` for their standard notation.
 - Add controls with `if`; prefix a control with `!` for an open control.
+- Use `parity(a, b)` for odd Z-basis parity, or `parity_x(...)`,
+  `parity_y(...)`, and `parity_z(...)` to select the basis explicitly.
 - Use `parallel` for an aligned layer. Let qrab pack ordinary independent operations itself; use `overlay` only for deliberate same-column overlap.
 - Use `fn`, `style`, `let`, and relative `import` for repeated maintained source. Imported modules contain declarations; the root file owns the circuit.
 - Keep strict wire declarations for maintained files. Use `autowires` only when the user explicitly wants a disposable sketch because typos otherwise become wires.
-- Treat labels as portable plain text. Prefer portable `with` styling; use `backend latex` or `backend typst` escapes only when the common model cannot express the requested result. There is no SVG escape.
+- In every visible string, keep ordinary text literal and delimit mathematics with `$...$` LaTeX; write `\$` inside a quoted qrab string for a literal dollar. LaTeX emits math directly, Typst uses MiTeX, SVG renders paths, and Quirk strips the delimiters because it cannot typeset math.
+- Prefer portable `with` styling; use `backend latex` or `backend typst` escapes only when the common model cannot express the requested result. There is no SVG escape.
 
 ## Check, compile, and verify
 

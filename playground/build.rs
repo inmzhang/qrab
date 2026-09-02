@@ -1,8 +1,4 @@
-//! Collects the circuits the playground offers in its example menu.
-//!
-//! The list is generated rather than written out so that adding a fixture to
-//! `tests/qpic/` puts it in the playground automatically, and so a renamed or
-//! deleted one is a build error instead of a stale menu entry.
+//! Generates the playground menu from maintained examples and qpic ports.
 
 use std::error::Error;
 use std::path::{Path, PathBuf};
@@ -17,6 +13,7 @@ const GUIDED: &[&str] = &[
     "teleportation",
     "functions",
     "annotations",
+    "math-labels",
     "regions",
     "lifecycle",
     "programming",
@@ -38,8 +35,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         ));
     }
 
-    // The ported qpic corpus is the interesting half of the menu: it is what
-    // proves the language covers the reference tool, so all of it ships.
     let mut ported = fs::read_dir(root.join("tests/qpic"))?
         .filter_map(|entry| entry.ok().map(|entry| entry.path()))
         .filter(|path| {

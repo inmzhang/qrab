@@ -1,5 +1,0 @@
-circuit manual_phase_width {
-  qubit q[2]
-  phase "theta" on q[0] with width: 36
-  phase "phi" on q[1] if q[0] with size: 28
-}

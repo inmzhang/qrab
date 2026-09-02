@@ -6,4 +6,8 @@ circuit controls {
   x q[2] if q[0], q[1]
   x q[2] if q[0], !q[1]
   h q[2] if q[0]
+  s q[0] if parity(q[1], q[2])
+  s q[0] if parity_x(q[1], q[2])
+  s q[0] if parity_y(q[1], q[2])
+  s q[0] if parity_z(q[1], q[2])
 }

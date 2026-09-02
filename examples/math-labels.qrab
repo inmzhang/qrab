@@ -1,0 +1,13 @@
+circuit math_labels {
+  qubit q[2]: "input $\\lvert\\psi\\rangle$" -> "output $q_1$"
+
+  mark start
+  gate "$U_f$" on q[0]
+  phase "$k + 1$" on q[1] if q[0]
+  label "step $i + 1$" on q[0..2]
+  note below "angle $\\theta / 2$" on q[1]
+  measure q[0] as "$m_0$"
+  mark end
+
+  group "round $r$" from start to end
+}

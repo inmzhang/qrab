@@ -26,8 +26,7 @@ await init();
 // A shared link carries the whole circuit in the URL fragment, so nothing is
 // stored server-side and a link keeps working offline.
 
-// Names arrive as "group/name"; each group becomes an <optgroup> so the ported
-// qpic corpus does not bury the introductory circuits.
+// Names arrive as "group/name"; each group becomes an <optgroup>.
 const groups = new Map();
 for (const entry of example_names()) {
   const [group, name] = splitEntry(entry);

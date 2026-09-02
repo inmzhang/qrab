@@ -1,7 +1,0 @@
-circuit manual_region {
-  qubit q[3]
-  mark start
-  h q[0]
-  x q[2] if q[0]
-  group "region" from start to here on q[0..3] with stroke: blue, dash: dashed
-}

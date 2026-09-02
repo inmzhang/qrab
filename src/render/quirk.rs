@@ -1,6 +1,8 @@
 use std::fmt::Write;
 
-use crate::ast::{Circuit, OperationKind, Shape, Style};
+use crate::ast::{Circuit, Control, OperationKind, ParityBasis, Shape, Style};
+
+use super::{LabelSpan, label_spans, label_text};
 
 const QUIRK_URL: &str = "https://algassert.com/quirk#circuit=";
 const MAX_WIRES: usize = 16;
@@ -31,11 +33,12 @@ pub(super) fn render_quirk(circuit: &Circuit) -> String {
                 && targets[0] < wire_count
                 && controls.iter().all(|control| control.wire < wire_count) =>
             {
-                let gate = native_gate(label, &operation.style)
-                    .map_or_else(|| custom_gate(&mut custom_gates, label, 1), str::to_owned);
+                let label = quirk_label(label);
+                let gate = native_gate(&label, &operation.style)
+                    .map_or_else(|| custom_gate(&mut custom_gates, &label, 1), str::to_owned);
                 column[targets[0]] = Some(gate);
                 for control in controls {
-                    column[control.wire] = Some(if control.positive { "•" } else { "◦" }.into());
+                    column[control.wire] = Some(control_gate(control).into());
                 }
             }
             OperationKind::Gate {
@@ -53,10 +56,13 @@ pub(super) fn render_quirk(circuit: &Circuit) -> String {
                     .iter()
                     .all(|control| control.wire < first || control.wire > last)
                 {
-                    column[first] = Some(custom_gate(&mut custom_gates, label, last - first + 1));
+                    column[first] = Some(custom_gate(
+                        &mut custom_gates,
+                        &quirk_label(label),
+                        last - first + 1,
+                    ));
                     for control in controls {
-                        column[control.wire] =
-                            Some(if control.positive { "•" } else { "◦" }.into());
+                        column[control.wire] = Some(control_gate(control).into());
                     }
                 }
             }
@@ -101,6 +107,29 @@ pub(super) fn render_quirk(circuit: &Circuit) -> String {
         json
     };
     format!("{QUIRK_URL}{fragment}")
+}
+
+fn control_gate(control: &Control) -> &'static str {
+    match control.parity {
+        Some(ParityBasis::X) => "xpar",
+        Some(ParityBasis::Y) => "ypar",
+        Some(ParityBasis::Z) => "zpar",
+        None if control.positive => "•",
+        None => "◦",
+    }
+}
+
+fn quirk_label(label: &str) -> String {
+    let mut output = String::new();
+    for span in label_spans(label) {
+        match span {
+            LabelSpan::Text(text) => output.push_str(&label_text(text)),
+            // Quirk cannot typeset TeX, but the source without `$` delimiters
+            // remains a useful and deterministic custom-gate name.
+            LabelSpan::Math(math) => output.push_str(math),
+        }
+    }
+    output
 }
 
 fn native_gate<'a>(label: &'a str, style: &Style) -> Option<&'a str> {
@@ -211,10 +240,20 @@ fn push_initial_states(output: &mut String, circuit: &Circuit) {
 }
 
 fn initial_state(label: Option<&str>) -> &'static str {
-    match label.map(str::trim) {
+    let label = label.map(quirk_label);
+    let compact = label.as_deref().map(|label| {
+        label
+            .chars()
+            .filter(|character| !character.is_whitespace())
+            .collect::<String>()
+    });
+    match compact.as_deref() {
         Some("1" | "|1>" | "|1⟩") => "1",
+        Some("\\ket{1}" | "\\lvert1\\rangle") => "1",
         Some("+" | "|+>" | "|+⟩") => "+",
+        Some("\\ket{+}" | "\\lvert+\\rangle") => "+",
         Some("-" | "|->" | "|-⟩") => "-",
+        Some("\\ket{-}" | "\\lvert-\\rangle") => "-",
         Some("i" | "+i" | "|i>" | "|+i>" | "|i⟩" | "|+i⟩") => "i",
         Some("-i" | "|-i>" | "|-i⟩") => "-i",
         _ => "0",
@@ -308,6 +347,29 @@ mod tests {
             concat!(
                 "https://algassert.com/quirk#circuit=",
                 r#"{"cols":[["Z^½"],["◦","Z^¼"],[1,1,"Z^⅛"],["Swap",1,"Swap"]],"init":[1,"+","-i"]}"#,
+            )
+        );
+    }
+
+    #[test]
+    fn ordinary_and_parity_controls_use_distinct_quirk_gates() {
+        assert_eq!(
+            render(
+                r#"
+                    circuit parity_controls {
+                      qubit top
+                      qubit middle
+                      qubit bottom
+                      s top if middle, bottom
+                      s top if parity(middle, bottom)
+                      s top if parity_x(middle, bottom)
+                      s top if parity_y(middle, bottom)
+                    }
+                "#,
+            ),
+            concat!(
+                "https://algassert.com/quirk#circuit=",
+                r#"{"cols":[["Z^½","•","•"],["Z^½","zpar","zpar"],["Z^½","xpar","xpar"],["Z^½","ypar","ypar"]]}"#,
             )
         );
     }

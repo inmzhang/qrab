@@ -1,7 +1,0 @@
-circuit manual_barrier {
-  qubit q[3]
-  h q[0]
-  barrier q[0], q[1] with stroke: blue
-  x q[2] if q[0]
-  barrier
-}

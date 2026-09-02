@@ -1,8 +1,0 @@
-circuit manual_repeat_once {
-  qubit q[2]
-  mark forward
-  h q[0]
-  x q[1] if q[0]
-  mark done
-  reverse from forward to done
-}

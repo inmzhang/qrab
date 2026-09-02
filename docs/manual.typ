@@ -294,7 +294,8 @@ typst compile build/circuit.typ build/circuit.pdf
 
 Both generated documents are standalone and crop to the circuit, so they drop
 straight into a paper with `\includegraphics` or Typst's `image`. Typst
-downloads Quill 0.8.0 on its first build.
+downloads Quill 0.8.0 on its first build and MiTeX 0.2.7 when a diagram uses
+mathematical text.
 
 == Diagnostics
 
@@ -396,10 +397,16 @@ qubit result -> "m"
 qubit plain
 ```
 
-Labels are plain text in every document backend. They are not LaTeX maths: write
-`"|psi>"` rather than `"$\ket{\psi}$"`, and the same string appears in the SVG,
-the TikZ, and the Typst output. If you need real mathematics in a paper, reach
-for a `backend latex` block (@escapes).
+Every visible string follows one portable LaTeX-style convention: ordinary
+characters are literal text and paired `$` delimit inline mathematics. For
+example, `"input $\\lvert\\psi\\rangle$"` mixes both, while `"$U_f$"` is only
+math; write `\$` inside a quoted qrab string for a literal dollar sign. The
+convention applies to wire endpoints, gates, measurements, labels, notes,
+braces, cuts, bundles, and groups.
+
+The LaTeX backend emits each math span directly, Typst converts it with MiTeX,
+and SVG renders it as paths. Quirk cannot typeset mathematics, so it removes
+the `$` delimiters and keeps the TeX source as its label.
 
 == Arrays and ranges
 
@@ -447,6 +454,11 @@ same picture here anyway.
 
 Controls follow `if`, separated by commas. A control prefixed with `!` is an
 open (negative) control and is drawn as a hollow dot.
+
+Wrapping controls in `parity(...)` instead applies the gate when an odd number
+of them are satisfied in the Z basis. `parity_x(...)`, `parity_y(...)`, and
+`parity_z(...)` select the basis explicitly. Commas outside a parity wrapper
+remain ordinary AND controls.
 
 #ex("gates-controls")
 
@@ -841,9 +853,9 @@ picture below is what every document backend draws with the hooks removed:
 #pic("backend-escape")
 
 Escapes are the explicit replacement for qpic's preamble and TikZ hooks. Reach
-for one when you need real LaTeX mathematics in a label, a package only one
-document needs, or an effect the common model cannot express --- and not
-otherwise, because anything you put here exists in exactly one output.
+for one when you need a package only one document understands or an effect the
+common model cannot express --- and not otherwise, because anything you put
+here exists in exactly one output.
 
 // ============================================================================
 
@@ -978,14 +990,14 @@ The differences are deliberate:
   [Token substitution macros], [`let`, `style`, and `fn`, resolved into a typed
     tree],
   [`\input` of another file], [`import`, path-aware and cycle-checked],
-  [Labels are LaTeX], [Labels are plain text in every document backend; LaTeX goes in a
-    `backend` block],
+  [Labels are LaTeX], [Every visible string supports literal text plus portable
+    `$...$` LaTeX math],
   [Uppercase directives (`VERTICAL`, `SCALE`, ...)], [A `layout` block],
   [Shapes clip their labels], [Shapes grow to fit them (@growth)],
   [One output: TikZ], [Four targets from one model],
 )
 
-Parity and its evidence are tracked in `docs/qpic-coverage.md`.
+See `docs/qpic-coverage.md` for compatibility details.
 
 // ============================================================================
 

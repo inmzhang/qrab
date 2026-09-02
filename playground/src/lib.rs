@@ -8,8 +8,7 @@
 use qrab::{Target, parse, render};
 use wasm_bindgen::prelude::*;
 
-// The menu is generated at build time from `examples/` and the ported qpic
-// corpus; see `build.rs`.
+// Generated from `examples/` and the curated qpic ports; see `build.rs`.
 include!(concat!(env!("OUT_DIR"), "/examples.rs"));
 
 /// One compilation attempt.
@@ -145,5 +144,13 @@ mod tests {
                 .output
                 .starts_with("https://algassert.com/quirk#circuit=")
         );
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    #[wasm_bindgen_test::wasm_bindgen_test]
+    fn math_labels_render_inside_wasm() {
+        let compiled = compile(include_str!("../../examples/math-labels.qrab"), "svg");
+        assert!(compiled.message.is_empty(), "{}", compiled.message);
+        assert!(compiled.output.contains("<path"));
     }
 }

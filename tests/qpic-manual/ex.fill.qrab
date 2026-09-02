@@ -1,6 +1,0 @@
-circuit manual_fill {
-  qubit q[3]
-  h q[0] with fill: yellow
-  gate "U" on q[1] with fill: green, opacity: 0.6
-  phase "theta" on q[2] with fill: "#DDEEFF"
-}

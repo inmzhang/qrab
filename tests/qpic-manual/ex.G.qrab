@@ -1,5 +1,0 @@
-circuit manual_gate {
-  qubit q[3]
-  gate "G" on q[0]
-  gate "multi" on q[0..3] with fill: yellow
-}

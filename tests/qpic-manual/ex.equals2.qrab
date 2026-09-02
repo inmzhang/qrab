@@ -1,6 +1,0 @@
-circuit manual_braced_equals {
-  qubit q[3]
-  equals "left" on q[0..3] braced left
-  equals "right" on q[0..3] braced right
-  equals "both" on q[0..3] braced both
-}

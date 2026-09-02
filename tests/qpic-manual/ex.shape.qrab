@@ -1,7 +1,0 @@
-circuit manual_shapes {
-  qubit q[4]
-  gate "box" on q[0] with shape: box
-  gate "circle" on q[1] with shape: circle
-  gate "ellipse" on q[2] with shape: ellipse, width: 34
-  gate "none" on q[3] with shape: none
-}

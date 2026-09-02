@@ -1,7 +1,0 @@
-circuit manual_cut {
-  qubit q[3]
-  h q[0]
-  cut on q[0..3] as "stage 1" with stroke: red
-  x q[2] if q[0]
-  cut as "stage 2" with stroke: blue
-}

@@ -1,6 +1,0 @@
-circuit manual_bundle_slash {
-  qubit register: "|x>" -> "|y>"
-  bundle "n" on register
-  h register
-  bundle "8" on register with stroke: blue
-}

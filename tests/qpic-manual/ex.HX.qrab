@@ -1,6 +1,0 @@
-circuit manual_hadamard_x {
-  autowires
-  h a
-  x b
-  x b if a
-}

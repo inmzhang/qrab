@@ -1,6 +1,0 @@
-circuit manual_controls {
-  qubit q[4]
-  x q[3] if q[0]
-  x q[2] if !q[1]
-  gate "U" on q[2] if q[0], !q[3]
-}

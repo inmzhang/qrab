@@ -4,131 +4,28 @@ use std::process::Command;
 
 use qrab::{Target, compile, load_source};
 
-const QPIC_GOLDEN_TESTS: &[&str] = &[
-    "2Bitcomp",
-    "Adder_CDKM",
-    "Adder_CDKM_MAJ",
-    "Adder_CDKM_UMA",
-    "Adder_VBE",
-    "Adder_VBE_Carry",
-    "Adder_VBE_Sum",
-    "AutoTest",
-    "BasicTeleportation",
-    "CoherentSuperDenseCoding",
-    "ModAdder",
-    "ModExp",
-    "NestedLevels",
-    "PleaseTouch",
-    "QFT3v1",
-    "QFT3v2",
-    "QFT4",
-    "QFT4vert",
-    "QuantumTeleportation",
-    "RecursiveQFT",
-    "RecursiveQFTv2",
-    "ShapeExamples",
-    "ShapeExamplesVertical",
-    "ShorNutshell",
-    "Simon",
-    "Steane_NOOP",
-    "SuperDenseCoding",
-    "Teleport",
-    "boxtest",
-    "cswap",
-    "gatecompare",
-    "measure",
-    "measure_tag",
-    "oop",
-    "permute",
-    "phantom_test",
-    "reverse-8",
-    "sink",
-    "start_and_end",
-    "starwars",
-    "test-rotate",
-    "test40",
-    "through",
-    "wiretest",
+const EXAMPLE_FIXTURES: &[&str] = &[
+    "bell",
+    "teleportation",
+    "styling",
+    "lifecycle",
+    "functions",
+    "programming",
+    "annotations",
+    "math-labels",
+    "regions",
+    "measurements",
+    "ellipsis",
+    "escapes",
+    "imports",
 ];
-
-const QPIC_MANUAL_EXAMPLES: &[&str] = &[
-    "Adder_CDKM_MAJ",
-    "QFT3v1",
-    "ShorNutshell",
-    "ex.BARRIER",
-    "ex.C",
-    "ex.CHANGEcwire",
-    "ex.CUT",
-    "ex.DEFINE",
-    "ex.DEFINEargs",
-    "ex.G",
-    "ex.GG",
-    "ex.Gbar",
-    "ex.HX",
-    "ex.INOUT",
-    "ex.M",
-    "ex.MIXGATES",
-    "ex.Mtag",
-    "ex.N",
-    "ex.P",
-    "ex.PERMUTE",
-    "ex.PHANTOM",
-    "ex.Pwidth",
-    "ex.R1",
-    "ex.R2",
-    "ex.Rmark",
-    "ex.S",
-    "ex.STARTEND",
-    "ex.SWAP",
-    "ex.T",
-    "ex.TOUCH",
-    "ex.W",
-    "ex.Z",
-    "ex.at",
-    "ex.atfill",
-    "ex.breadth",
-    "ex.color",
-    "ex.comment",
-    "ex.delay",
-    "ex.ellipsis",
-    "ex.equals",
-    "ex.equals2",
-    "ex.fill",
-    "ex.hyperlink",
-    "ex.hypertarget",
-    "ex.label",
-    "ex.level",
-    "ex.nW",
-    "ex.noTOUCH",
-    "ex.none",
-    "ex.operator",
-    "ex.operator2",
-    "ex.operatorquotes",
-    "ex.plus",
-    "ex.qcowire",
-    "ex.semicolon",
-    "ex.setsize",
-    "ex.shape",
-    "ex.size",
-    "ex.sizevert",
-    "ex.slash",
-    "ex.style",
-    "ex_latex",
-    "reverse-8",
-    "teleport",
-];
+const QPIC_FIXTURES: &[&str] = &["permute", "QFT4vert", "start_and_end", "ShorNutshell"];
 
 const PAGE_SIZE_BASELINES: &[(&str, f32, f32)] = &[
     ("teleportation", 460.62, 92.86),
     ("teleportation-typst", 276.945, 106.24),
     ("qpic-QFT4vert", 126.41, 440.98),
     ("qpic-QFT4vert-typst", 148.08, 311.142),
-    ("qpic-manual-ex.comment", 172.91, 128.62),
-    ("qpic-manual-ex.comment-typst", 137.4, 111.4),
-    ("qpic-manual-ex.MIXGATES", 209.99, 117.32),
-    ("qpic-manual-ex.MIXGATES-typst", 167.78, 122.82),
-    ("qpic-Steane_NOOP", 1043.00, 394.83),
-    ("qpic-Steane_NOOP-typst", 593.74, 416.62),
     ("imports", 232.33, 60.61),
     ("imports-typst", 166.125, 65.66),
     ("styling", 161.63, 439.36),
@@ -141,72 +38,25 @@ fn generated_backends_compile_to_pdfs() {
     let output_dir = PathBuf::from("target/artifact-tests");
     fs::create_dir_all(&output_dir).expect("create artifact test directory");
 
+    for name in EXAMPLE_FIXTURES {
+        let source = load_source(format!("examples/{name}.qrab"))
+            .unwrap_or_else(|error| panic!("load example {name}: {error}"));
+        compile_fixture(name, source.as_str(), &output_dir);
+    }
+    let math_labels =
+        fs::read_to_string("examples/math-labels.qrab").expect("load math-labels example");
     compile_fixture(
-        "teleportation",
-        include_str!("../examples/teleportation.qrab"),
+        "math-labels-vertical",
+        &math_labels.replacen('{', "{\n  layout { orientation: vertical }", 1),
         &output_dir,
     );
-    compile_fixture(
-        "styling",
-        include_str!("../examples/styling.qrab"),
-        &output_dir,
-    );
-    compile_fixture(
-        "lifecycle",
-        include_str!("../examples/lifecycle.qrab"),
-        &output_dir,
-    );
-    compile_fixture(
-        "functions",
-        include_str!("../examples/functions.qrab"),
-        &output_dir,
-    );
-    compile_fixture(
-        "programming",
-        include_str!("../examples/programming.qrab"),
-        &output_dir,
-    );
-    compile_fixture(
-        "annotations",
-        include_str!("../examples/annotations.qrab"),
-        &output_dir,
-    );
-    compile_fixture(
-        "regions",
-        include_str!("../examples/regions.qrab"),
-        &output_dir,
-    );
-    compile_fixture(
-        "measurements",
-        include_str!("../examples/measurements.qrab"),
-        &output_dir,
-    );
-    compile_fixture(
-        "ellipsis",
-        include_str!("../examples/ellipsis.qrab"),
-        &output_dir,
-    );
-    compile_fixture(
-        "escapes",
-        include_str!("../examples/escapes.qrab"),
-        &output_dir,
-    );
-    let imports = load_source("examples/imports.qrab").expect("load imported example");
-    compile_fixture("imports", imports.as_str(), &output_dir);
 
-    for name in QPIC_GOLDEN_TESTS {
+    for name in QPIC_FIXTURES {
         let source = fs::read_to_string(format!("tests/qpic/{name}.qrab"))
-            .unwrap_or_else(|error| panic!("missing qpic parity fixture `{name}`: {error}"));
+            .unwrap_or_else(|error| panic!("missing qpic fixture `{name}`: {error}"));
         compile_fixture(&format!("qpic-{name}"), &source, &output_dir);
     }
-    for name in QPIC_MANUAL_EXAMPLES {
-        let source = fs::read_to_string(format!("tests/qpic-manual/{name}.qrab"))
-            .unwrap_or_else(|error| panic!("missing qpic manual fixture `{name}`: {error}"));
-        compile_fixture(&format!("qpic-manual-{name}"), &source, &output_dir);
-    }
-    // Every drifted baseline is collected before failing. Asserting inside the
-    // loop hid the rest behind whichever one moved first, so a change that
-    // shifted several took one 55-second run per baseline to find.
+    // Report all drift in one run.
     let drift = PAGE_SIZE_BASELINES
         .iter()
         .filter_map(|(name, width, height)| {

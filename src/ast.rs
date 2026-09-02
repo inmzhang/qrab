@@ -240,7 +240,7 @@ pub enum OperationKind {
         label: String,
         /// Target wire indices.
         targets: Vec<usize>,
-        /// Positive or negative controls.
+        /// Ordinary or parity controls.
         controls: Vec<Control>,
     },
     /// A measurement that changes each target to a classical wire.
@@ -347,14 +347,38 @@ pub enum OperationKind {
     },
 }
 
-/// One positive or negative gate control.
+/// Basis used by a parity control.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ParityBasis {
+    /// X-basis parity.
+    X,
+    /// Y-basis parity.
+    Y,
+    /// Z-basis parity.
+    Z,
+}
+
+impl ParityBasis {
+    pub(crate) const fn label(self) -> &'static str {
+        match self {
+            Self::X => "X",
+            Self::Y => "Y",
+            Self::Z => "Z",
+        }
+    }
+}
+
+/// One ordinary or parity gate control.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct Control {
     /// Control wire index.
     pub wire: usize,
-    /// `true` for a closed control and `false` for an open control.
+    /// `true` for a closed control and `false` for an open control. Ignored for
+    /// parity controls.
     pub positive: bool,
+    /// Parity basis, or `None` for an ordinary control.
+    pub parity: Option<ParityBasis>,
 }
 
 impl OperationKind {
