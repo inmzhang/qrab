@@ -27,6 +27,7 @@ Register-ArgumentCompleter -Native -CommandName 'qrab' -ScriptBlock {
             [CompletionResult]::new('--version', '--version', [CompletionResultType]::ParameterName, 'Print version')
             [CompletionResult]::new('check', 'check', [CompletionResultType]::ParameterValue, 'Check a circuit without rendering it')
             [CompletionResult]::new('compile', 'compile', [CompletionResultType]::ParameterValue, 'Compile a circuit to LaTeX, Typst, SVG, Quirk, or all of them')
+            [CompletionResult]::new('install-skill', 'install-skill', [CompletionResultType]::ParameterValue, 'Install the qrab agent skill in the current project')
             [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
             break
         }
@@ -48,9 +49,17 @@ Register-ArgumentCompleter -Native -CommandName 'qrab' -ScriptBlock {
             [CompletionResult]::new('--version', '--version', [CompletionResultType]::ParameterName, 'Print version')
             break
         }
+        'qrab;install-skill' {
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('-V', '-V ', [CompletionResultType]::ParameterName, 'Print version')
+            [CompletionResult]::new('--version', '--version', [CompletionResultType]::ParameterName, 'Print version')
+            break
+        }
         'qrab;help' {
             [CompletionResult]::new('check', 'check', [CompletionResultType]::ParameterValue, 'Check a circuit without rendering it')
             [CompletionResult]::new('compile', 'compile', [CompletionResultType]::ParameterValue, 'Compile a circuit to LaTeX, Typst, SVG, Quirk, or all of them')
+            [CompletionResult]::new('install-skill', 'install-skill', [CompletionResultType]::ParameterValue, 'Install the qrab agent skill in the current project')
             [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
             break
         }
@@ -58,6 +67,9 @@ Register-ArgumentCompleter -Native -CommandName 'qrab' -ScriptBlock {
             break
         }
         'qrab;help;compile' {
+            break
+        }
+        'qrab;help;install-skill' {
             break
         }
         'qrab;help;help' {

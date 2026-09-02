@@ -237,11 +237,21 @@ to turn the generated sources into PDFs.
   it is the fastest way to try anything in this manual.
 ]
 
+== Agent skill
+
+```sh
+qrab install-skill
+```
+
+Run `install-skill` from a project's root to write
+`.agents/skills/qrab/SKILL.md`. Repeating it is harmless when the same skill is
+already present; it refuses to overwrite a changed file.
+
 // ============================================================================
 
 = The command line
 
-`qrab` has two subcommands.
+The circuit workflow uses two subcommands.
 
 == Checking
 

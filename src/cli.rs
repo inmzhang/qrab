@@ -24,6 +24,8 @@ pub(crate) enum Command {
     },
     /// Compile a circuit to LaTeX, Typst, SVG, Quirk, or all of them.
     Compile(CompileArgs),
+    /// Install the qrab agent skill in the current project.
+    InstallSkill,
 }
 
 #[derive(Debug, Args)]

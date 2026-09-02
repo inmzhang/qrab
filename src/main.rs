@@ -1,4 +1,5 @@
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use clap::{CommandFactory, Parser, error::ErrorKind};
@@ -8,6 +9,9 @@ use qrab::{Circuit, Target, load_source, parse, render};
 mod cli;
 
 use cli::{Cli, Command, CompileArgs, OutputTarget};
+
+const SKILL: &str = include_str!("../.agents/skills/qrab/SKILL.md");
+const SKILL_PATH: &str = ".agents/skills/qrab/SKILL.md";
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
@@ -23,7 +27,32 @@ fn run(command: Command) -> Result<()> {
     match command {
         Command::Check { input } => check_command(&input),
         Command::Compile(arguments) => compile_command(arguments),
+        Command::InstallSkill => install_skill(),
     }
+}
+
+fn install_skill() -> Result<()> {
+    let path = Path::new(SKILL_PATH);
+    if path.exists() {
+        let installed = fs::read_to_string(path)
+            .into_diagnostic()
+            .wrap_err_with(|| format!("cannot read {}", path.display()))?;
+        if installed != SKILL {
+            miette::bail!("refusing to overwrite existing {}", path.display());
+        }
+        println!("already installed {}", path.display());
+        return Ok(());
+    }
+
+    fs::create_dir_all(path.parent().expect("skill path has a parent"))
+        .into_diagnostic()
+        .wrap_err_with(|| format!("cannot create parent of {}", path.display()))?;
+    fs::File::create_new(path)
+        .and_then(|mut file| file.write_all(SKILL.as_bytes()))
+        .into_diagnostic()
+        .wrap_err_with(|| format!("cannot write {}", path.display()))?;
+    println!("installed {}", path.display());
+    Ok(())
 }
 
 fn check_command(input: &Path) -> Result<()> {

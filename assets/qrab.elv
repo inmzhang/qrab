@@ -24,6 +24,7 @@ set edit:completion:arg-completer[qrab] = {|@words|
             cand --version 'Print version'
             cand check 'Check a circuit without rendering it'
             cand compile 'Compile a circuit to LaTeX, Typst, SVG, Quirk, or all of them'
+            cand install-skill 'Install the qrab agent skill in the current project'
             cand help 'Print this message or the help of the given subcommand(s)'
         }
         &'qrab;check'= {
@@ -42,14 +43,23 @@ set edit:completion:arg-completer[qrab] = {|@words|
             cand -V 'Print version'
             cand --version 'Print version'
         }
+        &'qrab;install-skill'= {
+            cand -h 'Print help'
+            cand --help 'Print help'
+            cand -V 'Print version'
+            cand --version 'Print version'
+        }
         &'qrab;help'= {
             cand check 'Check a circuit without rendering it'
             cand compile 'Compile a circuit to LaTeX, Typst, SVG, Quirk, or all of them'
+            cand install-skill 'Install the qrab agent skill in the current project'
             cand help 'Print this message or the help of the given subcommand(s)'
         }
         &'qrab;help;check'= {
         }
         &'qrab;help;compile'= {
+        }
+        &'qrab;help;install-skill'= {
         }
         &'qrab;help;help'= {
         }

@@ -80,6 +80,47 @@ fn clap_handles_help_errors_delimiters_and_conflicts() {
         .stderr(predicate::str::contains("Usage:").not());
 }
 
+#[test]
+fn installs_agent_skill_without_overwriting_changes() {
+    let directory =
+        std::env::temp_dir().join(format!("qrab-skill-{}-{}", std::process::id(), line!()));
+    fs::create_dir(&directory).expect("create skill test directory");
+    let skill = directory.join(".agents/skills/qrab/SKILL.md");
+
+    cargo_bin_cmd!("qrab")
+        .current_dir(&directory)
+        .arg("install-skill")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "installed .agents/skills/qrab/SKILL.md",
+        ));
+    assert_eq!(
+        fs::read_to_string(&skill).expect("read installed skill"),
+        include_str!("../.agents/skills/qrab/SKILL.md")
+    );
+
+    cargo_bin_cmd!("qrab")
+        .current_dir(&directory)
+        .arg("install-skill")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("already installed"));
+
+    fs::write(&skill, "local changes\n").expect("customize installed skill");
+    cargo_bin_cmd!("qrab")
+        .current_dir(&directory)
+        .arg("install-skill")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("refusing to overwrite"));
+    assert_eq!(
+        fs::read_to_string(skill).expect("read customized skill"),
+        "local changes\n"
+    );
+    fs::remove_dir_all(directory).expect("remove skill test directory");
+}
+
 /// The man pages ship in every release archive, and their version comes from
 /// whichever crate compiled `cli.rs`. That is `xtask`, not this one, so the
 /// override in `xtask` is the only thing keeping them from advertising a
@@ -87,7 +128,12 @@ fn clap_handles_help_errors_delimiters_and_conflicts() {
 #[test]
 fn shipped_man_pages_carry_this_crate_version() {
     let version = env!("CARGO_PKG_VERSION");
-    for page in ["qrab.1", "qrab-check.1", "qrab-compile.1"] {
+    for page in [
+        "qrab.1",
+        "qrab-check.1",
+        "qrab-compile.1",
+        "qrab-install-skill.1",
+    ] {
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/");
         let text = fs::read_to_string(format!("{path}{page}"))
             .unwrap_or_else(|error| panic!("reading assets/{page}: {error}"));

@@ -92,6 +92,7 @@ qrab compile circuit.qrab                    # also writes circuit.url
 qrab compile circuit.qrab --target svg       # writes circuit.svg
 qrab compile circuit.qrab --target quirk     # writes an interactive URL to circuit.url
 qrab compile circuit.qrab -t latex -o out.tex
+qrab install-skill                            # writes .agents/skills/qrab/SKILL.md
 ```
 
 `--target` takes `latex` (alias `tikz`), `typst` (alias `quill`), `svg`,
