@@ -3,6 +3,15 @@
 All notable changes are documented here. This project follows Semantic Versioning.
 
 ## [Unreleased]
+## [0.1.4] - 2026-09-02
+
+### Added
+
+- Add qrab agent skill installer
+
+- Add parity controls and math labels
+
+
 ## [0.1.3] - 2026-09-01
 
 ### Added
