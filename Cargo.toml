@@ -1,6 +1,6 @@
 [package]
 name = "qrab"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2024"
 description = "A readable quantum-circuit compiler for TikZ, Typst, SVG, and Quirk"
 license = "MIT"
