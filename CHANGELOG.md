@@ -3,6 +3,13 @@
 All notable changes are documented here. This project follows Semantic Versioning.
 
 ## [Unreleased]
+## [0.1.6] - 2026-09-02
+
+### Fixed
+
+- Preserve parallel layers in Quirk export
+
+
 ## [0.1.5] - 2026-09-02
 
 ### Added
